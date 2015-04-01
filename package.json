@@ -1,0 +1,31 @@
+{
+  "name": "traceview-bindings",
+  "version": "1.0.0",
+  "description": "Bindings to liboboe for TraceView",
+  "author": "Stephen Belanger <sbelanger@appneta.com>",
+  "main": "index.js",
+  "gypfile": true,
+  "license": {
+    "name": "AppNeta Open License, Version 1.0",
+    "url": "http://www.appneta.com/appneta-license"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/appneta/node-traceview-bindings"
+  },
+  "bugs": {
+    "url": "https://github.com/appneta/node-traceview-bindings/issues"
+  },
+  "scripts": {
+    "test": "gulp test"
+  },
+  "dependencies": {
+    "bindings": "~1.2.1",
+    "nan": "~1.7.0"
+  },
+  "devDependencies": {
+    "gulp": "~3.8.11",
+    "gulp-mocha": "~2.0.1",
+    "should": "~5.2.0"
+  }
+}
