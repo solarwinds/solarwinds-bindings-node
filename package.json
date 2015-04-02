@@ -1,6 +1,6 @@
 {
   "name": "traceview-bindings",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Bindings to liboboe for TraceView",
   "author": "Stephen Belanger <sbelanger@appneta.com>",
   "main": "index.js",
