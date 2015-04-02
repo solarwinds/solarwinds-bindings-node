@@ -1,1 +1,0 @@
-cmd_Release/obj.target/traceview-bindings.node := flock ./Release/linker.lock g++ -shared -pthread -rdynamic -m64 -Wl,-rpath /usr/local/lib  -Wl,-soname=traceview-bindings.node -o Release/obj.target/traceview-bindings.node -Wl,--start-group Release/obj.target/traceview-bindings/src/bindings.o -Wl,--end-group -loboe

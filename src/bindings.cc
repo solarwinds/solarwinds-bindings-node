@@ -38,6 +38,6 @@ void init(Handle<Object> exports) {
 	oboe_init();
 }
 
-NODE_MODULE(node_oboe, init)
+NODE_MODULE(traceview_bindings, init)
 
 }
