@@ -21,11 +21,11 @@
   },
   "dependencies": {
     "bindings": "~1.2.1",
-    "nan": "~1.7.0"
+    "nan": "~1.8.4"
   },
   "devDependencies": {
     "gulp": "~3.8.11",
     "gulp-mocha": "~2.0.1",
-    "should": "~5.2.0"
+    "should": "~6.0.1"
   }
 }
