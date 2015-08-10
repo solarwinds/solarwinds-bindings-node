@@ -271,38 +271,34 @@ size_t oboe_sanitize_sql(char *sql, size_t in_len, int saniflags) {
     return pout - sql;
 }
 
-NAN_METHOD(Sanitizer::sanitize) {
-  NanScope();
-
-  if (args.Length() < 1) {
-    return NanThrowError("Wrong number of arguments");
+void Sanitizer::sanitize(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+  if (info.Length() < 1) {
+    return Nan::ThrowError("Wrong number of arguments");
   }
 
-  NanUtf8String nan_str(args[0]);
+  Nan::Utf8String nan_str(info[0]);
   const char* input = *nan_str;
 
   int flag = OBOE_SQLSANITIZE_AUTO;
-
-  if (args.Length() == 2) {
-    flag = args[1]->Int32Value();
+  if (info.Length() == 2) {
+    flag = info[1]->Int32Value();
   }
 
   char* output = strndup(input, strlen(input));
   oboe_sanitize_sql(output, strlen(input), flag);
-  NanReturnValue(NanNew<String>(output));
+  info.GetReturnValue().Set(Nan::New(output).ToLocalChecked());
 }
 
 // Wrap the C++ object so V8 can understand it
-void Sanitizer::Init(Handle<Object> module) {
-  NanScope();
+void Sanitizer::Init(v8::Local<v8::Object> module) {
+  Nan::HandleScope scope;
 
-  Local<Object> exports = NanNew<Object>();
+  v8::Local<v8::Object> exports = Nan::New<v8::Object>();
+  Nan::Set(exports, Nan::New("OBOE_SQLSANITIZE_AUTO").ToLocalChecked(), Nan::New(OBOE_SQLSANITIZE_AUTO));
+  Nan::Set(exports, Nan::New("OBOE_SQLSANITIZE_DROPDOUBLE").ToLocalChecked(), Nan::New(OBOE_SQLSANITIZE_DROPDOUBLE));
+  Nan::Set(exports, Nan::New("OBOE_SQLSANITIZE_KEEPDOUBLE").ToLocalChecked(), Nan::New(OBOE_SQLSANITIZE_KEEPDOUBLE));
 
-  exports->Set(NanNew<String>("OBOE_SQLSANITIZE_AUTO"), NanNew<Uint32>(OBOE_SQLSANITIZE_AUTO));
-  exports->Set(NanNew<String>("OBOE_SQLSANITIZE_DROPDOUBLE"), NanNew<Uint32>(OBOE_SQLSANITIZE_DROPDOUBLE));
-  exports->Set(NanNew<String>("OBOE_SQLSANITIZE_KEEPDOUBLE"), NanNew<Uint32>(OBOE_SQLSANITIZE_KEEPDOUBLE));
+  Nan::SetMethod(exports, "sanitize", Sanitizer::sanitize);
 
-  NODE_SET_METHOD(exports, "sanitize", Sanitizer::sanitize);
-
-  module->Set(NanNew<String>("Sanitizer"), exports);
+  Nan::Set(module, Nan::New("Sanitizer").ToLocalChecked(), exports);
 }

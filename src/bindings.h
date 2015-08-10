@@ -11,12 +11,9 @@
 
 #include <oboe/oboe.h>
 
-using namespace v8;
-using namespace std;
-
 class Event;
 
-class Metadata : public node::ObjectWrap {
+class Metadata : public Nan::ObjectWrap {
   friend class UdpReporter;
   friend class FileReporter;
   friend class OboeContext;
@@ -27,7 +24,7 @@ class Metadata : public node::ObjectWrap {
   Metadata(oboe_metadata_t*);
 
   oboe_metadata_t metadata;
-  static Persistent<FunctionTemplate> constructor;
+  static Nan::Persistent<v8::Function> constructor;
   static NAN_METHOD(New);
   static NAN_METHOD(fromString);
   static NAN_METHOD(makeRandom);
@@ -36,8 +33,11 @@ class Metadata : public node::ObjectWrap {
   static NAN_METHOD(toString);
   static NAN_METHOD(createEvent);
 
+  static v8::Local<v8::Object> NewInstance(v8::Local<v8::Value> arg);
+  static v8::Local<v8::Object> NewInstance();
+
   public:
-    static void Init(Handle<Object>);
+    static void Init(v8::Local<v8::Object>);
 };
 
 class OboeContext {
@@ -63,10 +63,10 @@ class OboeContext {
   static NAN_METHOD(startTrace);
 
   public:
-    static void Init(Handle<Object>);
+    static void Init(v8::Local<v8::Object>);
 };
 
-class Event : public node::ObjectWrap {
+class Event : public Nan::ObjectWrap {
   friend class UdpReporter;
   friend class FileReporter;
   friend class OboeContext;
@@ -78,7 +78,7 @@ class Event : public node::ObjectWrap {
   ~Event();
 
   oboe_event_t event;
-  static Persistent<FunctionTemplate> constructor;
+  static Nan::Persistent<v8::Function> constructor;
   static NAN_METHOD(New);
   static NAN_METHOD(addInfo);
   static NAN_METHOD(addEdge);
@@ -86,20 +86,24 @@ class Event : public node::ObjectWrap {
   static NAN_METHOD(toString);
   static NAN_METHOD(startTrace);
 
+  static v8::Local<v8::Object> NewInstance(v8::Local<v8::Value>, v8::Local<v8::Value>);
+  static v8::Local<v8::Object> NewInstance(v8::Local<v8::Value>);
+  static v8::Local<v8::Object> NewInstance();
+
   public:
-    static void Init(Handle<Object>);
+    static void Init(v8::Local<v8::Object>);
 };
 
-class UdpReporter : public node::ObjectWrap {
+class UdpReporter : public Nan::ObjectWrap {
   UdpReporter();
   ~UdpReporter();
   int send(oboe_metadata_t*, oboe_event_t*);
 
-  string host;
-  string port;
+  std::string host;
+  std::string port;
   bool connected;
   oboe_reporter_t reporter;
-  static Persistent<FunctionTemplate> constructor;
+  static Nan::Persistent<v8::Function> constructor;
   static NAN_METHOD(New);
   static NAN_METHOD(sendReport);
   static NAN_SETTER(setAddress);
@@ -110,20 +114,20 @@ class UdpReporter : public node::ObjectWrap {
   static NAN_GETTER(getHost);
 
   public:
-    static void Init(Handle<Object>);
+    static void Init(v8::Local<v8::Object>);
 };
 
-class FileReporter : public node::ObjectWrap {
+class FileReporter : public Nan::ObjectWrap {
   ~FileReporter();
   FileReporter(const char*);
 
   oboe_reporter_t reporter;
-  static Persistent<FunctionTemplate> constructor;
+  static Nan::Persistent<v8::Function> constructor;
   static NAN_METHOD(New);
   static NAN_METHOD(sendReport);
 
   public:
-    static void Init(Handle<Object>);
+    static void Init(v8::Local<v8::Object>);
 };
 
 class Config {
@@ -132,14 +136,14 @@ class Config {
   static NAN_METHOD(checkVersion);
 
   public:
-    static void Init(Handle<Object>);
+    static void Init(v8::Local<v8::Object>);
 };
 
 class Sanitizer {
   static NAN_METHOD(sanitize);
 
   public:
-    static void Init(Handle<Object>);
+    static void Init(v8::Local<v8::Object>);
 };
 
 #endif  // NODE_OBOE_H_
