@@ -7,13 +7,11 @@ describe('addon.config', function () {
   it('should get version', function () {
     version = bindings.Config.getVersion()
     version.should.be.an.instanceof(Number)
-    version.should.equal(1)
   })
 
   it('should get revision', function () {
     revision = bindings.Config.getRevision()
     revision.should.be.an.instanceof(Number)
-    revision.should.equal(1)
   })
 
   it('should check valid versions', function () {

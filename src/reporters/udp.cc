@@ -1,8 +1,6 @@
 #include "../bindings.h"
 
-using namespace v8;
-
-Persistent<FunctionTemplate> UdpReporter::constructor;
+Nan::Persistent<v8::Function> UdpReporter::constructor;
 
 // Construct with an address and port to report to
 UdpReporter::UdpReporter() {
@@ -32,21 +30,17 @@ int UdpReporter::send(oboe_metadata_t* meta, oboe_event_t* event) {
 }
 
 NAN_SETTER(UdpReporter::setAddress) {
-  NanScope();
-
   if ( ! value->IsString()) {
-    NanThrowError("Address must be a string");
-    return;
+    return Nan::ThrowTypeError("Address must be a string");
   }
 
-  UdpReporter* self = ObjectWrap::Unwrap<UdpReporter>(args.This());
+  UdpReporter* self = Nan::ObjectWrap::Unwrap<UdpReporter>(info.This());
 
-  std::string s = *NanUtf8String(value);
+  std::string s = *Nan::Utf8String(value);
   char* host = strdup(s.substr(0, s.find(":")).c_str());
   char* port = strdup(s.substr(s.find(":") + 1).c_str());
   if (host == NULL || port == NULL) {
-    NanThrowError("Invalid address string");
-    return;
+    return Nan::ThrowError("Invalid address string");
   }
 
   self->connected = false;
@@ -54,114 +48,97 @@ NAN_SETTER(UdpReporter::setAddress) {
   self->port = port;
 }
 NAN_GETTER(UdpReporter::getAddress) {
-  NanScope();
-
-  UdpReporter* self = ObjectWrap::Unwrap<UdpReporter>(args.This());
+  UdpReporter* self = Nan::ObjectWrap::Unwrap<UdpReporter>(info.This());
   std::string host = self->host;
   std::string port = self->port;
   std::string address = host + ":" + port;
-  NanReturnValue(NanNew<String>(address));
+  info.GetReturnValue().Set(Nan::New(address).ToLocalChecked());
 }
 
 NAN_SETTER(UdpReporter::setHost) {
-  NanScope();
-
   if ( ! value->IsString()) {
-    NanThrowError("host must be a string");
-    return;
+    return Nan::ThrowTypeError("host must be a string");
   }
 
-  UdpReporter* self = ObjectWrap::Unwrap<UdpReporter>(args.This());
-  NanUtf8String val(value->ToString());
+  UdpReporter* self = Nan::ObjectWrap::Unwrap<UdpReporter>(info.This());
+  Nan::Utf8String val(value->ToString());
 
   self->connected = false;
   self->host = *val;
 }
 NAN_GETTER(UdpReporter::getHost) {
-  NanScope();
-
-  UdpReporter* self = ObjectWrap::Unwrap<UdpReporter>(args.This());
-  NanReturnValue(NanNew<String>(self->host));
+  UdpReporter* self = Nan::ObjectWrap::Unwrap<UdpReporter>(info.This());
+  info.GetReturnValue().Set(Nan::New(self->host).ToLocalChecked());
 }
 
 NAN_SETTER(UdpReporter::setPort) {
-  NanScope();
-
   if ( ! value->IsString() && ! value->IsNumber()) {
-    NanThrowError("port must be a string");
-    return;
+    return Nan::ThrowTypeError("port must be a string");
   }
 
-  UdpReporter* self = ObjectWrap::Unwrap<UdpReporter>(args.This());
-  NanUtf8String val(value->ToString());
+  UdpReporter* self = Nan::ObjectWrap::Unwrap<UdpReporter>(info.This());
+  Nan::Utf8String val(value->ToString());
 
   self->connected = false;
   self->port = *val;
 }
 NAN_GETTER(UdpReporter::getPort) {
-  NanScope();
-
-  UdpReporter* self = ObjectWrap::Unwrap<UdpReporter>(args.This());
-  NanReturnValue(NanNew<String>(self->port));
+  UdpReporter* self = Nan::ObjectWrap::Unwrap<UdpReporter>(info.This());
+  info.GetReturnValue().Set(Nan::New(self->port).ToLocalChecked());
 }
 
 // Transform a string back into a metadata instance
 NAN_METHOD(UdpReporter::sendReport) {
-  NanScope();
-
-  if (args.Length() < 1) {
-    return NanThrowError("Wrong number of arguments");
+  if (info.Length() < 1) {
+    return Nan::ThrowError("Wrong number of arguments");
   }
-  if (!args[0]->IsObject()) {
-    return NanThrowError("Must supply an event instance");
+  if (!info[0]->IsObject()) {
+    return Nan::ThrowTypeError("Must supply an event instance");
   }
 
-  UdpReporter* self = ObjectWrap::Unwrap<UdpReporter>(args.This());
-  Event* event = ObjectWrap::Unwrap<Event>(args[0]->ToObject());
+  UdpReporter* self = Nan::ObjectWrap::Unwrap<UdpReporter>(info.This());
+  Event* event = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
 
   oboe_metadata_t *md;
-  if (args.Length() == 2 && args[1]->IsObject()) {
-    Metadata* metadata = ObjectWrap::Unwrap<Metadata>(args[1]->ToObject());
+  if (info.Length() == 2 && info[1]->IsObject()) {
+    Metadata* metadata = Nan::ObjectWrap::Unwrap<Metadata>(info[1]->ToObject());
     md = &metadata->metadata;
   } else {
     md = OboeContext::get();
   }
 
   int status = self->send(md, &event->event);
-  NanReturnValue(NanNew<Boolean>(status >= 0));
+  info.GetReturnValue().Set(Nan::New(status >= 0));
 }
 
 // Creates a new Javascript instance
 NAN_METHOD(UdpReporter::New) {
-  NanScope();
-
-  if (!args.IsConstructCall()) {
-    return NanThrowError("UdpReporter() must be called as a constructor");
+  if (!info.IsConstructCall()) {
+    return Nan::ThrowError("UdpReporter() must be called as a constructor");
   }
-
   UdpReporter* reporter = new UdpReporter();
-  reporter->Wrap(args.This());
-  NanReturnValue(args.This());
+  reporter->Wrap(info.This());
+  info.GetReturnValue().Set(info.This());
 }
 
 // Wrap the C++ object so V8 can understand it
-void UdpReporter::Init(Handle<Object> exports) {
-	NanScope();
+void UdpReporter::Init(v8::Local<v8::Object> exports) {
+  Nan::HandleScope scope;
 
   // Prepare constructor template
-  Handle<FunctionTemplate> ctor = NanNew<FunctionTemplate>(New);
+  v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(New);
   ctor->InstanceTemplate()->SetInternalFieldCount(1);
-  ctor->SetClassName(NanNew<String>("UdpReporter"));
-  NanAssignPersistent(constructor, ctor);
+  ctor->SetClassName(Nan::New("UdpReporter").ToLocalChecked());
 
   // Assign host/port to change reporter target
   Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
-  proto->SetAccessor(NanNew<String>("address"), NULL, setAddress);
-  proto->SetAccessor(NanNew<String>("host"), getHost, setHost);
-  proto->SetAccessor(NanNew<String>("port"), getPort, setPort);
+  Nan::SetAccessor(proto, Nan::New("address").ToLocalChecked(), getAddress, setAddress);
+  Nan::SetAccessor(proto, Nan::New("host").ToLocalChecked(), getHost, setHost);
+  Nan::SetAccessor(proto, Nan::New("port").ToLocalChecked(), getPort, setPort);
 
   // Prototype
-  NODE_SET_PROTOTYPE_METHOD(ctor, "sendReport", UdpReporter::sendReport);
+  Nan::SetPrototypeMethod(ctor, "sendReport", UdpReporter::sendReport);
 
-  exports->Set(NanNew<String>("UdpReporter"), ctor->GetFunction());
+  constructor.Reset(ctor->GetFunction());
+  Nan::Set(exports, Nan::New("UdpReporter").ToLocalChecked(), ctor->GetFunction());
 }

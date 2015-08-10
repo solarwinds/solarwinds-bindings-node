@@ -3,46 +3,40 @@
 
 #include "bindings.h"
 
-using namespace v8;
-
 NAN_METHOD(Config::getRevision) {
-  NanScope();
-  NanReturnValue(NanNew<Number>(oboe_config_get_revision()));
+  info.GetReturnValue().Set(Nan::New(oboe_config_get_revision()));
 }
 
 NAN_METHOD(Config::getVersion) {
-  NanScope();
-  NanReturnValue(NanNew<Number>(oboe_config_get_version()));
+  info.GetReturnValue().Set(Nan::New(oboe_config_get_version()));
 }
 
 NAN_METHOD(Config::checkVersion) {
-  NanScope();
-
-  if (args.Length() != 2) {
-    return NanThrowError("Wrong number of arguments");
+  if (info.Length() != 2) {
+    return Nan::ThrowError("Wrong number of arguments");
   }
 
-  if (!args[0]->IsNumber() || !args[1]->IsNumber()) {
-    return NanThrowError("Values must be numbers");
+  if (!info[0]->IsNumber() || !info[1]->IsNumber()) {
+    return Nan::ThrowTypeError("Values must be numbers");
   }
 
-  int version = args[0]->NumberValue();
-  int revision = args[1]->NumberValue();
+  int version = info[0]->NumberValue();
+  int revision = info[1]->NumberValue();
 
   bool status = oboe_config_check_version(version, revision) != 0;
 
-  NanReturnValue(NanNew<Boolean>(status));
+  info.GetReturnValue().Set(Nan::New(status));
 }
 
-void Config::Init(Handle<Object> module) {
-  NanScope();
+void Config::Init(v8::Local<v8::Object> module) {
+  Nan::HandleScope scope;
 
-  Local<Object> exports = NanNew<Object>();
-  NODE_SET_METHOD(exports, "getVersion", Config::getVersion);
-  NODE_SET_METHOD(exports, "getRevision", Config::getRevision);
-  NODE_SET_METHOD(exports, "checkVersion", Config::checkVersion);
+  v8::Local<v8::Object> exports = Nan::New<v8::Object>();
+  Nan::SetMethod(exports, "getVersion", Config::getVersion);
+  Nan::SetMethod(exports, "getRevision", Config::getRevision);
+  Nan::SetMethod(exports, "checkVersion", Config::checkVersion);
 
-  module->Set(NanNew<String>("Config"), exports);
+  Nan::Set(module, Nan::New("Config").ToLocalChecked(), exports);
 }
 
 #endif

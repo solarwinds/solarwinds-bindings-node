@@ -1,10 +1,6 @@
 var bindings = require('../')
 
 describe('addon.context', function () {
-  it('should initialize', function () {
-    bindings.Context.init()
-  })
-
   it('should set tracing mode to never', function () {
     bindings.Context.setTracingMode(bindings.TRACE_NEVER)
   })

@@ -9,33 +9,29 @@
 #include "reporters/udp.cc"
 #include "reporters/file.cc"
 
-using v8::Handle;
-using v8::Object;
-
 extern "C" {
 
 // Register the exposed parts of the module
-void init(Handle<Object> exports) {
-	NanScope();
+void init(v8::Local<v8::Object> exports) {
+  Nan::HandleScope scope;
 
-	exports->Set(NanNew<String>("MAX_SAMPLE_RATE"), NanNew<Uint32>(OBOE_SAMPLE_RESOLUTION));
-	exports->Set(NanNew<String>("MAX_METADATA_PACK_LEN"), NanNew<Uint32>(OBOE_MAX_METADATA_PACK_LEN));
-	exports->Set(NanNew<String>("MAX_TASK_ID_LEN"), NanNew<Uint32>(OBOE_MAX_TASK_ID_LEN));
-	exports->Set(NanNew<String>("MAX_OP_ID_LEN"), NanNew<Uint32>(OBOE_MAX_OP_ID_LEN));
+  Nan::Set(exports, Nan::New("MAX_SAMPLE_RATE").ToLocalChecked(), Nan::New(OBOE_SAMPLE_RESOLUTION));
+  Nan::Set(exports, Nan::New("MAX_METADATA_PACK_LEN").ToLocalChecked(), Nan::New(OBOE_MAX_METADATA_PACK_LEN));
+  Nan::Set(exports, Nan::New("MAX_TASK_ID_LEN").ToLocalChecked(), Nan::New(OBOE_MAX_TASK_ID_LEN));
+  Nan::Set(exports, Nan::New("MAX_OP_ID_LEN").ToLocalChecked(), Nan::New(OBOE_MAX_OP_ID_LEN));
+  Nan::Set(exports, Nan::New("TRACE_NEVER").ToLocalChecked(), Nan::New(OBOE_TRACE_NEVER));
+  Nan::Set(exports, Nan::New("TRACE_ALWAYS").ToLocalChecked(), Nan::New(OBOE_TRACE_ALWAYS));
+  Nan::Set(exports, Nan::New("TRACE_THROUGH").ToLocalChecked(), Nan::New(OBOE_TRACE_THROUGH));
 
-	exports->Set(NanNew<String>("TRACE_NEVER"), NanNew<Uint32>(OBOE_TRACE_NEVER));
-	exports->Set(NanNew<String>("TRACE_ALWAYS"), NanNew<Uint32>(OBOE_TRACE_ALWAYS));
-	exports->Set(NanNew<String>("TRACE_THROUGH"), NanNew<Uint32>(OBOE_TRACE_THROUGH));
-
-	FileReporter::Init(exports);
-	UdpReporter::Init(exports);
-	OboeContext::Init(exports);
-	Sanitizer::Init(exports);
+  FileReporter::Init(exports);
+  UdpReporter::Init(exports);
+  OboeContext::Init(exports);
+  Sanitizer::Init(exports);
   Metadata::Init(exports);
   Event::Init(exports);
   Config::Init(exports);
 
-	oboe_init();
+  oboe_init();
 }
 
 NODE_MODULE(traceview_bindings, init)
