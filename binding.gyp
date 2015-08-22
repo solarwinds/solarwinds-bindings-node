@@ -9,7 +9,7 @@
         'src/bindings.cc'
       ],
       'conditions': [
-        ['OS=="linux"', {
+        ['OS in "linux mac"', {
           'libraries': [
             '-loboe'
           ],
