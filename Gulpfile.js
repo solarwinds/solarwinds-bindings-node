@@ -1,6 +1,7 @@
 var gulp = require('gulp')
 var mocha = require('gulp-mocha')
 var spawn = require('child_process').spawn
+var build = require('./build')
 
 gulp.task('test', function () {
   return gulp.src('test/*.test.js', {
@@ -10,12 +11,7 @@ gulp.task('test', function () {
   .once('end', process.exit)
 })
 
-gulp.task('rebuild', function (cb) {
-  var p = spawn('npm', ['install'])
-  p.stdout.pipe(process.stdout)
-  p.stderr.pipe(process.stderr)
-  p.on('close', cb)
-})
+gulp.task('rebuild', build)
 
 gulp.task('watch', function () {
   gulp.watch([

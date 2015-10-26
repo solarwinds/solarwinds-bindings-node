@@ -17,7 +17,8 @@
     "url": "https://github.com/appneta/node-traceview-bindings/issues"
   },
   "scripts": {
-    "test": "gulp test"
+    "test": "gulp test",
+    "install": "node build"
   },
   "dependencies": {
     "bindings": "~1.2.1",
