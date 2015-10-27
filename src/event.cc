@@ -96,15 +96,16 @@ NAN_METHOD(Event::addInfo) {
   // Handle string values
   } else {
     // Get value string from arguments
-    char* val = *Nan::Utf8String(info[1]);
-    int len = strlen(val);
+    Nan::Utf8String v8_value(info[1]);
+    int length = v8_value.length();
+    char* value = *v8_value;
 
     // Detect if we should add as binary or a string
     // TODO: Should probably use buffers for binary data...
-    if (memchr(val, '\0', len)) {
-      status = oboe_event_add_info_binary(event, key, val, len);
+    if (memchr(value, '\0', length)) {
+      status = oboe_event_add_info_binary(event, key, value, length);
     } else {
-      status = oboe_event_add_info(event, key, val);
+      status = oboe_event_add_info(event, key, value);
     }
   }
 
