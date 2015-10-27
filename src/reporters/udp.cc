@@ -61,10 +61,8 @@ NAN_SETTER(UdpReporter::setHost) {
   }
 
   UdpReporter* self = Nan::ObjectWrap::Unwrap<UdpReporter>(info.This());
-  Nan::Utf8String val(value->ToString());
-
+  self->host = *Nan::Utf8String(value->ToString());
   self->connected = false;
-  self->host = *val;
 }
 NAN_GETTER(UdpReporter::getHost) {
   UdpReporter* self = Nan::ObjectWrap::Unwrap<UdpReporter>(info.This());
@@ -77,10 +75,8 @@ NAN_SETTER(UdpReporter::setPort) {
   }
 
   UdpReporter* self = Nan::ObjectWrap::Unwrap<UdpReporter>(info.This());
-  Nan::Utf8String val(value->ToString());
-
+  self->port = *Nan::Utf8String(value->ToString());
   self->connected = false;
-  self->port = *val;
 }
 NAN_GETTER(UdpReporter::getPort) {
   UdpReporter* self = Nan::ObjectWrap::Unwrap<UdpReporter>(info.This());

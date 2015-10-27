@@ -83,16 +83,14 @@ NAN_METHOD(OboeContext::sampleRequest) {
   if (!info[0]->IsString()) {
     return Nan::ThrowTypeError("Layer name must be a string");
   }
-  Nan::Utf8String layer_name_v8(info[0]);
-  layer_name = *layer_name_v8;
+  layer_name = *Nan::Utf8String(info[0]);
 
   // If the second argument is present, it must be a string
   if (info.Length() >= 2) {
     if ( ! info[1]->IsString()) {
       return Nan::ThrowTypeError("X-Trace ID must be a string");
     }
-    Nan::Utf8String in_xtrace_v8(info[1]);
-    in_xtrace = *in_xtrace_v8;
+    in_xtrace = *Nan::Utf8String(info[1]);
   } else {
     in_xtrace = strdup("");
   }
@@ -102,8 +100,7 @@ NAN_METHOD(OboeContext::sampleRequest) {
     if ( ! info[2]->IsString()) {
       return Nan::ThrowTypeError("AppView Web ID must be a string");
     }
-    Nan::Utf8String in_tv_meta_v8(info[2]);
-    in_tv_meta = *in_tv_meta_v8;
+    in_tv_meta = *Nan::Utf8String(info[2]);
   } else {
     in_tv_meta = strdup("");
   }
@@ -161,8 +158,7 @@ NAN_METHOD(OboeContext::set) {
     oboe_context_set(&metadata->metadata);
   } else {
     // Get string data from arguments
-    Nan::Utf8String v8_val(info[0]);
-    std::string val(*v8_val);
+    std::string val(*Nan::Utf8String(info[0]));
 
     // Set the context data from the converted string
     int status = oboe_context_set_fromstr(val.data(), val.size());

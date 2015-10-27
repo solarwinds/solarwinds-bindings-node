@@ -39,8 +39,7 @@ v8::Local<v8::Object> Metadata::NewInstance() {
 
 // Transform a string back into a metadata instance
 NAN_METHOD(Metadata::fromString) {
-  Nan::Utf8String v8_s(info[0]);
-  std::string s(*v8_s);
+  std::string s(*Nan::Utf8String(info[0]));
 
   oboe_metadata_t md;
   int status = oboe_metadata_fromstr(&md, s.data(), s.size());

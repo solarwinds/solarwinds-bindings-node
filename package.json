@@ -18,7 +18,8 @@
   },
   "scripts": {
     "test": "gulp test",
-    "install": "node build"
+    "install": "node build",
+    "rebuild": "node-gyp rebuild"
   },
   "dependencies": {
     "bindings": "~1.2.1",

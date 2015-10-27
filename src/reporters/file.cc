@@ -50,8 +50,7 @@ NAN_METHOD(FileReporter::New) {
     return Nan::ThrowTypeError("Address must be a string");
   }
 
-  Nan::Utf8String path(info[0]);
-  FileReporter* obj = new FileReporter(*path);
+  FileReporter* obj = new FileReporter(*Nan::Utf8String(info[0]));
 
   obj->Wrap(info.This());
   info.GetReturnValue().Set(info.This());
@@ -60,7 +59,7 @@ NAN_METHOD(FileReporter::New) {
 // Wrap the C++ object so V8 can understand it
 void FileReporter::Init(v8::Local<v8::Object> exports) {
   Nan::HandleScope scope;
-  
+
   // Prepare constructor template
   v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(New);
   ctor->InstanceTemplate()->SetInternalFieldCount(1);

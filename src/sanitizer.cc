@@ -276,8 +276,7 @@ void Sanitizer::sanitize(const Nan::FunctionCallbackInfo<v8::Value>& info) {
     return Nan::ThrowError("Wrong number of arguments");
   }
 
-  Nan::Utf8String nan_str(info[0]);
-  const char* input = *nan_str;
+  const char* input = *Nan::Utf8String(info[0]);
 
   int flag = OBOE_SQLSANITIZE_AUTO;
   if (info.Length() == 2) {

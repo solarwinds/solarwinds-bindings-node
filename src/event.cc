@@ -75,8 +75,7 @@ NAN_METHOD(Event::addInfo) {
   oboe_event_t* event = &self->event;
 
   // Get key string from arguments and prepare a status variable
-  Nan::Utf8String nan_key(info[0]);
-  const char* key = *nan_key;
+  const char* key = *Nan::Utf8String(info[0]);
   int status;
 
   // Handle integer values
@@ -97,8 +96,7 @@ NAN_METHOD(Event::addInfo) {
   // Handle string values
   } else {
     // Get value string from arguments
-    Nan::Utf8String nan_val(info[1]);
-    char* val = *nan_val;
+    char* val = *Nan::Utf8String(info[1]);
     int len = strlen(val);
 
     // Detect if we should add as binary or a string
@@ -137,11 +135,10 @@ NAN_METHOD(Event::addEdge) {
     status = oboe_event_add_edge(&self->event, &metadata->metadata);
   } else {
     // Get string data from arguments
-    Nan::Utf8String edge(info[0]);
-    std::string val(*edge);
+    char* val = *Nan::Utf8String(info[0]);
 
     // Attempt to add edge
-    status = oboe_event_add_edge_fromstr(&self->event, *edge, strlen(*edge));
+    status = oboe_event_add_edge_fromstr(&self->event, val, strlen(val));
   }
 
   if (status < 0) {
