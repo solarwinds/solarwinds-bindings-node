@@ -75,9 +75,9 @@ NAN_METHOD(OboeContext::sampleRequest) {
     return Nan::ThrowError("Wrong number of arguments");
   }
 
-  char* layer_name;
-  char* in_xtrace;
-  char* in_tv_meta;
+  std::string layer_name;
+  std::string in_xtrace;
+  std::string in_tv_meta;
 
   // The first argument must be a string
   if (!info[0]->IsString()) {
@@ -91,8 +91,6 @@ NAN_METHOD(OboeContext::sampleRequest) {
       return Nan::ThrowTypeError("X-Trace ID must be a string");
     }
     in_xtrace = *Nan::Utf8String(info[1]);
-  } else {
-    in_xtrace = strdup("");
   }
 
   // If the third argument is present, it must be a string
@@ -101,16 +99,14 @@ NAN_METHOD(OboeContext::sampleRequest) {
       return Nan::ThrowTypeError("AppView Web ID must be a string");
     }
     in_tv_meta = *Nan::Utf8String(info[2]);
-  } else {
-    in_tv_meta = strdup("");
   }
 
   int sample_rate = 0;
   int sample_source = 0;
   int rc = oboe_sample_layer(
-    layer_name,
-    in_xtrace,
-    in_tv_meta,
+    layer_name.c_str(),
+    in_xtrace.c_str(),
+    in_tv_meta.c_str(),
     &sample_rate,
     &sample_source
   );
@@ -124,15 +120,10 @@ NAN_METHOD(OboeContext::sampleRequest) {
   info.GetReturnValue().Set(array);
 }
 
-// returns pointer to current context (from thread-local storage)
-oboe_metadata_t* OboeContext::get() {
-  return oboe_context_get();
-}
-
 NAN_METHOD(OboeContext::toString) {
   char buf[OBOE_MAX_METADATA_PACK_LEN];
 
-  oboe_metadata_t *md = OboeContext::get();
+  oboe_metadata_t *md = oboe_context_get();
   int rc = oboe_metadata_tostr(md, buf, sizeof(buf) - 1);
   if (rc == 0) {
     info.GetReturnValue().Set(Nan::New(buf).ToLocalChecked());
@@ -158,10 +149,10 @@ NAN_METHOD(OboeContext::set) {
     oboe_context_set(&metadata->metadata);
   } else {
     // Get string data from arguments
-    std::string val(*Nan::Utf8String(info[0]));
+    Nan::Utf8String val(info[0]);
 
     // Set the context data from the converted string
-    int status = oboe_context_set_fromstr(val.data(), val.size());
+    int status = oboe_context_set_fromstr(*val, val.length());
     if (status != 0) {
       return Nan::ThrowError("Could not set context by metadata string id");
     }
@@ -169,18 +160,8 @@ NAN_METHOD(OboeContext::set) {
 }
 
 NAN_METHOD(OboeContext::copy) {
-  // Make an empty object template with space for internal field pointers
-  v8::Local<v8::ObjectTemplate> t = Nan::New<v8::ObjectTemplate>();
-  t->SetInternalFieldCount(2);
-
-  // Construct an object with our internal field pointer
-  v8::Local<v8::Object> obj = t->NewInstance();
-
-  // Attach the internal field pointer
-  Nan::SetInternalFieldPointer(obj, 1, OboeContext::get());
-
-  // Use the object as an argument in the event constructor
-  info.GetReturnValue().Set(Metadata::NewInstance(obj));
+  Metadata* md = new Metadata(oboe_context_get());
+  info.GetReturnValue().Set(Metadata::NewInstance(md));
 }
 
 NAN_METHOD(OboeContext::clear) {
@@ -192,22 +173,12 @@ NAN_METHOD(OboeContext::isValid) {
 }
 
 NAN_METHOD(OboeContext::createEvent) {
-  // Make an empty object template with space for internal field pointers
-  v8::Local<v8::ObjectTemplate> t = Nan::New<v8::ObjectTemplate>();
-  t->SetInternalFieldCount(2);
-
-  // Construct an object with our internal field pointer
-  v8::Local<v8::Object> obj = t->NewInstance();
-
-  // Attach the internal field pointer
-  Nan::SetInternalFieldPointer(obj, 1, OboeContext::get());
-
-  // Use the object as an argument in the event constructor
-  info.GetReturnValue().Set(Event::NewInstance(obj));
+  Metadata* md = new Metadata(oboe_context_get());
+  info.GetReturnValue().Set(Event::NewInstance(md));
 }
 
 NAN_METHOD(OboeContext::startTrace) {
-  oboe_metadata_t* md = OboeContext::get();
+  oboe_metadata_t* md = oboe_context_get();
   oboe_metadata_random(md);
   info.GetReturnValue().Set(Event::NewInstance());
 }

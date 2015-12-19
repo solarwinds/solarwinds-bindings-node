@@ -11,9 +11,7 @@ UdpReporter::UdpReporter() {
 
 // Remember to cleanup the udp reporter struct when garbage collected
 UdpReporter::~UdpReporter() {
-  if (&reporter) {
-    oboe_reporter_destroy(&reporter);
-  }
+  oboe_reporter_destroy(&reporter);
 }
 
 int UdpReporter::send(oboe_metadata_t* meta, oboe_event_t* event) {
@@ -46,6 +44,8 @@ NAN_SETTER(UdpReporter::setAddress) {
   self->connected = false;
   self->host = host;
   self->port = port;
+  free(host);
+  free(port);
 }
 NAN_GETTER(UdpReporter::getAddress) {
   UdpReporter* self = Nan::ObjectWrap::Unwrap<UdpReporter>(info.This());
@@ -100,7 +100,7 @@ NAN_METHOD(UdpReporter::sendReport) {
     Metadata* metadata = Nan::ObjectWrap::Unwrap<Metadata>(info[1]->ToObject());
     md = &metadata->metadata;
   } else {
-    md = OboeContext::get();
+    md = oboe_context_get();
   }
 
   int status = self->send(md, &event->event);

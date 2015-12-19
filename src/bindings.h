@@ -33,7 +33,7 @@ class Metadata : public Nan::ObjectWrap {
   static NAN_METHOD(toString);
   static NAN_METHOD(createEvent);
 
-  static v8::Local<v8::Object> NewInstance(v8::Local<v8::Value> arg);
+  static v8::Local<v8::Object> NewInstance(Metadata*);
   static v8::Local<v8::Object> NewInstance();
 
   public:
@@ -45,9 +45,6 @@ class OboeContext {
   friend class FileReporter;
   friend class Metadata;
   friend class Event;
-
-  // used internally
-  static oboe_metadata_t *get();
 
   // V8 conversion
   static NAN_METHOD(setTracingMode);
@@ -86,8 +83,8 @@ class Event : public Nan::ObjectWrap {
   static NAN_METHOD(toString);
   static NAN_METHOD(startTrace);
 
-  static v8::Local<v8::Object> NewInstance(v8::Local<v8::Value>, v8::Local<v8::Value>);
-  static v8::Local<v8::Object> NewInstance(v8::Local<v8::Value>);
+  static v8::Local<v8::Object> NewInstance(Metadata*, bool);
+  static v8::Local<v8::Object> NewInstance(Metadata*);
   static v8::Local<v8::Object> NewInstance();
 
   public:
