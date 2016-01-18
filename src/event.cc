@@ -4,7 +4,7 @@ Nan::Persistent<v8::Function> Event::constructor;
 
 // Construct a blank event from the context metadata
 Event::Event() {
-  oboe_event_init(&event, OboeContext::get());
+  oboe_event_init(&event, oboe_context_get());
 }
 
 // Construct a new event point an edge at another
@@ -24,22 +24,25 @@ Event::~Event() {
   oboe_event_destroy(&event);
 }
 
-v8::Local<v8::Object> Event::NewInstance(v8::Local<v8::Value> context, v8::Local<v8::Value> addEdge) {
+v8::Local<v8::Object> Event::NewInstance(Metadata* md, bool addEdge) {
   Nan::EscapableHandleScope scope;
 
   const unsigned argc = 2;
-  v8::Local<v8::Value> argv[argc] = { context, addEdge };
+  v8::Local<v8::Value> argv[argc] = {
+    Nan::New<v8::External>(md),
+    Nan::New(addEdge)
+  };
   v8::Local<v8::Function> cons = Nan::New<v8::Function>(constructor);
   v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
 
   return scope.Escape(instance);
 }
 
-v8::Local<v8::Object> Event::NewInstance(v8::Local<v8::Value> context) {
+v8::Local<v8::Object> Event::NewInstance(Metadata* md) {
   Nan::EscapableHandleScope scope;
 
   const unsigned argc = 1;
-  v8::Local<v8::Value> argv[argc] = { context };
+  v8::Local<v8::Value> argv[argc] = { Nan::New<v8::External>(md) };
   v8::Local<v8::Function> cons = Nan::New<v8::Function>(constructor);
   v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
 
@@ -75,37 +78,35 @@ NAN_METHOD(Event::addInfo) {
   oboe_event_t* event = &self->event;
 
   // Get key string from arguments and prepare a status variable
-  const char* key = *Nan::Utf8String(info[0]);
+  Nan::Utf8String key(info[0]);
   int status;
 
   // Handle integer values
   if (info[1]->IsBoolean()) {
     bool val = info[1]->BooleanValue();
-    status = oboe_event_add_info_bool(event, key, val);
+    status = oboe_event_add_info_bool(event, *key, val);
 
   // Handle double values
   } else if (info[1]->IsInt32()) {
     int64_t val = info[1]->Int32Value();
-    status = oboe_event_add_info_int64(event, key, val);
+    status = oboe_event_add_info_int64(event, *key, val);
 
   // Handle double values
   } else if (info[1]->IsNumber()) {
     const double val = info[1]->NumberValue();
-    status = oboe_event_add_info_double(event, key, val);
+    status = oboe_event_add_info_double(event, *key, val);
 
   // Handle string values
   } else {
     // Get value string from arguments
-    Nan::Utf8String v8_value(info[1]);
-    int length = v8_value.length();
-    char* value = *v8_value;
+    Nan::Utf8String value(info[1]);
 
     // Detect if we should add as binary or a string
     // TODO: Should probably use buffers for binary data...
-    if (memchr(value, '\0', length)) {
-      status = oboe_event_add_info_binary(event, key, value, length);
+    if (memchr(*value, '\0', value.length())) {
+      status = oboe_event_add_info_binary(event, *key, *value, value.length());
     } else {
-      status = oboe_event_add_info(event, key, value);
+      status = oboe_event_add_info(event, *key, *value);
     }
   }
 
@@ -136,10 +137,10 @@ NAN_METHOD(Event::addEdge) {
     status = oboe_event_add_edge(&self->event, &metadata->metadata);
   } else {
     // Get string data from arguments
-    char* val = *Nan::Utf8String(info[0]);
+    Nan::Utf8String val(info[0]);
 
     // Attempt to add edge
-    status = oboe_event_add_edge_fromstr(&self->event, val, strlen(val));
+    status = oboe_event_add_edge_fromstr(&self->event, *val, val.length());
   }
 
   if (status < 0) {
@@ -149,22 +150,10 @@ NAN_METHOD(Event::addEdge) {
 
 // Get the metadata of an event
 NAN_METHOD(Event::getMetadata) {
-  // Unwrap event instance from V8
   Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
   oboe_event_t* event = &self->event;
-
-  // Make an empty object template with space for internal field pointers
-  v8::Local<v8::ObjectTemplate> t = Nan::New<v8::ObjectTemplate>();
-  t->SetInternalFieldCount(2);
-
-  // Construct an object with our internal field pointer
-  v8::Local<v8::Object> obj = t->NewInstance();
-
-  // Attach the internal field pointer
-  Nan::SetInternalFieldPointer(obj, 1, (void *) &event->metadata);
-
-  // Use the object as an argument in the event constructor
-  info.GetReturnValue().Set(Metadata::NewInstance(obj));
+  Metadata* metadata = new Metadata(&event->metadata);
+  info.GetReturnValue().Set(Metadata::NewInstance(metadata));
 }
 
 // Get the metadata of an event as a string
@@ -199,21 +188,8 @@ NAN_METHOD(Event::startTrace) {
     return Nan::ThrowTypeError("Must supply a metadata instance");
   }
 
-  // Unwrap metadata from arguments
   Metadata* metadata = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
-
-  // Make an empty object template with space for internal field pointers
-  v8::Local<v8::ObjectTemplate> t = Nan::New<v8::ObjectTemplate>();
-  t->SetInternalFieldCount(2);
-
-  // Construct an object with our internal field pointer
-  v8::Local<v8::Object> obj = t->NewInstance();
-
-  // Attach the internal field pointer
-  Nan::SetInternalFieldPointer(obj, 1, (void *) &metadata->metadata);
-
-  // Use the object as an argument in the event constructor
-  info.GetReturnValue().Set(Event::NewInstance(obj, Nan::New(false)));
+  info.GetReturnValue().Set(Event::NewInstance(metadata, false));
 }
 
 // Creates a new Javascript instance
@@ -223,9 +199,9 @@ NAN_METHOD(Event::New) {
   }
 
   Event* event;
-  if (info.Length() > 0) {
-    void* ptr = Nan::GetInternalFieldPointer(info[0].As<v8::Object>(), 1);
-    oboe_metadata_t* context = static_cast<oboe_metadata_t*>(ptr);
+  if (info.Length() > 0 && info[0]->IsExternal()) {
+    Metadata* md = static_cast<Metadata*>(info[0].As<v8::External>()->Value());
+    oboe_metadata_t* context = &md->metadata;
 
     bool addEdge = true;
     if (info.Length() == 2 && info[1]->IsBoolean()) {
@@ -238,7 +214,6 @@ NAN_METHOD(Event::New) {
   }
 
   event->Wrap(info.This());
-  Nan::SetInternalFieldPointer(info.This(), 1, &event->event);
   info.GetReturnValue().Set(info.This());
 }
 

@@ -6,7 +6,7 @@ Nan::Persistent<v8::Function> Metadata::constructor;
 Metadata::Metadata() {}
 
 // Allow construction of clones
-Metadata::Metadata(oboe_metadata_t *md) {
+Metadata::Metadata(oboe_metadata_t* md) {
   oboe_metadata_copy(&metadata, md);
 }
 
@@ -15,11 +15,11 @@ Metadata::~Metadata() {
   oboe_metadata_destroy(&metadata);
 }
 
-v8::Local<v8::Object> Metadata::NewInstance(v8::Local<v8::Value> arg) {
+v8::Local<v8::Object> Metadata::NewInstance(Metadata* md) {
   Nan::EscapableHandleScope scope;
 
   const unsigned argc = 1;
-  v8::Local<v8::Value> argv[argc] = { arg };
+  v8::Local<v8::Value> argv[argc] = { Nan::New<v8::External>(md) };
   v8::Local<v8::Function> cons = Nan::New<v8::Function>(constructor);
   v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
 
@@ -39,26 +39,15 @@ v8::Local<v8::Object> Metadata::NewInstance() {
 
 // Transform a string back into a metadata instance
 NAN_METHOD(Metadata::fromString) {
-  std::string s(*Nan::Utf8String(info[0]));
+  Nan::Utf8String str(info[0]);
 
   oboe_metadata_t md;
-  int status = oboe_metadata_fromstr(&md, s.data(), s.size());
+  int status = oboe_metadata_fromstr(&md, *str, str.length());
   if (status < 0) {
-    return Nan::ThrowError("Failed to convert Metadata to string");
+    return Nan::ThrowError("Failed to convert Metadata from string");
   }
 
-  // Make an empty object template with space for internal field pointers
-  v8::Local<v8::ObjectTemplate> t = Nan::New<v8::ObjectTemplate>();
-  t->SetInternalFieldCount(2);
-
-  // Construct an object with our internal field pointer
-  v8::Local<v8::Object> obj = t->NewInstance();
-
-  // Attach the internal field pointer
-  Nan::SetInternalFieldPointer(obj, 1, (void *) &md);
-
-  // Use the object as an argument in the event constructor
-  info.GetReturnValue().Set(Metadata::NewInstance(obj));
+  info.GetReturnValue().Set(Metadata::NewInstance(new Metadata(&md)));
 }
 
 // Make a new metadata instance with randomized data
@@ -67,36 +56,14 @@ NAN_METHOD(Metadata::makeRandom) {
   oboe_metadata_init(&md);
   oboe_metadata_random(&md);
 
-  // Make an empty object template with space for internal field pointers
-  v8::Local<v8::ObjectTemplate> t = Nan::New<v8::ObjectTemplate>();
-  t->SetInternalFieldCount(2);
-
-  // Construct an object with our internal field pointer
-  v8::Local<v8::Object> obj = t->NewInstance();
-
-  // Attach the internal field pointer
-  Nan::SetInternalFieldPointer(obj, 1, (void *) &md);
-
   // Use the object as an argument in the event constructor
-  info.GetReturnValue().Set(Metadata::NewInstance(obj));
+  info.GetReturnValue().Set(Metadata::NewInstance(new Metadata(&md)));
 }
 
 // Copy the contents of the metadata instance to a new instance
 NAN_METHOD(Metadata::copy) {
   Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
-
-  // Make an empty object template with space for internal field pointers
-  v8::Local<v8::ObjectTemplate> t = Nan::New<v8::ObjectTemplate>();
-  t->SetInternalFieldCount(2);
-
-  // Construct an object with our internal field pointer
-  v8::Local<v8::Object> obj = t->NewInstance();
-
-  // Attach the internal field pointer
-  Nan::SetInternalFieldPointer(obj, 1, (void *) &self->metadata);
-
-  // Use the object as an argument in the event constructor
-  info.GetReturnValue().Set(Metadata::NewInstance(obj));
+  info.GetReturnValue().Set(Metadata::NewInstance(self));
 }
 
 // Verify that the state of the metadata instance is valid
@@ -127,21 +94,8 @@ NAN_METHOD(Metadata::toString) {
 
 // Create an event from this metadata instance
 NAN_METHOD(Metadata::createEvent) {
-  // Unwrap the Metadata instance from V8
   Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
-
-  // Make an empty object template with space for internal field pointers
-  v8::Local<v8::ObjectTemplate> t = Nan::New<v8::ObjectTemplate>();
-  t->SetInternalFieldCount(2);
-
-  // Construct an object with our internal field pointer
-  v8::Local<v8::Object> obj = t->NewInstance();
-
-  // Attach the internal field pointer
-  Nan::SetInternalFieldPointer(obj, 1, (void *) &self->metadata);
-
-  // Use the object as an argument in the event constructor
-  info.GetReturnValue().Set(Event::NewInstance(obj));
+  info.GetReturnValue().Set(Event::NewInstance(self));
 }
 
 // Creates a new Javascript instance
@@ -151,16 +105,15 @@ NAN_METHOD(Metadata::New) {
   }
 
   Metadata* metadata;
-  if (info.Length() == 1) {
-    void* ptr = Nan::GetInternalFieldPointer(info[0].As<v8::Object>(), 1);
-    oboe_metadata_t* context = static_cast<oboe_metadata_t*>(ptr);
+  if (info.Length() == 1 && info[0]->IsExternal()) {
+    Metadata* md = static_cast<Metadata*>(info[0].As<v8::External>()->Value());
+    oboe_metadata_t* context = &md->metadata;
     metadata = new Metadata(context);
   } else {
     metadata = new Metadata();
   }
 
   metadata->Wrap(info.This());
-  Nan::SetInternalFieldPointer(info.This(), 1, (void *) &metadata->metadata);
   info.GetReturnValue().Set(info.This());
 }
 

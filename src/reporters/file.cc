@@ -29,7 +29,7 @@ NAN_METHOD(FileReporter::sendReport) {
     Metadata* metadata = Nan::ObjectWrap::Unwrap<Metadata>(info[1]->ToObject());
     md = &metadata->metadata;
   } else {
-    md = OboeContext::get();
+    md = oboe_context_get();
   }
 
   int status = oboe_reporter_send(&self->reporter, md, &event->event);
