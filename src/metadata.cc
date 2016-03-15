@@ -47,7 +47,9 @@ NAN_METHOD(Metadata::fromString) {
     return Nan::ThrowError("Failed to convert Metadata from string");
   }
 
-  info.GetReturnValue().Set(Metadata::NewInstance(new Metadata(&md)));
+  Metadata* metadata = new Metadata(&md);
+  info.GetReturnValue().Set(Metadata::NewInstance(metadata));
+  delete metadata;
 }
 
 // Make a new metadata instance with randomized data
@@ -57,7 +59,9 @@ NAN_METHOD(Metadata::makeRandom) {
   oboe_metadata_random(&md);
 
   // Use the object as an argument in the event constructor
-  info.GetReturnValue().Set(Metadata::NewInstance(new Metadata(&md)));
+  Metadata* metadata = new Metadata(&md);
+  info.GetReturnValue().Set(Metadata::NewInstance(metadata));
+  delete metadata;
 }
 
 // Copy the contents of the metadata instance to a new instance

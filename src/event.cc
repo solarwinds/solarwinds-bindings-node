@@ -154,6 +154,7 @@ NAN_METHOD(Event::getMetadata) {
   oboe_event_t* event = &self->event;
   Metadata* metadata = new Metadata(&event->metadata);
   info.GetReturnValue().Set(Metadata::NewInstance(metadata));
+  delete metadata;
 }
 
 // Get the metadata of an event as a string

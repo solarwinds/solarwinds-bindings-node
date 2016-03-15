@@ -162,6 +162,7 @@ NAN_METHOD(OboeContext::set) {
 NAN_METHOD(OboeContext::copy) {
   Metadata* md = new Metadata(oboe_context_get());
   info.GetReturnValue().Set(Metadata::NewInstance(md));
+  delete md;
 }
 
 NAN_METHOD(OboeContext::clear) {
@@ -175,6 +176,7 @@ NAN_METHOD(OboeContext::isValid) {
 NAN_METHOD(OboeContext::createEvent) {
   Metadata* md = new Metadata(oboe_context_get());
   info.GetReturnValue().Set(Event::NewInstance(md));
+  delete md;
 }
 
 NAN_METHOD(OboeContext::startTrace) {
