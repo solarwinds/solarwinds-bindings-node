@@ -2,7 +2,7 @@
 
 ## Dev environment
 
-Like [node-traceview](http://github.com/appneta/node-traceview), this repo
+Like [node-traceview](http://github.com/tracelytics/node-traceview), this repo
 contains a `Vagrantfile` to build a dev environment VM. This one is simpler
 though, due to not needing database docker containers.
 
