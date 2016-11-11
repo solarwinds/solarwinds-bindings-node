@@ -1,9 +1,5 @@
-AppNeta Open License, Version 1.0
-
-AppNeta Open License
-Version 1.0, April, 2013
-
-http://www.appneta.com/appneta-license
+Librato Open License
+Version 1.0, October, 2016
 
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
@@ -13,7 +9,7 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 distribution as defined by Sections 1 through 11 of this document.
 
 "Licensor" shall mean the copyright owner or entity authorized by the copyright
-owner that is granting the License.  Licensor can include AppNeta as an
+owner that is granting the License.  Licensor can include Librato as an
 original contributor to the Work as defined below.
 
 "Legal Entity" shall mean the union of the acting entity and all other entities
@@ -36,8 +32,7 @@ code, generated documentation, and conversions to other media types.
 
 "Work" shall mean the work of authorship, whether in Source or Object form,
 made available under the License, as indicated by a copyright notice that is
-included in or attached to the work (an example is provided in the Appendix
-below).
+included in or attached to the work.
 
 "Derivative Works" shall mean any work, whether in Source or Object form, that
 is based on (or derived from) the Work and for which the editorial revisions,
@@ -186,8 +181,8 @@ of your accepting any such warranty or additional liability.
 10. Noncompetition
 
 You may install and execute the Work only in conjunction with the direct use of
-AppNeta software.  This Work, any file or any derivative thereof shall not be
-used in conjunction with any product that competes with any AppNeta software.
+Librato software.  This Work, any file or any derivative thereof shall not be
+used in conjunction with any product that competes with any Librato software.
 
 11. Termination
 
