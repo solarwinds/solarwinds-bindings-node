@@ -14,8 +14,12 @@ function spinner (fps, fn) {
   }
 }
 
+
 function build (cb) {
-  var p = spawn('node-gyp', ['rebuild'])
+    var childOutput = []
+    var showOutput = false
+
+    var p = spawn('node-gyp', ['rebuild'])
 
   if (process.stdout.isTTY) {
     var spin = spinner(15, function (c) {
@@ -24,6 +28,12 @@ function build (cb) {
       process.stdout.write(c + ' building TraceView native bindings')
     })
   }
+
+  p.stderr.on('data', function (data) {
+      if (showOutput) {
+          childOutput.push(data)
+      }
+  })
 
   p.on('close', function (err) {
     if (process.stdout.isTTY) {
@@ -34,6 +44,10 @@ function build (cb) {
 
     if (err) {
       console.warn('TraceView oboe library not found, tracing disabled')
+      if (showOutput) {
+          childOutput = childOutput.join('').toString('utf8')
+          console.warn(childOutput)
+      }
     } else {
       console.log('TraceView bindings built successfully')
     }
