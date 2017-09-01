@@ -17,7 +17,7 @@ function spinner (fps, fn) {
 
 function build (cb) {
     var childOutput = []
-    var showOutput = false
+    var showOutput = process.env.APPOPTICS_DBG_GYP
 
     var p = spawn('node-gyp', ['rebuild'])
 
