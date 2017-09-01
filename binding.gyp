@@ -14,7 +14,9 @@
             '-loboe'
           ],
           'ldflags': [
-            '-Wl,-rpath /usr/local/lib'
+            '-Wl,-rpath-link <!(echo $PWD)/lib',
+            '-Wl,-rpath <!(echo $PWD)/lib'
+            #'-Wl,-rpath /usr/local/lib'
           ]
         }]
       ]
