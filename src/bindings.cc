@@ -34,6 +34,6 @@ void init(v8::Local<v8::Object> exports) {
   oboe_init();
 }
 
-NODE_MODULE(traceview_bindings, init)
+NODE_MODULE(appoptics_bindings, init)
 
 }

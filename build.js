@@ -25,7 +25,7 @@ function build (cb) {
     var spin = spinner(15, function (c) {
       process.stdout.clearLine()
       process.stdout.cursorTo(0)
-      process.stdout.write(c + ' building TraceView native bindings')
+      process.stdout.write(c + ' building AppOptics native bindings')
     })
   }
 
@@ -43,13 +43,13 @@ function build (cb) {
     }
 
     if (err) {
-      console.warn('TraceView oboe library not found, tracing disabled')
+      console.warn('AppOptics oboe library not found, tracing disabled')
       if (showOutput) {
           childOutput = childOutput.join('').toString('utf8')
           console.warn(childOutput)
       }
     } else {
-      console.log('TraceView bindings built successfully')
+      console.log('AppOptics bindings built successfully')
     }
 
     cb()

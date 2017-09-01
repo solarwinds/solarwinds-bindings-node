@@ -2,7 +2,7 @@
 
 ## Dev environment
 
-Like [node-traceview](http://github.com/tracelytics/node-traceview), this repo
+Like [node-appoptics](http://github.com/librato/node-appoptics), this repo
 contains a `Vagrantfile` to build a dev environment VM. This one is simpler
 though, due to not needing database docker containers.
 
@@ -31,11 +31,11 @@ run the `node-gyp rebuild` phase directly.
 
 ### Developing
 
-Just like `node-traceview`, this repo uses simple feature branches that only
+Just like `node-appoptics`, this repo uses simple feature branches that only
 get merged to master at release time.
 
 ### Releasing
 
-Again, like `node-traceview` the `npm version patch|minor|major` tool is used
+Again, like `node-appoptics` the `npm version patch|minor|major` tool is used
 to create a version bump commit and tag to push to github, then you can simply
 run `npm publish` to publish the release.
