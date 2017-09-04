@@ -23,6 +23,7 @@
     "rebuild": "node-gyp rebuild"
   },
   "files": [
+    ".",
     "lib/liboboe.so"
   ],
   "dependencies": {
