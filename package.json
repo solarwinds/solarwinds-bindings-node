@@ -1,9 +1,11 @@
 {
   "name": "appoptics-bindings",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Bindings to liboboe for AppOptics",
   "author": "Stephen Belanger <sbelanger@appneta.com>",
-  "contributors": ["Bruce A. MacNaughton <bruce@librato.com>"],
+  "contributors": [
+    "Bruce A. MacNaughton <bruce@librato.com>"
+  ],
   "main": "index.js",
   "gypfile": true,
   "license": {
