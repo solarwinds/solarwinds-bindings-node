@@ -22,10 +22,6 @@
     "install": "node build",
     "rebuild": "node-gyp rebuild"
   },
-  "files": [
-    ".",
-    "lib/liboboe.so"
-  ],
   "dependencies": {
     "bindings": "~1.2.1",
     "nan": "^2.3.2"
