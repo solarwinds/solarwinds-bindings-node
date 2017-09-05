@@ -1,4 +1,5 @@
 node_modules
 build
 .vagrant
+*.tgz
 !lib/liboboe.so
