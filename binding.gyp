@@ -10,13 +10,16 @@
       ],
       'conditions': [
         ['OS in "linux mac"', {
-          'libraries': [
-            '-loboe'
+          # includes reference oboe/oboe.h, so
+          'include_dirs': [
+            '<(module_root_dir)/'
           ],
-          'ldflags': [
-            '-Wl,-rpath-link <!(echo $PWD)/lib',
-            '-Wl,-rpath <!(echo $PWD)/lib'
-          ]
+          'libraries': [
+            '-loboe',
+            '-L<(module_root_dir)/lib/',
+            '-Wl,-rpath-link,<(module_root_dir)/lib/',
+            '-Wl,-rpath,<(module_root_dir)/lib/'
+          ],
         }]
       ]
     }
