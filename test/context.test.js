@@ -11,7 +11,7 @@ describe('addon.context', function () {
   //it('should set tracing mode to through', function () {
     //bindings.Context.setTracingMode(bindings.TRACE_THROUGH)
   //})
-  it('should set tracing mode to an out-of-range input', function () {
+  it('should throw setting invalid tracing mode value', function () {
     try {
       bindings.Context.setTracingMode(3)
     } catch (e) {
@@ -22,7 +22,7 @@ describe('addon.context', function () {
 
     throw new Error('setTracingMode should fail on invalid inputs')
   })
-  it('should set tracing mode to an invalid input', function () {
+  it('should throw setting invalid tracing mode type', function () {
     try {
       bindings.Context.setTracingMode('foo')
     } catch (e) {
@@ -37,7 +37,7 @@ describe('addon.context', function () {
   it('should set valid sample rate', function () {
     bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE / 10)
   })
-  it('should set invalid sample rate', function () {
+  it('should throw setting invalid sample rate', function () {
     try {
       bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE + 1)
     } catch (e) {
@@ -49,14 +49,20 @@ describe('addon.context', function () {
     throw new Error('setDefaultSampleRate should fail on invalid inputs')
   })
 
-  it('should check if a request should be sampled', function () {
-    bindings.Context.setTracingMode(bindings.TRACE_ALWAYS)
-    bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE)
-    var check = bindings.Context.sampleRequest('a', 'b', 'c')
-    check.should.be.an.instanceof(Array)
-    check.should.have.property(0, 1)
-    check.should.have.property(1, 1)
-    check.should.have.property(2, bindings.MAX_SAMPLE_RATE)
+  it('should check if a request should be sampled', function (done) {
+    setTimeout(function() {
+        bindings.Context.setTracingMode(bindings.TRACE_ALWAYS)
+        bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE)
+        // this hasn't been tested yet - maybe reorder tests?
+        var event = bindings.Context.startTrace()
+        var xid = event.getMetadata().toString().slice(0, -1) + '\u0001'
+        var check = bindings.Context.sampleRequest('bruce-test', xid, 'c')
+        check.should.be.an.instanceof(Array)
+        check.should.have.property(0, 1)
+        check.should.have.property(1, 1)
+        check.should.have.property(2, bindings.MAX_SAMPLE_RATE)
+        done()
+    }, 2000)
   })
 
   it('should serialize context to string', function () {
