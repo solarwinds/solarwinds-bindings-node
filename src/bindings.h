@@ -14,8 +14,9 @@
 class Event;
 
 class Metadata : public Nan::ObjectWrap {
-  friend class UdpReporter;
-  friend class FileReporter;
+  friend class Reporter;
+  //friend class UdpReporter;
+  //friend class FileReporter;
   friend class OboeContext;
   friend class Event;
 
@@ -41,8 +42,9 @@ class Metadata : public Nan::ObjectWrap {
 };
 
 class OboeContext {
-  friend class UdpReporter;
-  friend class FileReporter;
+  friend class Reporter;
+  //friend class UdpReporter;
+  //friend class FileReporter;
   friend class Metadata;
   friend class Event;
 
@@ -64,8 +66,9 @@ class OboeContext {
 };
 
 class Event : public Nan::ObjectWrap {
-  friend class UdpReporter;
-  friend class FileReporter;
+  friend class Reporter;
+  //friend class UdpReporter;
+  //friend class FileReporter;
   friend class OboeContext;
   friend class Metadata;
   friend class Log;
@@ -91,6 +94,31 @@ class Event : public Nan::ObjectWrap {
     static void Init(v8::Local<v8::Object>);
 };
 
+class Reporter : public Nan::ObjectWrap {
+    Reporter();
+    ~Reporter();
+    int send(oboe_metadata_t*, oboe_event_t*);
+
+    std::string host;
+    std::string port;
+    bool connected;
+    oboe_reporter_t reporter;
+    static Nan::Persistent<v8::Function> constructor;
+    static NAN_METHOD(New);
+    static NAN_METHOD(sendReport);
+    static NAN_SETTER(setAddress);
+    static NAN_GETTER(getAddress);
+    static NAN_SETTER(setPort);
+    static NAN_GETTER(getPort);
+    static NAN_SETTER(setHost);
+    static NAN_GETTER(getHost);
+
+    public:
+      static void Init(v8::Local<v8::Object>);
+  };
+
+
+/*
 class UdpReporter : public Nan::ObjectWrap {
   UdpReporter();
   ~UdpReporter();
@@ -126,6 +154,7 @@ class FileReporter : public Nan::ObjectWrap {
   public:
     static void Init(v8::Local<v8::Object>);
 };
+// */
 
 class Config {
   static NAN_METHOD(getRevision);

@@ -1,0 +1,136 @@
+#include "bindings.h"
+
+Nan::Persistent<v8::Function> Reporter::constructor;
+
+// Construct with an address and port to report to
+Reporter::Reporter() {
+  //
+  connected = true;
+  host = "";
+  port = "443";
+}
+
+// Remember to cleanup the udp reporter struct when garbage collected
+Reporter::~Reporter() {
+  oboe_reporter_destroy(&reporter);
+}
+
+int Reporter::send(oboe_metadata_t* meta, oboe_event_t* event) {
+  if ( ! connected) {
+    return -1;
+  }
+
+  return oboe_event_send(OBOE_SEND_EVENT, event, meta);
+}
+
+NAN_SETTER(Reporter::setAddress) {
+  if ( ! value->IsString()) {
+    return Nan::ThrowTypeError("Address must be a string");
+  }
+
+  Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
+
+  std::string s = *Nan::Utf8String(value);
+  char* host = strdup(s.substr(0, s.find(":")).c_str());
+  char* port = strdup(s.substr(s.find(":") + 1).c_str());
+  if (host == NULL || port == NULL) {
+    return Nan::ThrowError("Invalid address string");
+  }
+
+  self->connected = false;
+  self->host = host;
+  self->port = port;
+  free(host);
+  free(port);
+}
+NAN_GETTER(Reporter::getAddress) {
+  Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
+  std::string host = self->host;
+  std::string port = self->port;
+  std::string address = host + ":" + port;
+  info.GetReturnValue().Set(Nan::New(address).ToLocalChecked());
+}
+
+NAN_SETTER(Reporter::setHost) {
+  if ( ! value->IsString()) {
+    return Nan::ThrowTypeError("host must be a string");
+  }
+
+  Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
+  self->host = *Nan::Utf8String(value->ToString());
+  self->connected = false;
+}
+NAN_GETTER(Reporter::getHost) {
+  Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
+  info.GetReturnValue().Set(Nan::New(self->host).ToLocalChecked());
+}
+
+NAN_SETTER(Reporter::setPort) {
+  if ( ! value->IsString() && ! value->IsNumber()) {
+    return Nan::ThrowTypeError("port must be a string");
+  }
+
+  Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
+  self->port = *Nan::Utf8String(value->ToString());
+  self->connected = false;
+}
+NAN_GETTER(Reporter::getPort) {
+  Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
+  info.GetReturnValue().Set(Nan::New(self->port).ToLocalChecked());
+}
+
+// Transform a string back into a metadata instance
+NAN_METHOD(Reporter::sendReport) {
+  if (info.Length() < 1) {
+    return Nan::ThrowError("Wrong number of arguments");
+  }
+  if (!info[0]->IsObject()) {
+    return Nan::ThrowTypeError("Must supply an event instance");
+  }
+
+  Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
+  Event* event = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
+
+  oboe_metadata_t *md;
+  if (info.Length() == 2 && info[1]->IsObject()) {
+    Metadata* metadata = Nan::ObjectWrap::Unwrap<Metadata>(info[1]->ToObject());
+    md = &metadata->metadata;
+  } else {
+    md = oboe_context_get();
+  }
+
+  int status = self->send(md, &event->event);
+  info.GetReturnValue().Set(Nan::New(status >= 0));
+}
+
+// Creates a new Javascript instance
+NAN_METHOD(Reporter::New) {
+  if (!info.IsConstructCall()) {
+    return Nan::ThrowError("Reporter() must be called as a constructor");
+  }
+  Reporter* reporter = new Reporter();
+  reporter->Wrap(info.This());
+  info.GetReturnValue().Set(info.This());
+}
+
+// Wrap the C++ object so V8 can understand it
+void Reporter::Init(v8::Local<v8::Object> exports) {
+  Nan::HandleScope scope;
+
+  // Prepare constructor template
+  v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(New);
+  ctor->InstanceTemplate()->SetInternalFieldCount(1);
+  ctor->SetClassName(Nan::New("Reporter").ToLocalChecked());
+
+  // Assign host/port to change reporter target
+  Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
+  Nan::SetAccessor(proto, Nan::New("address").ToLocalChecked(), getAddress, setAddress);
+  Nan::SetAccessor(proto, Nan::New("host").ToLocalChecked(), getHost, setHost);
+  Nan::SetAccessor(proto, Nan::New("port").ToLocalChecked(), getPort, setPort);
+
+  // Prototype
+  Nan::SetPrototypeMethod(ctor, "sendReport", Reporter::sendReport);
+
+  constructor.Reset(ctor->GetFunction());
+  Nan::Set(exports, Nan::New("Reporter").ToLocalChecked(), ctor->GetFunction());
+}

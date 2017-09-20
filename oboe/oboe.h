@@ -1,13 +1,13 @@
 /**
  * @file oboe.h
  * 
- * API header for Traceview's Oboe application tracing library for use with TraceView.
+ * API header for AppOptics' Oboe application tracing library for use with AppOptics.
  *
  * @package             Oboe
- * @author              Traceview
+ * @author              AppOptics
  * @copyright           Copyright (c) 2016, SolarWinds LLC
  * @license             
- * @link                https://traceview.solarwinds.com
+ * @link                https://appoptics.com
  **/
 
 #ifndef LIBOBOE_H
@@ -42,9 +42,29 @@ extern "C" {
 #define OBOE_DEFAULT_SETTINGS_INTERVAL 30
 
 /**
+ * Default interval to check for timed out settings records in seconds
+ */
+#define OBOE_DEFAULT_TIMEOUT_CHECK_INTERVAL 10
+
+/**
  * Default heartbeat status update interval in seconds.
  */
 #define OBOE_DEFAULT_HEARTBEAT_INTERVAL 60
+
+/**
+ * Default throughput metrics update interval in seconds
+ */
+#define OBOE_DEFAULT_COUNTER_INTERVAL_SEC 30
+
+/**
+ * Default maximum number of transaction names to track when aggregating metric and histogram data by individual service transaction
+ */
+#define OBOE_DEFAULT_MAX_TRANSACTIONS 200
+
+/**
+ * Default maximum number of custom metrics per flash interval
+ */
+#define OBOE_DEFAULT_MAX_CUSTOM_METRICS 500
 
 /**
  * Default keepalive interval in seconds.
@@ -53,21 +73,22 @@ extern "C" {
  */
 #define OBOE_DEFAULT_KEEPALIVE_INTERVAL 20
 
-#define OBOE_SAMPLE_RATE_DEFAULT 300000 // 30%
 #define OBOE_SAMPLE_RESOLUTION 1000000
 
 #define OBOE_MAX_TASK_ID_LEN 20
 #define OBOE_MAX_OP_ID_LEN 8
 #define OBOE_MAX_METADATA_PACK_LEN 512
 
-#define XTR_CURRENT_VERSION 1
+#define XTR_CURRENT_VERSION 2
+
+#define XTR_FLAGS_NOT_SAMPLED 0x0
+#define XTR_FLAGS_SAMPLED 0x1
+
 #define XTR_UDP_PORT 7831
 
 #define OBOE_REPORTER_PROTOCOL_FILE "file"
 #define OBOE_REPORTER_PROTOCOL_UDP "udp"
-#if 0
 #define OBOE_REPORTER_PROTOCOL_SSL "ssl"
-#endif
 #define OBOE_REPORTER_PROTOCOL_DEFAULT OBOE_REPORTER_PROTOCOL_UDP
 
 /** Maximum reasonable length of an arguments string for configuring a reporter. */
@@ -78,6 +99,10 @@ extern "C" {
 #define SETTINGS_RUM_ENABLE_MASK 0x00000001
 #endif
 
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 256
+#endif
+
 // structs
 
 typedef struct oboe_ids {
@@ -86,20 +111,38 @@ typedef struct oboe_ids {
 } oboe_ids_t;
 
 typedef struct oboe_metadata {
+    uint8_t     version;
     oboe_ids_t  ids;
     size_t      task_len;
     size_t      op_len;
+    uint8_t     flags;
+#ifdef _FUTURE_PLANS_
+    /* Can't add this without breaking the ABI, but someday... */
+    int         auto_delete;
+#endif /* _FUTURE_PLANS_ */
 } oboe_metadata_t;
 
 typedef struct oboe_event {
     oboe_metadata_t metadata;
     bson_buffer     bbuf;
     char *          bb_str;
+#ifdef _FUTURE_PLANS_
+    /* Can't add this without breaking the ABI, but someday... */
+    int             auto_delete;
+#endif /* _FUTURE_PLANS_ */
 } oboe_event_t;
+
+typedef struct oboe_metric_tag {
+    char *key;
+    char *value;
+} oboe_metric_tag_t;
 
 
 // oboe_metadata
 
+#ifdef _FUTURE_PLANS_
+oboe_metadata_t *oboe_metadata_new();
+#endif /* _FUTURE_PLANS_ */
 int oboe_metadata_init      (oboe_metadata_t *);
 int oboe_metadata_destroy   (oboe_metadata_t *);
 
@@ -115,9 +158,13 @@ int oboe_metadata_create_event  (const oboe_metadata_t *, oboe_event_t *);
 int oboe_metadata_tostr     (const oboe_metadata_t *, char *, size_t);
 int oboe_metadata_fromstr   (oboe_metadata_t *, const char *, size_t);
 
+int oboe_metadata_is_sampled(oboe_metadata_t *md);
 
 // oboe_event
 
+#ifdef _FUTURE_PLANS_
+oboe_event_t *oboe_event_new(const oboe_metadata_t *);
+#endif /* _FUTURE_PLANS_ */
 int oboe_event_init     (oboe_event_t *, const oboe_metadata_t *);
 int oboe_event_destroy  (oboe_event_t *);
 
@@ -134,11 +181,12 @@ int oboe_event_add_edge_fromstr(oboe_event_t *, const char *, size_t);
 /**
  * Send event message using the default reporter.
  *
+ * @param channel the channel to send out this message (OBOE_SEND_EVENT or OBOE_SEND_INIT)
  * @param evt The event message.
  * @param md The X-Trace metadata.
  * @return Length of message sent in bytes on success; otherwise -1.
  */
-int oboe_event_send(oboe_event_t *evt, oboe_metadata_t *md);
+int oboe_event_send(int channel, oboe_event_t *evt, oboe_metadata_t *md);
 
 
 // oboe_context
@@ -151,26 +199,31 @@ void oboe_context_clear();
 
 int oboe_context_is_valid();
 
+int oboe_context_is_sampled();
 
 // oboe_reporter
 
 struct oboe_reporter;
-typedef ssize_t (*reporter_send)(void *, const char *, size_t);
-typedef int (*reporter_destroy)(void *);
 
+/* TODO: Move struct oboe_reporter to private header. */
+typedef ssize_t (*reporter_send)(void *, int, const char *, size_t);
+typedef int (*reporter_send_span)(void *, const char *, const char *, const int64_t, const int, const char *, const int);
+typedef int (*reporter_add_custom_metric)(void *, const char *, const double, const int, const int, const int, const oboe_metric_tag_t*, const size_t);
+typedef int (*reporter_destroy)(void *);
 typedef struct oboe_reporter {
     void *              descriptor;     /*!< Reporter's context. */
     reporter_send       send;           /*!< Send a trace event message. */
+    reporter_send_span  sendSpan;
+    reporter_add_custom_metric addCustomMetric;
     reporter_destroy    destroy;        /*!< Destroy the reporter - release all resources. */
 } oboe_reporter_t;
 
-int oboe_reporter_udp_init  (oboe_reporter_t *, const char *, const char *);
-int oboe_reporter_udp_init_str(oboe_reporter_t *, const char *);
-int oboe_reporter_file_init (oboe_reporter_t *, const char *);
-int oboe_reporter_file_init_str(oboe_reporter_t *, const char *);
-#if 0
-int oboe_reporter_ssl_init (oboe_reporter_t *, const char *);
-#endif
+int oboe_reporter_udp_init  (oboe_reporter_t *, const char *, const char *);    /* DEPRECATE - Use oboe_init_reporter() */
+int oboe_reporter_udp_init_str(oboe_reporter_t *, const char *);    /* DEPRECATE - Use oboe_init_reporter() */
+int oboe_reporter_file_init (oboe_reporter_t *, const char *);      /* DEPRECATE - Use oboe_init_reporter() */
+int oboe_reporter_file_init_str(oboe_reporter_t *, const char *);   /* DEPRECATE - Use oboe_init_reporter() */
+int oboe_reporter_ssl_init (oboe_reporter_t *, const char *);       /* DEPRECATE - Use oboe_init_reporter() */
+
 
 /**
  * Initialize a reporter structure for use with the specified protocol.
@@ -181,7 +234,7 @@ int oboe_reporter_ssl_init (oboe_reporter_t *, const char *);
  * @param args A configuration string for the specified protocol (protocol dependent syntax).
  * @return Zero on success; otherwise -1.
  */
-int oboe_reporter_init (oboe_reporter_t *rep, const char *protocol, const char *args);
+int oboe_reporter_init (oboe_reporter_t *rep, const char *protocol, const char *args);  /* DEPRECATE - Use oboe_init_reporter() */
 
 /**
  * Check if the reporter is ready to send.
@@ -191,17 +244,7 @@ int oboe_reporter_init (oboe_reporter_t *rep, const char *protocol, const char *
  * @param rep The reporter context (optional).
  * @return Non-zero if the reporter is ready to send.
  */
-int oboe_reporter_is_ready(oboe_reporter_t *rep);
-
-/**
- * Send an event message using the selected reporter context.
- *
- * @param rep The reporter context.
- * @param evt The event message.
- * @param md The X-Trace metadata.
- * @return Length of message sent in bytes on success; otherwise -1.
- */
-int oboe_reporter_send(oboe_reporter_t *rep, oboe_metadata_t *md, oboe_event_t *evt);
+int oboe_reporter_is_ready(oboe_reporter_t *rep);   /* DEPRECATE: Use oboe_is_ready() */
 
 /**
  * Release any resources held by the reporter context.
@@ -209,42 +252,103 @@ int oboe_reporter_send(oboe_reporter_t *rep, oboe_metadata_t *md, oboe_event_t *
  * @param rep Pointer to a reporter context structure.
  * @return Zero on success; otherwise non-zero to indicate an error.
  */
-int oboe_reporter_destroy(oboe_reporter_t *rep);
+int oboe_reporter_destroy(oboe_reporter_t *rep);    /* DEPRECATE: Use oboe_shutdown() */
 
 /**
- * Disconnect or shut down the Oboe reporter, but allow it to be reconnect()ed.
+ * Disconnect or shut down the Oboe reporter, but allow it to be reconnected.
  *
  * @param rep Pointer to the active reporter object.
  */
-void oboe_disconnect(oboe_reporter_t *rep);
+void oboe_disconnect(oboe_reporter_t *rep); /* DEPRECATE: Use oboe_reporter_disconnect() */
 
 /**
  * Reconnect or restart the Oboe reporter.
  *
  * @param rep Pointer to the active reporter object.
  */
-void oboe_reconnect(oboe_reporter_t *rep);
+void oboe_reconnect(oboe_reporter_t *rep);  /* DEPRECATE: Use oboe_reporter_reconnect() */
 
-/* Deprecated? Use oboe_reporter_send() */
-ssize_t oboe_reporter_udp_send(void *desc, const char *data, size_t len);
+ssize_t oboe_reporter_udp_send(void *desc, const char *data, size_t len);   /* DEPRECATE - Use oboe_event_send() */
 
 
-// initialization
+/* Oboe initialization and reporter management */
 
 /**
  * Initialize the Oboe subsystems.
  *
- * This should be called before any other oboe_* functions.  However, in order
+ * One of oboe_init_log and oboe_init should be called before any other 
+ * oboe_* functions.  Use oboe_init_log to specify the log level and log
+ * file name when initializing the oboe subsystem.  However, in order
  * to make the library easier to work with, checks are in place so that it
  * will be called by any of the other functions that depend on it.
  *
- * Note that while calling this will be handled automatically, the application
- * must still initialize one of the reporters directly since each reporter
- * requires unique parameters.  The use of oboe_reporter_init() is recommended
- * so that the selection of the reporter and values for its configuration
- * parameters
+ * Besides initializing the oboe library, this will also initialize a
+ * reporter based on the values of environment variables, configuration
+ * file options, and whether a tracelyzer is installed.
+ *
+ * @param access_key  Client access key
+ * @param log_level Level at which log messages will be written to log file
+ * @param log_file_path file name including path for log file
+ * @return true if initialization succeeded, false otherwise
  */
-void oboe_init();
+int oboe_init_log(const char *access_key, int log_level, const char* log_file_path);
+
+/**
+ * Initialize the Oboe subsystems.
+ *
+ * See oboe_init_log description above for more information.  (Note: Either 
+ * oboe_init or oboe_init_log should be called to initialize the oboe subsystem).
+ *
+ * @param access_key  Client access key
+ * @return true if initialization succeeded, false otherwise
+ */
+int oboe_init(const char *access_key);
+
+/**
+ * Initialize the Oboe subsytems using a specific reporter configuration.
+ *
+ * This should be called before any other oboe_* functions butm may also be
+ * used to change or re-initialize the current reporter.  To reconnect the 
+ * reporter use oboe_disconnect() and oboe_reconnect() instead.
+ *
+ * @param protocol One of  OBOE_REPORTER_PROTOCOL_FILE, OBOE_REPORTER_PROTOCOL_UDP,
+ *      or OBOE_REPORTER_PROTOCOL_SSL.
+ * @param args A configuration string for the specified protocol (protocol dependent syntax).
+ * @return Zero on success; otherwise an error code.
+ */
+int oboe_init_reporter(const char *protocol, const char *args);
+
+/**
+ * Disconnect or shut down the Oboe reporter, but allow it to be reconnect()ed.
+ */
+void oboe_reporter_disconnect();    /* TODO: Need implementation. */
+
+/**
+ * Reconnect or restart the Oboe reporter.
+ */
+void oboe_reporter_reconnect();     /* TODO: Need implementation. */
+
+/**
+ * Check if the Oboe is ready to send.
+ *
+ * The concept of 'ready' is depends on the specific reporter being used.
+ *
+ * @return Non-zero if the reporter is ready to send.
+ */
+int oboe_is_ready();    /* TODO: Need implementation. */
+
+/**
+ * Send a raw message using the current reporter.
+ *
+ * Use oboe_event_send() unless you are handling all the details of constructing
+ * the messages for a valid trace.
+ *
+ * @param channel the channel to send out this message (OBOE_SEND_EVENT or OBOE_SEND_INIT)
+ * @param data A BSON-encoded event message.
+ * @param len The length of the message data in bytes.
+ * @return Length of message sent in bytes on success; otherwise -1.
+ */
+int oboe_raw_send(int channel, const char *data, size_t len);
 
 /**
  * Shut down the Oboe subsystems.
@@ -274,11 +378,9 @@ void oboe_shutdown();
 #define OBOE_SETTINGS_FLAG_SAMPLE_THROUGH 0x8
 #define OBOE_SETTINGS_FLAG_SAMPLE_THROUGH_ALWAYS 0x10
 #define OBOE_SETTINGS_FLAG_SAMPLE_AVW_ALWAYS     0x20
-#define OBOE_SETTINGS_FLAG_SAMPLE_BUCKET_ENABLED 0x40
 #define OBOE_SETTINGS_MAX_STRLEN 256
 
 #define OBOE_SETTINGS_UNSET -1
-#define OBOE_SETTINGS_MIN_REFRESH_INTERVAL 30
 
 // Value for "SampleSource" info key
 // where was the sample rate specified? (oboe settings, config file, hard-coded default, etc)
@@ -287,14 +389,14 @@ void oboe_shutdown();
 #define OBOE_SAMPLE_RATE_SOURCE_OBOE 3
 #define OBOE_SAMPLE_RATE_SOURCE_LAST_OBOE 4
 #define OBOE_SAMPLE_RATE_SOURCE_DEFAULT_MISCONFIGURED 5
-#define OBOE_SAMPLE_RATE_SOURCE_OBOE_DEFAULT 6 
+#define OBOE_SAMPLE_RATE_SOURCE_OBOE_DEFAULT 6
+#define OBOE_SAMPLE_RATE_SOURCE_CUSTOM 7
 
 #define OBOE_SAMPLE_RESOLUTION 1000000
 
 // Used to convert to settings flags:
 #define OBOE_TRACE_NEVER   0
 #define OBOE_TRACE_ALWAYS  1
-#define OBOE_TRACE_THROUGH 2
 
 #if defined _WIN32
     #pragma pack(push, 1)
@@ -303,39 +405,29 @@ void oboe_shutdown();
 #define TOKEN_BUCKET_CAPACITY_DEFAULT 16               // bucket capacity (how many tokens fit into the bucket)
 #define TOKEN_BUCKET_RATE_PER_SECOND_DEFAULT 8         // rate per second (number of tokens per second)
 
+#define OBOE_SEND_EVENT 0
+#define OBOE_SEND_STATUS 1
+
 typedef struct {
-    volatile uint32_t magic;
-    volatile uint32_t timestamp;
-    volatile uint16_t type;
-    volatile uint16_t flags;
-    volatile uint32_t value;
+    uint32_t magic;
+    uint32_t timestamp;
+    uint16_t type;
+    uint16_t flags;
+    uint32_t value;
+    uint32_t ttl;
     uint32_t _pad;
     char layer[OBOE_SETTINGS_MAX_STRLEN];
-    char arg[OBOE_SETTINGS_MAX_STRLEN];
-} 
-#if defined _WIN32
-    oboe_settings_t;
-    #pragma pack(pop)
-#else
-    __attribute__((packed)) oboe_settings_t;
-#endif
+    double bucket_capacity;
+    double bucket_rate_per_sec;
+} oboe_settings_t;
 
 typedef struct {
-    volatile float capacity;
-    volatile float available;
-    volatile float rate_per_usec; // time is usecs from gettimeofday
-    struct timeval last_check;
-}
-#if defined _WIN32
-    __declspec(align(8)) token_bucket_t;
-#else
-    __attribute__((aligned)) token_bucket_t; // Max alignment for a scalar data type. 8 bytes on x64.
-#endif
-
-typedef struct {
+    float available;
     double capacity;
-    double rate_per_sec;
-} token_bucket_args_t;
+    double rate_per_usec; // time is usecs from gettimeofday
+    struct timeval last_check;
+} token_bucket_t;
+
 
 typedef struct {
     char name[OBOE_SETTINGS_MAX_STRLEN];
@@ -347,22 +439,14 @@ typedef struct {
     volatile uint32_t through_count;            // # of through traces
     volatile uint32_t through_ignored_count;    // # of new requests, that are rejected due to start_always_flag == 0
                                                 // that have through_always_flag == 1
-    volatile uint32_t avw_count;                // # of AppView Web (AVW) traces
     volatile uint32_t last_used_sample_rate;
     volatile uint32_t last_used_sample_source;
-}
-#if defined _WIN32
-    __declspec(align(8)) entry_layer_t;
-#else
-    __attribute__((aligned)) entry_layer_t;
-#endif
+} entry_layer_t;
 
 // Current settings configuration:
 typedef struct {
     int tracing_mode;          // loaded from config file
     int sample_rate;           // loaded from config file
-    int default_sample_rate;   // default sample rate (fallback)
-//    oboe_reporter_t *reporter; // the initialized event reporter
     oboe_settings_t *settings; // cached settings, updated by tracelyzer (init to NULL)
     int last_auto_sample_rate; // stores last known automatic sampling rate 
     uint16_t last_auto_flags;  // stores last known flags associated with above 
@@ -380,10 +464,11 @@ int oboe_settings_get_value(oboe_settings_t *s, int *outval, unsigned short *out
 entry_layer_t* oboe_settings_entry_layer_get(const char* name);
 
 oboe_settings_cfg_t* oboe_settings_cfg_get();
-void oboe_settings_cfg_set(oboe_settings_cfg_t*);
 void oboe_settings_cfg_init(oboe_settings_cfg_t *cfg);
-void oboe_settings_cfg_tracing_mode_set(int new_mode);
-void oboe_settings_cfg_sample_rate_set(int new_rate);
+
+void oboe_settings_set(int sample_rate, int tracing_mode);
+void oboe_settings_rate_set(int sample_rate);
+void oboe_settings_mode_set(int tracing_mode);
 
 int oboe_rand_get_value();
 
@@ -402,37 +487,17 @@ const char *oboe_tracing_mode_to_string(int tracing_mode);
 int oboe_sample_is_enabled(oboe_settings_cfg_t *cfg);
 
 /**
- * Check if this request should be sampled (deprecated - use oboe_sample_layer() instead).
- *
- * @param layer Layer name as used in oboe_settings_t.layer (may be NULL to use default settings)
- * @param xtrace X-Trace ID string from an HTTP request or higher layer (NULL or empty string if not present).
- * @param cfg The settings configuration to use for this evaluation.
- * @param sample_rate_out The sample rate used to check if this request should be sampled
- *          (output - may be zero if not used).
- * @param sample_source_out The OBOE_SAMPLE_RATE_SOURCE used to check if this request
- *          should be sampled (output - may be zero if not used).
- * @return Non-zero if the given layer should be sampled.
- */
-int oboe_sample_request(const char *layer, const char *in_xtrace, oboe_settings_cfg_t *cfg,
-                      int *sample_rate_out, int *sample_source_out);
-
-/**
  * Check if this request should be sampled.
  *
  * Checks for sample rate flags and settings for the specified layer, considers
- * the current tracing mode and any special features in the X-Trace and
- * X-TV-Meta HTTP headers, and, if appropriate, rolls the virtual dice to
+ * the current tracing mode and any special features in the X-Trace
+ * headers, and, if appropriate, rolls the virtual dice to
  * decide if this request should be sampled.
  *
  * This is designed to be called once per layer per request.
  *
- * This replaces oboe_sample_request with a version that uses the settings
- * configuration kept in thread-local storage and takes the X-TV-Meta HTTP
- * header value in order to support AppView Web integration.
- *
  * @param layer Layer name as used in oboe_settings_t.layer (may be NULL to use default settings)
  * @param xtrace X-Trace ID string from an HTTP request or higher layer (NULL or empty string if not present).
- * @param tv_meta AppView Web ID from X-TV-Meta HTTP header or higher layer (NULL or empty string if not present).
  * @param sample_rate_out The sample rate used to check if this request should be sampled
  *          (output - may be zero if not used).
  * @param sample_source_out The OBOE_SAMPLE_RATE_SOURCE used to check if this request
@@ -442,7 +507,27 @@ int oboe_sample_request(const char *layer, const char *in_xtrace, oboe_settings_
 int oboe_sample_layer(
     const char *layer,
     const char *xtrace,
-    const char *tv_meta,
+    int *sample_rate_out,
+    int *sample_source_out
+);
+
+/**
+ * Same as oboe_sample_layer() but accepting custom sample rate and custom tracing mode
+ *
+ * @param layer Layer name as used in oboe_settings_t.layer (may be NULL to use default settings)
+ * @param xtrace X-Trace ID string from an HTTP request or higher layer (NULL or empty string if not present).
+ * @param custom_sample_rate a custom sample rate only used for this request (OBOE_SETTINGS_UNSET won't override)
+ * @param custom_tracing_mode a custom tracing mode only used for this request (OBOE_SETTINGS_UNSET won't override)
+ * @param sample_rate_out The sample rate used to check if this request should be sampled
+ *          (output - may be zero if not used).
+ * @param sample_source_out The OBOE_SAMPLE_RATE_SOURCE used to check if this request
+ *          should be sampled (output - may be zero if not used).
+ */
+int oboe_sample_layer_custom(
+    const char *layer,
+    const char *in_xtrace,
+    int custom_sample_rate,
+    int custom_tracing_mode,
     int *sample_rate_out,
     int *sample_source_out
 );
@@ -535,6 +620,13 @@ extern void oboe_debug_log_level_set(int module, int newLevel);
  * @return Zero on success; otherwise an error code (normally from errno).
  */
 extern int oboe_debug_log_to_stream(FILE *newStream);
+
+/**
+ * If we're logging to a stream, flush it.
+ *
+ * @return Zero on success; otherwise an error code (normally from errno).
+ */
+extern int oboe_debug_log_flush();
 
 /**
  * Set the default logger to write to the specified file.
@@ -751,6 +843,37 @@ const char* oboe_config_get_version_string();
  * @param dlen Number of bytes of data stored
  */
 void oboe_rum_create_digest(const char* access_key, unsigned int uuid_length, unsigned char* digest, unsigned int *dlen);
+
+// Span reporting
+
+/*
+ * generate a new HTTP span
+ *
+ * @param transaction   transaction name (will be NULL or empty if url given)
+ * @param url           the raw url which will be processed and used as transaction name (if transaction is NULL or empty)
+ * @param duration      the duration of the span in micro seconds (usec)
+ * @param status        HTTP status code (e.g. 200, 500, ...)
+ * @param method        HTTP method (e.g. GET, POST, ...)
+ * @param error         boolean flag whether this transaction contains an error (1) or not (0)
+ */
+void oboe_http_span(const char *transaction, const char *url, const int64_t duration,
+        const int status, const char *method, const int has_error);
+
+/*
+ * helper functions to mark the start/end of a span
+ *
+ * @return monotonic time in micro seconds (usec) since some unspecified starting point
+ */
+int64_t oboe_span_start();
+int64_t oboe_span_stop();
+
+// Custom metrics
+
+int oboe_custom_metric_summary(const char *name, const double value, const int count, const int host_tag,
+        const oboe_metric_tag_t tags[], const size_t tags_count);
+
+int oboe_custom_metric_increment(const char *name, const int count, const int host_tag,
+        const oboe_metric_tag_t tags[], const size_t tags_count);
 
 #ifdef __cplusplus
 } // extern "C"

@@ -30,8 +30,8 @@ describe('addon.event', function () {
 
   it('should serialize metadata to id string', function () {
     var meta = event.toString()
-    meta.should.be.an.instanceof(String).with.lengthOf(58)
-    meta[0].should.equal('1')
+    meta.should.be.an.instanceof(String).with.lengthOf(60)
+    meta[0].should.equal('2')
     meta[1].should.equal('B')
   })
 

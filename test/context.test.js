@@ -7,9 +7,10 @@ describe('addon.context', function () {
   it('should set tracing mode to always', function () {
     bindings.Context.setTracingMode(bindings.TRACE_ALWAYS)
   })
-  it('should set tracing mode to through', function () {
-    bindings.Context.setTracingMode(bindings.TRACE_THROUGH)
-  })
+
+  //it('should set tracing mode to through', function () {
+    //bindings.Context.setTracingMode(bindings.TRACE_THROUGH)
+  //})
   it('should set tracing mode to an out-of-range input', function () {
     try {
       bindings.Context.setTracingMode(3)
@@ -61,7 +62,7 @@ describe('addon.context', function () {
   it('should serialize context to string', function () {
     bindings.Context.clear()
     var string = bindings.Context.toString()
-    string.should.equal('1B00000000000000000000000000000000000000000000000000000000')
+    string.should.equal('2B0000000000000000000000000000000000000000000000000000000000')
   })
   it('should set context to metadata instance', function () {
     var event = bindings.Context.createEvent()
@@ -86,7 +87,7 @@ describe('addon.context', function () {
     v.should.equal(metadata.toString())
   })
   it('should clear the context', function () {
-    var string = '1B00000000000000000000000000000000000000000000000000000000'
+    var string = '2B0000000000000000000000000000000000000000000000000000000000'
     bindings.Context.toString().should.not.equal(string)
     bindings.Context.clear()
     bindings.Context.toString().should.equal(string)

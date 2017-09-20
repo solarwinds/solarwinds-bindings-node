@@ -18,11 +18,12 @@ NAN_METHOD(OboeContext::setTracingMode) {
   }
 
   int mode = info[0]->NumberValue();
-  if (mode < 0 || mode > 2) {
+  //if (mode < 0 || mode > 2) {
+  if (mode != OBOE_TRACE_NEVER && mode != OBOE_TRACE_ALWAYS) {
     return Nan::ThrowRangeError("Invalid tracing mode");
   }
 
-  oboe_settings_cfg_tracing_mode_set(mode);
+  oboe_settings_mode_set(mode);
 }
 
 /**
@@ -49,7 +50,7 @@ NAN_METHOD(OboeContext::setDefaultSampleRate) {
     return Nan::ThrowRangeError("Sample rate out of range");
   }
 
-  oboe_settings_cfg_sample_rate_set(rate);
+  oboe_settings_rate_set(rate);
 }
 
 /**
@@ -106,7 +107,6 @@ NAN_METHOD(OboeContext::sampleRequest) {
   int rc = oboe_sample_layer(
     layer_name.c_str(),
     in_xtrace.c_str(),
-    in_tv_meta.c_str(),
     &sample_rate,
     &sample_source
   );
