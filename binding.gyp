@@ -16,9 +16,9 @@
           ],
           'libraries': [
             '-loboe',
-            '-L<(module_root_dir)/lib/',
-            '-Wl,-rpath-link,<(module_root_dir)/lib/',
-            '-Wl,-rpath,<(module_root_dir)/lib/'
+            '-L<(module_root_dir)/oboe/',
+            '-Wl,-rpath-link,<(module_root_dir)/oboe/',
+            '-Wl,-rpath,<(module_root_dir)/oboe/'
           ],
         }]
       ]
