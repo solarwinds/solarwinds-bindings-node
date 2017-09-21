@@ -4,18 +4,18 @@ Nan::Persistent<v8::Function> Reporter::constructor;
 
 // Construct with an address and port to report to
 Reporter::Reporter() {
-  //
+  // this is a shell for until it can setup new reporters
   connected = true;
   host = "";
   port = "443";
+  protocol = getenv("APPOPTICS_REPORTER");
 }
 
-// Remember to cleanup the udp reporter struct when garbage collected
 Reporter::~Reporter() {
-  oboe_reporter_destroy(&reporter);
 }
 
 int Reporter::send(oboe_metadata_t* meta, oboe_event_t* event) {
+  // some way to check that connection is not available (ssl)?
   if ( ! connected) {
     return -1;
   }
