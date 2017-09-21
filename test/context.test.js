@@ -89,20 +89,26 @@ describe('addon.context', function () {
     event.should.be.an.instanceof(bindings.Event)
   })
 
-  it('should check if a request should be sampled', function (done) {
-    setTimeout(function() {
-        bindings.Context.setTracingMode(bindings.TRACE_ALWAYS)
-        bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE)
-        var event = bindings.Context.startTrace()
-        var xid = event.getMetadata().toString().slice(0, -1) + '\u0001'
-        // AO sampleRequest() requires service-name and X-Trace ID to check if sampling.
-        var check = bindings.Context.sampleRequest('bruce-test', xid, 'c')
+  it('should get verification that a request should be sampled', function (done) {
+    bindings.Context.setTracingMode(bindings.TRACE_ALWAYS)
+    bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE)
+    var event = bindings.Context.startTrace()
+    var xid = event.getMetadata().toString().slice(0, -1) + '\u0001'
+    var counter = 8
+    // poll to give time for the SSL connection to complete
+    var id = setInterval(function() {
+      // AO sampleRequest() requires service-name and X-Trace ID to check if sampling.
+      var check = bindings.Context.sampleRequest('bruce-test', xid, 'c')
+      if (--counter <= 0 || Array.isArray(check) && check[0] === 1) {
+        clearInterval(id)
         check.should.be.an.instanceof(Array)
         check.should.have.property(0, 1)
         check.should.have.property(1, 1)
         check.should.have.property(2, bindings.MAX_SAMPLE_RATE)
         done()
-    }, 2000)
+        return
+      }
+  }, 500)
   })
 
   it('should be invalid when empty', function () {
