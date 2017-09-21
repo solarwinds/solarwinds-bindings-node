@@ -7,8 +7,6 @@
 #include "config.cc"
 #include "event.cc"
 #include "reporter.cc"
-//#include "reporters/udp.cc"
-//#include "reporters/file.cc"
 
 extern "C" {
 
@@ -22,10 +20,7 @@ void init(v8::Local<v8::Object> exports) {
   Nan::Set(exports, Nan::New("MAX_OP_ID_LEN").ToLocalChecked(), Nan::New(OBOE_MAX_OP_ID_LEN));
   Nan::Set(exports, Nan::New("TRACE_NEVER").ToLocalChecked(), Nan::New(OBOE_TRACE_NEVER));
   Nan::Set(exports, Nan::New("TRACE_ALWAYS").ToLocalChecked(), Nan::New(OBOE_TRACE_ALWAYS));
-  //Nan::Set(exports, Nan::New("TRACE_THROUGH").ToLocalChecked(), Nan::New(OBOE_TRACE_THROUGH));
 
-  //FileReporter::Init(exports);
-  //UdpReporter::Init(exports);
   Reporter::Init(exports);
   OboeContext::Init(exports);
   Sanitizer::Init(exports);
@@ -33,8 +28,8 @@ void init(v8::Local<v8::Object> exports) {
   Event::Init(exports);
   Config::Init(exports);
 
-  // hardcode service key for now
-  oboe_init("795fb4947d15275d208c49cfd2412d4a5bf38742045b47236c94c4fe5f5b17c7:bruce-test");
+  char* key = getenv("APPOPTICS_SERVICE_KEY");
+  oboe_init(key);
 }
 
 NODE_MODULE(appoptics_bindings, init)
