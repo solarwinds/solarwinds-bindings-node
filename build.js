@@ -30,9 +30,9 @@ function build (cb) {
   }
 
   p.stderr.on('data', function (data) {
-      if (showOutput) {
-          childOutput.push(data)
-      }
+    if (showOutput) {
+      childOutput.push(data)
+    }
   })
 
   p.on('close', function (err) {
