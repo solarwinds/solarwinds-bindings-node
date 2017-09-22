@@ -21,7 +21,7 @@
   },
   "scripts": {
     "test": "gulp test",
-    "prepublish": "node setup-liboboe",
+    "preinstall": "node setup-liboboe",
     "install": "node build",
     "rebuild": "node-gyp rebuild"
   },
