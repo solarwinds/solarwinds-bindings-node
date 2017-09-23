@@ -107,6 +107,8 @@ class Reporter : public Nan::ObjectWrap {
     static NAN_SETTER(setHost);
     static NAN_GETTER(getHost);
 
+    static v8::Local<v8::Object> NewInstance();
+
     public:
       static void Init(v8::Local<v8::Object>);
   };

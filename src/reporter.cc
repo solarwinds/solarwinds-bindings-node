@@ -14,6 +14,18 @@ Reporter::Reporter() {
 Reporter::~Reporter() {
 }
 
+
+v8::Local<v8::Object> Reporter::NewInstance() {
+    Nan::EscapableHandleScope scope;
+
+    const unsigned argc = 0;
+    v8::Local<v8::Value> argv[argc] = {};
+    v8::Local<v8::Function> cons = Nan::New<v8::Function>(constructor);
+    v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
+
+    return scope.Escape(instance);
+  }
+
 int Reporter::send(oboe_metadata_t* meta, oboe_event_t* event) {
   // some way to check that connection is not available (ssl)?
   if ( ! connected) {
