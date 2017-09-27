@@ -8,7 +8,12 @@ Reporter::Reporter() {
   connected = true;
   host = "";
   port = "443";
-  protocol = getenv("APPOPTICS_REPORTER");
+  const char *p = getenv("APPOPTICS_REPORTER");
+  // handle null, thanks.
+  if (p == 0 || p[0] == '\0') {
+      p = "";
+  }
+  protocol = p;
 }
 
 Reporter::~Reporter() {
