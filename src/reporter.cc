@@ -14,6 +14,7 @@ Reporter::Reporter() {
       p = "";
   }
   protocol = p;
+  channel = OBOE_SEND_STATUS;
 }
 
 Reporter::~Reporter() {
@@ -34,10 +35,17 @@ v8::Local<v8::Object> Reporter::NewInstance() {
 int Reporter::send(oboe_metadata_t* meta, oboe_event_t* event) {
   // some way to check that connection is not available (ssl)?
   if ( ! connected) {
+
     return -1;
   }
+  // try to use STATUS channel for the first send. Not sure this works
+  // in all cases but hopefully it will move things along.
+  int channel_to_use = channel;
+  if (channel == OBOE_SEND_STATUS) {
+      channel = OBOE_SEND_EVENT;
+  }
 
-  return oboe_event_send(OBOE_SEND_EVENT, event, meta);
+  return oboe_event_send(channel_to_use, event, meta);
 }
 
 NAN_SETTER(Reporter::setAddress) {

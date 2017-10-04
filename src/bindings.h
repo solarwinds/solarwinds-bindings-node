@@ -97,6 +97,7 @@ class Reporter : public Nan::ObjectWrap {
     std::string port;
     std::string protocol;
     bool connected;
+    int channel;
     static Nan::Persistent<v8::Function> constructor;
     static NAN_METHOD(New);
     static NAN_METHOD(sendReport);
