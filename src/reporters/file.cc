@@ -2,12 +2,12 @@
 
 Nan::Persistent<v8::Function> FileReporter::constructor;
 
-// Construct with an address and port to report to
+// Construct with a filename.
 FileReporter::FileReporter(const char *file) {
   oboe_reporter_file_init(&reporter, file);
 }
 
-// Remember to cleanup the udp reporter struct when garbage collected
+// Remember to cleanup the reporter struct when garbage collected
 FileReporter::~FileReporter() {
   oboe_reporter_destroy(&reporter);
 }
@@ -39,7 +39,7 @@ NAN_METHOD(FileReporter::sendReport) {
 // Creates a new Javascript instance
 NAN_METHOD(FileReporter::New) {
   if (!info.IsConstructCall()) {
-    return Nan::ThrowError("UdpReporter() must be called as a constructor");
+    return Nan::ThrowError("FileReporter() must be called as a constructor");
   }
 
   // Validate arguments
@@ -63,7 +63,7 @@ void FileReporter::Init(v8::Local<v8::Object> exports) {
   // Prepare constructor template
   v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(New);
   ctor->InstanceTemplate()->SetInternalFieldCount(1);
-  ctor->SetClassName(Nan::New("UdpReporter").ToLocalChecked());
+  ctor->SetClassName(Nan::New("FileReporter").ToLocalChecked());
 
   // Prototype
   Nan::SetPrototypeMethod(ctor, "sendReport", FileReporter::sendReport);
