@@ -125,7 +125,7 @@ NAN_METHOD(Reporter::sendReport) {
   }
 
   int status = self->send(md, &event->event);
-  info.GetReturnValue().Set(Nan::New(status >= 0));
+  info.GetReturnValue().Set(Nan::New(status));
 }
 
 // Creates a new Javascript instance
