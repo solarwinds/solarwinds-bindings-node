@@ -14,6 +14,7 @@ Reporter::Reporter() {
       p = "";
   }
   protocol = p;
+  initDone = false;
   channel = OBOE_SEND_STATUS;
 }
 
@@ -35,17 +36,11 @@ v8::Local<v8::Object> Reporter::NewInstance() {
 int Reporter::send(oboe_metadata_t* meta, oboe_event_t* event) {
   // some way to check that connection is not available (ssl)?
   if ( ! connected) {
-
-    return -1;
-  }
-  // try to use STATUS channel for the first send. Not sure this works
-  // in all cases but hopefully it will move things along.
-  int channel_to_use = channel;
-  if (channel == OBOE_SEND_STATUS) {
-      channel = OBOE_SEND_EVENT;
+    // return some unique code to distinguish from liboboe codes.
+    return -111;
   }
 
-  return oboe_event_send(channel_to_use, event, meta);
+  return oboe_event_send(channel, event, meta);
 }
 
 NAN_SETTER(Reporter::setAddress) {
@@ -62,7 +57,7 @@ NAN_SETTER(Reporter::setAddress) {
     return Nan::ThrowError("Invalid address string");
   }
 
-  self->connected = false;
+  //self->connected = false;
   self->host = host;
   self->port = port;
   free(host);
@@ -103,6 +98,27 @@ NAN_GETTER(Reporter::getPort) {
   Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
   info.GetReturnValue().Set(Nan::New(self->port).ToLocalChecked());
 }
+
+
+NAN_SETTER(Reporter::setInitDone) {
+    if (!value->IsBoolean()) {
+        return Nan::ThrowTypeError("init value must be boolean");
+    }
+    Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
+    self->initDone = value->BooleanValue();
+
+    self->channel = self->initDone ? OBOE_SEND_EVENT : OBOE_SEND_STATUS;
+}
+NAN_GETTER(Reporter::getInitDone) {
+    Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
+    info.GetReturnValue().Set(Nan::New(self->initDone));
+}
+
+NAN_GETTER(Reporter::getChannel) {
+    Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
+    info.GetReturnValue().Set(Nan::New(self->channel));
+}
+
 
 // Transform a string back into a metadata instance
 NAN_METHOD(Reporter::sendReport) {
@@ -152,6 +168,8 @@ void Reporter::Init(v8::Local<v8::Object> exports) {
   Nan::SetAccessor(proto, Nan::New("address").ToLocalChecked(), getAddress, setAddress);
   Nan::SetAccessor(proto, Nan::New("host").ToLocalChecked(), getHost, setHost);
   Nan::SetAccessor(proto, Nan::New("port").ToLocalChecked(), getPort, setPort);
+  Nan::SetAccessor(proto, Nan::New("initDone").ToLocalChecked(), getInitDone, setInitDone);
+  Nan::SetAccessor(proto, Nan::New("channel").ToLocalChecked(), getChannel);
 
   // Prototype
   Nan::SetPrototypeMethod(ctor, "sendReport", Reporter::sendReport);

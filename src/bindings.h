@@ -98,15 +98,24 @@ class Reporter : public Nan::ObjectWrap {
     std::string protocol;
     bool connected;
     int channel;
+    bool initDone;
     static Nan::Persistent<v8::Function> constructor;
     static NAN_METHOD(New);
     static NAN_METHOD(sendReport);
+
     static NAN_SETTER(setAddress);
     static NAN_GETTER(getAddress);
+
     static NAN_SETTER(setPort);
     static NAN_GETTER(getPort);
+
     static NAN_SETTER(setHost);
     static NAN_GETTER(getHost);
+
+    static NAN_SETTER(setInitDone);
+    static NAN_GETTER(getInitDone);
+
+    static NAN_GETTER(getChannel);
 
     static v8::Local<v8::Object> NewInstance();
 

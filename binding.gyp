@@ -5,6 +5,8 @@
       'include_dirs': [
         "<!(node -e \"require('nan')\")"
       ],
+      # preprocessor only (in bindings.o for some reason)
+      #'cflags': ['-E'],
       'sources': [
         'src/bindings.cc'
       ],
