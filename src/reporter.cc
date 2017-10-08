@@ -101,9 +101,11 @@ NAN_GETTER(Reporter::getPort) {
 
 
 NAN_SETTER(Reporter::setInitDone) {
+    /*
     if (!value->IsBoolean()) {
         return Nan::ThrowTypeError("init value must be boolean");
     }
+    */
     Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
     self->initDone = value->BooleanValue();
 
