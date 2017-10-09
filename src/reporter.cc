@@ -78,7 +78,7 @@ NAN_SETTER(Reporter::setHost) {
 
   Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
   self->host = *Nan::Utf8String(value->ToString());
-  self->connected = false;
+  //self->connected = false;
 }
 NAN_GETTER(Reporter::getHost) {
   Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
@@ -92,7 +92,7 @@ NAN_SETTER(Reporter::setPort) {
 
   Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
   self->port = *Nan::Utf8String(value->ToString());
-  self->connected = false;
+  //self->connected = false;
 }
 NAN_GETTER(Reporter::getPort) {
   Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
