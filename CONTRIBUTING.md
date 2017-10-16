@@ -1,5 +1,30 @@
 # Contributing
 
+## Two minutes on how it works
+
+[node-appoptics-bindings](https://github.com/librato/node-appoptics-bindings)
+implements the low-level interface to liboboe. liboboe implements core functions
+to enable tracing. Traces are sequences of entry and exit events which capture
+performance information. Each event has a:
+
+```
+label: (string - typically entry or exit)
+layer: (string - the name of the layer being instrumented)
+timestamp: (integer - unix timestamp)
+hostname: (string)
+X-trace ID: <header><task ID><op ID><flags>
+edge: the previous event's X-trace ID
+```
+
+An X-trace ID (XID) comprises a single byte header with the hex value `2B`, a task ID
+of 20 bytes that is constant for all events in a trace, an op ID of 8 bytes that
+is unique for each event in a trace, a flag byte. In this implementation the XID is
+often manipulated as a string of hex digits, so the task ID is 40 characters, the
+op ID is 16 characters, and the header and flags are two characters each.
+
+
+
+
 ## Dev environment
 
 Like [node-appoptics](http://github.com/librato/node-appoptics), this repo
@@ -11,8 +36,15 @@ start the VM and connect to it.
 
 ## Testing
 
-This repo is simpler in that it doesn't have a segmented test suite. You
-can simply run `gulp test` or `npm test` to run the test suite.
+This repo is simpler than `node-appoptics-bindings` in that it doesn't have
+a segmented test suite. Simply execute `gulp test` or `npm test` to run the test suite.
+
+The following environment variables must be set for the "should get verification that a request should be sampled" test.
+
+- `APPOPTICS_COLLECTOR=collector-stg.appoptics.com:4444` or `:443`
+- `APPOPTICS\_SERVICE_KEY=795fb4947d15275d208c49cfd2412d4a5bf38742045b47236c94c4fe5f5b17c7:name`
+
+TODO: extend mock reporter to return correct values to pass this test.
 
 ## Project layout
 
