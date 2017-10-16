@@ -33,14 +33,21 @@ v8::Local<v8::Object> Reporter::NewInstance() {
     return scope.Escape(instance);
   }
 
-int Reporter::send(oboe_metadata_t* meta, oboe_event_t* event) {
+int Reporter::send_event(oboe_metadata_t* meta, oboe_event_t* event) {
   // some way to check that connection is not available (ssl)?
   if ( ! connected) {
     // return some unique code to distinguish from liboboe codes.
     return -111;
   }
 
-  return oboe_event_send(channel, event, meta);
+  return oboe_event_send(OBOE_SEND_EVENT, event, meta);
+}
+
+int Reporter::send_status(oboe_metadata_t* meta, oboe_event_t* event) {
+    if (!connected) {
+        return -111;
+    }
+    return oboe_event_send(OBOE_SEND_STATUS, event, meta);
 }
 
 NAN_SETTER(Reporter::setAddress) {
@@ -101,7 +108,7 @@ NAN_GETTER(Reporter::getPort) {
 
 
 NAN_SETTER(Reporter::setInitDone) {
-    /*
+    /* let it be truthy of falsey, no need to be boolean.
     if (!value->IsBoolean()) {
         return Nan::ThrowTypeError("init value must be boolean");
     }
@@ -142,8 +149,26 @@ NAN_METHOD(Reporter::sendReport) {
     md = oboe_context_get();
   }
 
-  int status = self->send(md, &event->event);
+  int status = self->send_event(md, &event->event);
   info.GetReturnValue().Set(Nan::New(status));
+}
+
+NAN_METHOD(Reporter::sendStatus) {
+    if (info.Length() != 1) {
+        return Nan::ThrowError("Reporter::sendStatus requires exactly one argument");
+    }
+    if (!info[0]->IsObject()) {
+        return Nan::ThrowError("Reporter::sendStatus argument must be an event instance");
+    }
+
+    Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
+    Event* event = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
+
+    // fetch a new context
+    oboe_metadata_t* md = oboe_context_get();
+
+    int status = self->send_status(md, &event->event);
+    info.GetReturnValue().Set(Nan::New(status));
 }
 
 // Creates a new Javascript instance
@@ -175,6 +200,7 @@ void Reporter::Init(v8::Local<v8::Object> exports) {
 
   // Prototype
   Nan::SetPrototypeMethod(ctor, "sendReport", Reporter::sendReport);
+  Nan::SetPrototypeMethod(ctor, "sendStatus", Reporter::sendStatus);
 
   constructor.Reset(ctor->GetFunction());
   Nan::Set(exports, Nan::New("Reporter").ToLocalChecked(), ctor->GetFunction());

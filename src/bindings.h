@@ -91,7 +91,8 @@ class Event : public Nan::ObjectWrap {
 class Reporter : public Nan::ObjectWrap {
     Reporter();
     ~Reporter();
-    int send(oboe_metadata_t*, oboe_event_t*);
+    int send_event(oboe_metadata_t*, oboe_event_t*);
+    int send_status(oboe_metadata_t*, oboe_event_t*);
 
     std::string host;
     std::string port;
@@ -102,6 +103,7 @@ class Reporter : public Nan::ObjectWrap {
     static Nan::Persistent<v8::Function> constructor;
     static NAN_METHOD(New);
     static NAN_METHOD(sendReport);
+    static NAN_METHOD(sendStatus);
 
     static NAN_SETTER(setAddress);
     static NAN_GETTER(getAddress);
