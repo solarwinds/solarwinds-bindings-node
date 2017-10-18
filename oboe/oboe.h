@@ -181,7 +181,7 @@ int oboe_event_add_edge_fromstr(oboe_event_t *, const char *, size_t);
 /**
  * Send event message using the default reporter.
  *
- * @param channel the channel to send out this message (OBOE_SEND_EVENT or OBOE_SEND_INIT)
+ * @param channel the channel to send out this message (OBOE_SEND_EVENT or OBOE_SEND_STATUS)
  * @param evt The event message.
  * @param md The X-Trace metadata.
  * @return Length of message sent in bytes on success; otherwise -1.
@@ -228,13 +228,12 @@ int oboe_reporter_ssl_init (oboe_reporter_t *, const char *);       /* DEPRECATE
 /**
  * Initialize a reporter structure for use with the specified protocol.
  *
- * @param rep Pointer to an uninitialized reporter structure.
  * @param protocol One of  OBOE_REPORTER_PROTOCOL_FILE, OBOE_REPORTER_PROTOCOL_UDP,
  *      or OBOE_REPORTER_PROTOCOL_SSL.
  * @param args A configuration string for the specified protocol (protocol dependent syntax).
  * @return Zero on success; otherwise -1.
  */
-int oboe_reporter_init (oboe_reporter_t *rep, const char *protocol, const char *args);  /* DEPRECATE - Use oboe_init_reporter() */
+int oboe_reporter_init (const char *protocol, const char *args);  /* DEPRECATE - Use oboe_init_reporter() */
 
 /**
  * Check if the reporter is ready to send.
@@ -343,7 +342,7 @@ int oboe_is_ready();    /* TODO: Need implementation. */
  * Use oboe_event_send() unless you are handling all the details of constructing
  * the messages for a valid trace.
  *
- * @param channel the channel to send out this message (OBOE_SEND_EVENT or OBOE_SEND_INIT)
+ * @param channel the channel to send out this message (OBOE_SEND_EVENT or OBOE_SEND_STATUS)
  * @param data A BSON-encoded event message.
  * @param len The length of the message data in bytes.
  * @return Length of message sent in bytes on success; otherwise -1.
@@ -445,8 +444,8 @@ typedef struct {
 
 // Current settings configuration:
 typedef struct {
-    int tracing_mode;          // loaded from config file
-    int sample_rate;           // loaded from config file
+    int tracing_mode;          // pushed from server, override from config file
+    int sample_rate;           // pushed from server, override from config file
     oboe_settings_t *settings; // cached settings, updated by tracelyzer (init to NULL)
     int last_auto_sample_rate; // stores last known automatic sampling rate 
     uint16_t last_auto_flags;  // stores last known flags associated with above 
