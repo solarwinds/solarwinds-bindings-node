@@ -18,7 +18,8 @@ function spinner (fps, fn) {
 function build (cb) {
     var childOutput = []
     var showOutput = process.env.APPOPTICS_DBG_GYP
-
+    // TODO check environment var for debugging-symbols
+    // var p = spawn('node-gyp', ['--debug', 'configure', 'rebuild'])
     var p = spawn('node-gyp', ['rebuild'])
 
   if (process.stdout.isTTY) {

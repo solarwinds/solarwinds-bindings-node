@@ -106,7 +106,7 @@ NAN_GETTER(Reporter::getPort) {
   info.GetReturnValue().Set(Nan::New(self->port).ToLocalChecked());
 }
 
-
+// TODO remove initDone altogether.
 NAN_SETTER(Reporter::setInitDone) {
     /* let it be truthy of falsey, no need to be boolean.
     if (!value->IsBoolean()) {
