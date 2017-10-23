@@ -24,7 +24,7 @@ function setupLiboboe(cb) {
   var showOutput = process.env.APPOPTICS_NODE_DBG_SETUP
 
   var liboboeName
-  fs.readdirSync(dir).forEach(f => {
+  fs.readdirSync(dir).forEach(function (f) {
     if (f.indexOf('liboboe') === 0) {
       // if the file is a link delete it
       if (fs.lstatSync(dir + f).isSymbolicLink()) {
