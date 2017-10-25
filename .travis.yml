@@ -1,10 +1,16 @@
 language: node_js
 
+global:
+  - secure: "dCSF+XK95yJHdmNRSalu5s/T2TmXFVb10WFMn9FHJtCZANoM0HI+4sRdGlsNQJXZzMgiL7xGssgcmEWmZfoBroQma/YjT9BkjauDMXQpLCtRV6gY10BK05s4Ex25d7mJIpGUWjSFlqBHO2mJNCU74wb+bu8ewCHf5deDJuurj/rAfvzvtEBXRhxkhUZk+PQjEPJWwJK6EuJ7Jvj/8ERmfKjwhHgc2i375Y7WJl4q2VXG7NJJJawUN5dKPYS9OLqlhPFSq3FG4xLkqU25C1U1HVzXV54hH5u6ZwVlh1GX8ucNmL1brpOTSgWkkcr+aExisw+7+WTroLz9CdpSxN5u6LA47E8nZ1u1ikEvGC+p1vShv2OFbDxhTJuwsk10cHl1H2MvOWcS7Lo9eyAPCPO7uOVQeIrSj3xaHhAXTdtuHBXS7mxu5GUkzgXH2P/AFKVj/AbL7X8Idax/nCgSQBkt6svFzOG8FiY4dpLba6KUlqUOprjFiNHi87p8oq9PIDB4vSTJ+rinmNm2i9YMzn1zZCg4Dx/Wwb+Q8h6ZBIAdKYppWrbFubZYf2UlH95PHH8ik3A7LMhffT1vQsq2NW49bytlfNFvc8Jrv7VIbYymqj0cV3OyFORgBro4upiXbjZKouX5BvImJ/HhnKLdiefWBPVloDPl3zR2KB9FaX+CTMw="
+
+  - secure: "duAJOTR27e5EFdmNAGeS0ChYJNTTnSfISamU/kxmTXrbnbrxPOdmc3KbLox3YKeE7TKiMXPI2qW1AzeLELdyfYqrBEZLSwFfotSwXwkA5nmp2GW8nc3JoijBBGYhLSCRfKyqgi0mbiizI+jNfl8ajeugfeV7Zy1yGGULrkpNjDB7tiMWrFhhfjcRxp1Q7GjHYsqEATWlYNr/VYlUZqmC6Ng/S82B+Xidr+IapcoGhWIs9nWjYjqnLCG1AuO9tCWY+61VJBmFm8Y4+8Xe6NKg2FhjYjhcR0drmphVXynGOyQd7hrtVdkwxEHL2NlDGun1PQnaWDupKuxYK29Z5GCzhsPd9rtphn+UvOuQW+ccaiGK1A7M/agQRb/xZkRQyS4Ja14n9s6jT0fwiTu6vqw1E7J0Obik0K3yvtjjRB4wIEkVOdSP6bN8DfZoMj2cTyacJKZU0c+osEK88NTau3IqGxH33SWRmvKu2eOvR3M88ETXuc/ptB8dWS9OKs5pJclI/IvLZtbQ9Q5TC0dCkAvztogkPo5x8sQZXKigXfNnyCXf9DnkSvOHX2SBATyMIZW4lWQyAv1F4ORNR9Esb56OANqu5yvct89lU5sOLCkHDMXhCSsDWYEu6iHYbp/ypjZfrnBBUR+gXEmuL9HPDaO0e9lN1P9E8ULIWB3pKZTyn3w="
+
 cache:
   directories:
   - node_modules
 
 node_js:
+  - "6"
   - "5"
   - "4"
   - "3"
@@ -16,13 +22,13 @@ node_js:
 install:
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get -qq update
-  - sudo apt-get -qq install g++-4.8 gcc-4.8
-  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 20
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 20
+  - sudo apt-get -qq install g++-4.9 gcc-4.9
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 20
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 20
   - sudo update-alternatives --config gcc
   - sudo update-alternatives --config g++
-  - wget https://files.tv.solarwinds.com/install_traceview.sh
-  - sudo sh ./install_traceview.sh f08da708-7f1c-4935-ae2e-122caf1ebe31
+#  - wget https://files.tv.solarwinds.com/install_traceview.sh
+#  - sudo sh ./install_traceview.sh f08da708-7f1c-4935-ae2e-122caf1ebe31
 
 before_script:
   - npm install
