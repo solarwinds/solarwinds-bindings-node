@@ -17,15 +17,13 @@ function spinner (fps, fn) {
 
 
 function build (cb) {
-    var childOutput = []
-    var showOutput = process.env.APPOPTICS_SHOW_GYP
-    var args = ['rebuild']
-    if (process.env.APPOPTICS_BUILD_GYP_DEBUG) {
-      args = ['--debug', 'configure'].concat(args)
-    }
-    var p = spawn('node-gyp', ['rebuild'])
-    //var p = spawnSync('node-gyp', ['rebuild'])
-
+  var childOutput = []
+  var showOutput = process.env.APPOPTICS_SHOW_GYP
+  var args = ['rebuild']
+  if (process.env.APPOPTICS_BUILD_GYP_DEBUG) {
+    args = ['--debug', 'configure'].concat(args)
+  }
+  var p = spawn('node-gyp', ['rebuild'])
 
   if (process.stdout.isTTY) {
     var spin = spinner(15, function (c) {
