@@ -1,4 +1,5 @@
 var spawn = require('child_process').spawn
+var spawnSync = require('child_process').spawnSync
 
 var chars = '⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
 var len = chars.length
@@ -17,10 +18,14 @@ function spinner (fps, fn) {
 
 function build (cb) {
     var childOutput = []
-    var showOutput = process.env.APPOPTICS_DBG_GYP
-    // TODO check environment var for debugging-symbols
-    // var p = spawn('node-gyp', ['--debug', 'configure', 'rebuild'])
+    var showOutput = process.env.APPOPTICS_SHOW_GYP
+    var args = ['rebuild']
+    if (process.env.APPOPTICS_BUILD_GYP_DEBUG) {
+      args = ['--debug', 'configure'].concat(args)
+    }
     var p = spawn('node-gyp', ['rebuild'])
+    //var p = spawnSync('node-gyp', ['rebuild'])
+
 
   if (process.stdout.isTTY) {
     var spin = spinner(15, function (c) {
@@ -58,7 +63,8 @@ function build (cb) {
 }
 
 if ( ! module.parent) {
-	build(function () {})
+  var i = setInterval(function() {}, 100)
+	build(function () {clearInterval(i)})
 } else {
 	module.exports = build
 }
