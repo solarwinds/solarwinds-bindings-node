@@ -59,7 +59,8 @@ Whenever you do an `npm install`, the build process will be run automatically.
 This method uses a `prepublish` script in `package.json` to conceal compiler
 output though, so you may want to skip that if dealing with build issues. To
 do so, you can use `npm run rebuild` to bypass the `prepublish` script and
-run the `node-gyp rebuild` phase directly.
+run the `node-gyp rebuild` phase directly. You can also set the environment
+variable `APPOPTICS\_SHOW_GYP` to any non-empty value.
 
 ### Developing
 
