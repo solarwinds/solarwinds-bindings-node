@@ -67,8 +67,7 @@ NAN_METHOD(OboeContext::setDefaultSampleRate) {
  * @param layer Name of the layer being considered for tracing
  * @param in_xtrace Incoming X-Trace ID (NULL or empty string if not present)
  * @param in_tv_meta AppView Web ID from X-TV-Meta HTTP header or higher layer (NULL or empty string if not present).
- * @return Zero to not trace; otherwise return the sample rate used in the low order
- *         bytes 0 to 2 and the sample source in the higher-order byte 3.
+ * @return {Array} [sample, sampleRateUsed, sampleSource] sample is truthy if it should be sampled.
  */
 NAN_METHOD(OboeContext::sampleRequest) {
   // Validate arguments
@@ -95,6 +94,7 @@ NAN_METHOD(OboeContext::sampleRequest) {
   }
 
   // If the third argument is present, it must be a string
+  // TODO this is unused - remove?
   if (info.Length() >= 3) {
     if ( ! info[2]->IsString()) {
       return Nan::ThrowTypeError("AppView Web ID must be a string");
