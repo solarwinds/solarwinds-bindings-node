@@ -92,7 +92,8 @@ function setupLiboboe(cb) {
 }
 
 if (!module.parent) {
-  setupLiboboe(function () { })
+  var i = setInterval(function() {}, 100)
+  setupLiboboe(function () {clearInterval(i)})
 } else {
   module.exports = setupLiboboe
 }
