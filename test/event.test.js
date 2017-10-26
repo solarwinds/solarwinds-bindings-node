@@ -3,6 +3,8 @@ var bindings = require('../')
 describe('addon.event', function () {
   var event
 
+  bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY)
+
   it('should construct', function () {
     event = new bindings.Event()
   })
