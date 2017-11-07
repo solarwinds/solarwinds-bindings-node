@@ -7,14 +7,17 @@ Event::Event() {
   oboe_event_init(&event, oboe_context_get());
 }
 
-// Construct a new event point an edge at another
+// Construct a new event and point an edge at another
 Event::Event(const oboe_metadata_t *md, bool addEdge) {
-  // both methods copy metadata from md -> this
+  // both methods copy metadata (version, task_id, flags) from
+  // md to this->event and create a new random op_id.
   if (addEdge) {
     // create_event automatically adds edge in event to md
+    // (so event points an edge to the op_id in md).
     oboe_metadata_create_event(md, &event);
   } else {
-    // initializes new Event with this md's task_id & new random op_id; no edges set
+    // initializes new Event with md's task_id & new random op_id;
+    // no edges set
     oboe_event_init(&event, md);
   }
 }
@@ -224,7 +227,7 @@ void Event::Init(v8::Local<v8::Object> exports) {
 
   // Prepare constructor template
   v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(New);
-  ctor->InstanceTemplate()->SetInternalFieldCount(2);
+  ctor->InstanceTemplate()->SetInternalFieldCount(1);
   ctor->SetClassName(Nan::New("Event").ToLocalChecked());
 
   // Statics
