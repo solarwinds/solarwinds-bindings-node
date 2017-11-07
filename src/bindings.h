@@ -48,6 +48,7 @@ class OboeContext {
   static NAN_METHOD(setTracingMode);
   static NAN_METHOD(setDefaultSampleRate);
   static NAN_METHOD(sampleRequest);
+  static NAN_METHOD(sampleLayer);
   static NAN_METHOD(toString);
   static NAN_METHOD(set);
   static NAN_METHOD(copy);
@@ -140,6 +141,13 @@ class Sanitizer {
   static NAN_METHOD(sanitize);
 
   public:
+    static void Init(v8::Local<v8::Object>);
+};
+
+class Utility {
+    static NAN_METHOD(getBuffer);
+
+public:
     static void Init(v8::Local<v8::Object>);
 };
 
