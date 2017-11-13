@@ -77,6 +77,20 @@ NAN_METHOD(Metadata::isValid) {
   info.GetReturnValue().Set(Nan::New(status));
 }
 
+NAN_METHOD(Metadata::setSampleFlag) {
+    Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
+    bool previous = self->metadata.flags & XTR_FLAGS_SAMPLED;
+    self->metadata.flags |= XTR_FLAGS_SAMPLED;
+    info.GetReturnValue().Set(Nan::New(previous));
+}
+
+NAN_METHOD(Metadata::clearSampleFlag) {
+    Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
+    bool previous = self->metadata.flags & XTR_FLAGS_SAMPLED;
+    self->metadata.flags &= ~XTR_FLAGS_SAMPLED;
+    info.GetReturnValue().Set(Nan::New(previous));
+}
+
 // Serialize a metadata object to a string
 NAN_METHOD(Metadata::toString) {
   // Unwrap the Metadata instance from V8
@@ -137,6 +151,8 @@ void Metadata::Init(v8::Local<v8::Object> exports) {
   // Prototype
   Nan::SetPrototypeMethod(ctor, "copy", Metadata::copy);
   Nan::SetPrototypeMethod(ctor, "isValid", Metadata::isValid);
+  Nan::SetPrototypeMethod(ctor, "setSampleFlag", Metadata::setSampleFlag);
+  Nan::SetPrototypeMethod(ctor, "clearSampleFlag", Metadata::clearSampleFlag);
   Nan::SetPrototypeMethod(ctor, "toString", Metadata::toString);
   Nan::SetPrototypeMethod(ctor, "createEvent", Metadata::createEvent);
 

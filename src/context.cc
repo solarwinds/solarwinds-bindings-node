@@ -69,7 +69,7 @@ NAN_METHOD(OboeContext::setDefaultSampleRate) {
  * @param in_tv_meta AppView Web ID from X-TV-Meta HTTP header or higher layer (NULL or empty string if not present).
  * @return {Array} [sample, sampleRateUsed, sampleSource] sample is truthy if it should be sampled.
  */
-NAN_METHOD(OboeContext::sampleRequest) {
+NAN_METHOD(OboeContext::sampleTrace) {
   // Validate arguments
   if (info.Length() < 1) {
     return Nan::ThrowError("Wrong number of arguments");
@@ -77,7 +77,6 @@ NAN_METHOD(OboeContext::sampleRequest) {
 
   std::string layer_name;
   std::string in_xtrace;
-  std::string in_tv_meta;
 
   // The first argument must be a string
   if (!info[0]->IsString()) {
@@ -95,15 +94,6 @@ NAN_METHOD(OboeContext::sampleRequest) {
     in_xtrace = *Nan::Utf8String(info[1]);
   }
 
-  // If the third argument is present, it must be a string
-  // TODO BAM this is unused - remove?
-  if (info.Length() >= 3) {
-    if ( ! info[2]->IsString()) {
-      return Nan::ThrowTypeError("AppView Web ID must be a string");
-    }
-    in_tv_meta = *Nan::Utf8String(info[2]);
-  }
-
   int sample_rate = 0;
   int sample_source = 0;
   int rc = oboe_sample_layer(
@@ -116,55 +106,13 @@ NAN_METHOD(OboeContext::sampleRequest) {
   // Store rc, sample_source and sample_rate in an array
   // TODO BAM - this is 3 elements, does the array expand
   // automatically? (it's a JS array, so probably).
-  v8::Local<v8::Array> array = Nan::New<v8::Array>(2);
+  v8::Local<v8::Array> array = Nan::New<v8::Array>(3);
   Nan::Set(array, 0, Nan::New(rc));
   Nan::Set(array, 1, Nan::New(sample_source));
   Nan::Set(array, 2, Nan::New(sample_rate));
 
   info.GetReturnValue().Set(array);
 }
-/*
- * Stripped down function to check to see if layer should be sampled.
- * It is called every layer now so does the minimal amount possible
- * on each call.
- *
- */
-
-NAN_METHOD(OboeContext::sampleLayer) {
-    // Validate arguments
-    if (info.Length() != 2) {
-      return Nan::ThrowError("Wrong number of arguments");
-    }
-
-    std::string layer_name;
-    std::string in_xtrace;
-
-    // The first argument must be a string
-    if (!info[0]->IsString()) {
-      return Nan::ThrowTypeError("Layer name must be a string");
-    }
-    layer_name = *Nan::Utf8String(info[0]);
-
-    // The second argument must be a string
-    if ( ! info[1]->IsString()) {
-    return Nan::ThrowTypeError("X-Trace ID must be a string");
-    }
-    in_xtrace = *Nan::Utf8String(info[1]);
-
-    // oboe returns these but they aren't important for the
-    // sampling decision.
-    // TODO BAM does the info need to return sample_rate and source?
-    int sample_rate = 0;
-    int sample_source = 0;
-    int rc = oboe_sample_layer(
-      layer_name.c_str(),
-      in_xtrace.c_str(),
-      &sample_rate,
-      &sample_source
-    );
-
-    info.GetReturnValue().Set(Nan::New(rc));
-  }
 
 NAN_METHOD(OboeContext::toString) {
   char buf[OBOE_MAX_METADATA_PACK_LEN];
@@ -237,8 +185,7 @@ void OboeContext::Init(v8::Local<v8::Object> module) {
   v8::Local<v8::Object> exports = Nan::New<v8::Object>();
   Nan::SetMethod(exports, "setTracingMode", OboeContext::setTracingMode);
   Nan::SetMethod(exports, "setDefaultSampleRate", OboeContext::setDefaultSampleRate);
-  Nan::SetMethod(exports, "sampleRequest", OboeContext::sampleRequest);
-  Nan::SetMethod(exports, "sampleLayer", OboeContext::sampleLayer);
+  Nan::SetMethod(exports, "sampleTrace", OboeContext::sampleTrace);
   Nan::SetMethod(exports, "toString", OboeContext::toString);
   Nan::SetMethod(exports, "set", OboeContext::set);
   Nan::SetMethod(exports, "copy", OboeContext::copy);

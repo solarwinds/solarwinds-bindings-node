@@ -29,6 +29,8 @@ class Metadata : public Nan::ObjectWrap {
   static NAN_METHOD(makeRandom);
   static NAN_METHOD(copy);
   static NAN_METHOD(isValid);
+  static NAN_METHOD(setSampleFlag);
+  static NAN_METHOD(clearSampleFlag);
   static NAN_METHOD(toString);
   static NAN_METHOD(createEvent);
 
@@ -47,8 +49,7 @@ class OboeContext {
   // V8 conversion
   static NAN_METHOD(setTracingMode);
   static NAN_METHOD(setDefaultSampleRate);
-  static NAN_METHOD(sampleRequest);
-  static NAN_METHOD(sampleLayer);
+  static NAN_METHOD(sampleTrace);
   static NAN_METHOD(toString);
   static NAN_METHOD(set);
   static NAN_METHOD(copy);
