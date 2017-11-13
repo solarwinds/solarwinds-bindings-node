@@ -98,7 +98,7 @@ describe('addon.context', function () {
     // poll to give time for the SSL connection to complete
     var id = setInterval(function() {
       // AO sampleRequest() requires service-name and X-Trace ID to check if sampling.
-      var check = bindings.Context.sampleRequest('bruce-test', xid, 'c')
+      var check = bindings.Context.sampleTrace('bruce-test', xid, 'c')
       if (--counter <= 0 || Array.isArray(check) && check[0] === 1) {
         clearInterval(id)
         check.should.be.an.instanceof(Array)
