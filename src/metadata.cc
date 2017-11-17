@@ -77,6 +77,7 @@ NAN_METHOD(Metadata::isValid) {
   info.GetReturnValue().Set(Nan::New(status));
 }
 
+// Set the sample flag and return the previous value
 NAN_METHOD(Metadata::setSampleFlag) {
     Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
     bool previous = self->metadata.flags & XTR_FLAGS_SAMPLED;
@@ -84,6 +85,7 @@ NAN_METHOD(Metadata::setSampleFlag) {
     info.GetReturnValue().Set(Nan::New(previous));
 }
 
+// Clear the sample flag and return the previous value
 NAN_METHOD(Metadata::clearSampleFlag) {
     Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
     bool previous = self->metadata.flags & XTR_FLAGS_SAMPLED;
