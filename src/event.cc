@@ -17,7 +17,8 @@ Event::Event(const oboe_metadata_t *md, bool addEdge) {
     oboe_metadata_create_event(md, &event);
   } else {
     // initializes new Event with md's task_id & new random op_id;
-    // no edges set
+    // no edges set.
+    // TODO BAM - this can fail. handle?
     oboe_event_init(&event, md);
   }
 }
@@ -226,7 +227,7 @@ void Event::Init(v8::Local<v8::Object> exports) {
   Nan::HandleScope scope;
 
   // Prepare constructor template
-  v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(New);
+  v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(Event::New);
   ctor->InstanceTemplate()->SetInternalFieldCount(1);
   ctor->SetClassName(Nan::New("Event").ToLocalChecked());
 
