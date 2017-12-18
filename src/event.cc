@@ -1,9 +1,17 @@
 #include "bindings.h"
 
+//
+// Create an event using oboe's context.
+//
 Event::Event() {
   oboe_status = oboe_event_init(&event, oboe_context_get());
 }
 
+//
+// Create an event using the specified metadata instead of
+// oboe's context. Optionally an and edge to the metadata's
+// op ID.
+//
 Event::Event(const oboe_metadata_t* md, bool addEdge) {
   if (addEdge) {
     oboe_status = oboe_metadata_create_event(md, &event);
@@ -121,6 +129,8 @@ NAN_METHOD(Event::X) {
       //if (Nan::New(Event::constructor)->HasInstance(info[0])) {
 
           message = "it is an Event instance";
+      } else if (Metadata::isMetadata(arg)) {
+          message = "it is a Metadata instance";
       } else {
           message = "it is not an Event instance";
           /*

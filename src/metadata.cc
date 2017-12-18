@@ -1,7 +1,6 @@
 #include "bindings.h"
-#include <iostream>
 
-Nan::Persistent<v8::Function> Metadata::constructor;
+Nan::Persistent<v8::FunctionTemplate> Metadata::constructor;
 
 Metadata::Metadata() {}
 
@@ -20,7 +19,7 @@ v8::Local<v8::Object> Metadata::NewInstance(Metadata* md) {
 
   const unsigned argc = 1;
   v8::Local<v8::Value> argv[argc] = { Nan::New<v8::External>(md) };
-  v8::Local<v8::Function> cons = Nan::New<v8::Function>(constructor);
+  v8::Local<v8::Function> cons = Nan::New<v8::FunctionTemplate>(constructor)->GetFunction();
   v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
 
   return scope.Escape(instance);
@@ -31,8 +30,9 @@ v8::Local<v8::Object> Metadata::NewInstance() {
 
   const unsigned argc = 0;
   v8::Local<v8::Value> argv[argc] = {};
-  v8::Local<v8::Function> cons = Nan::New<v8::Function>(constructor);
+  v8::Local<v8::Function> cons = Nan::New<v8::FunctionTemplate>(constructor)->GetFunction();
   v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
+  //v8::Local<v8::Object> instance = Nan::NewInstance(cons, argc, argv);
 
   return scope.Escape(instance);
 }
@@ -137,18 +137,33 @@ NAN_METHOD(Metadata::New) {
   info.GetReturnValue().Set(info.This());
 }
 
+bool Metadata::isMetadata(v8::Local<v8::Value> object) {
+  return Nan::New(Metadata::constructor)->HasInstance(object);
+}
+
+NAN_METHOD(Metadata::isInstance) {
+    bool is = false;
+    if (info.Length() == 1) {
+        v8::Local<v8::Value> arg = info[0];
+        is = Metadata::isMetadata(arg);
+    }
+    info.GetReturnValue().Set(is);
+}
+
 // Wrap the C++ object so V8 can understand it
 void Metadata::Init(v8::Local<v8::Object> exports) {
   Nan::HandleScope scope;
 
   // Prepare constructor template
-  v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(New);
+  v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(Event::New);
+  constructor.Reset(ctor);
   ctor->InstanceTemplate()->SetInternalFieldCount(2);
   ctor->SetClassName(Nan::New("Metadata").ToLocalChecked());
 
   // Statics
   Nan::SetMethod(ctor, "fromString", Metadata::fromString);
   Nan::SetMethod(ctor, "makeRandom", Metadata::makeRandom);
+  Nan::SetMethod(ctor, "isInstance", Metadata::isInstance);
 
   // Prototype
   Nan::SetPrototypeMethod(ctor, "copy", Metadata::copy);
@@ -158,6 +173,5 @@ void Metadata::Init(v8::Local<v8::Object> exports) {
   Nan::SetPrototypeMethod(ctor, "toString", Metadata::toString);
   Nan::SetPrototypeMethod(ctor, "createEvent", Metadata::createEvent);
 
-  constructor.Reset(ctor->GetFunction());
   Nan::Set(exports, Nan::New("Metadata").ToLocalChecked(), ctor->GetFunction());
 }

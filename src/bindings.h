@@ -27,8 +27,7 @@ class Metadata : public Nan::ObjectWrap {
   Metadata(oboe_metadata_t*);
 
   oboe_metadata_t metadata;
-  static Nan::Persistent<v8::Function> constructor;
-  static Nan::Persistent<v8::FunctionTemplate> tpl;
+  static Nan::Persistent<v8::FunctionTemplate> constructor;
   static NAN_METHOD(New);
   static NAN_METHOD(fromString);
   static NAN_METHOD(makeRandom);
@@ -41,6 +40,9 @@ class Metadata : public Nan::ObjectWrap {
 
   static v8::Local<v8::Object> NewInstance(Metadata*);
   static v8::Local<v8::Object> NewInstance();
+
+  static NAN_METHOD(isInstance);
+  static bool isMetadata(v8::Local<v8::Value>);
 
   public:
     static void Init(v8::Local<v8::Object>);
