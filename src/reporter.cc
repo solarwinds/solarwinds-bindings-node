@@ -164,7 +164,7 @@ NAN_METHOD(Reporter::sendStatus) {
     Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
     Event* event = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
 
-    // fetch a new context
+    // fetch the (possibly new) context
     oboe_metadata_t* md = oboe_context_get();
 
     int status = self->send_status(md, &event->event);

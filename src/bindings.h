@@ -11,6 +11,10 @@
 
 #include <oboe/oboe.h>
 
+// debugging
+#include <sstream>
+#include <iomanip>
+
 class Event;
 
 class Metadata : public Nan::ObjectWrap {
@@ -24,6 +28,7 @@ class Metadata : public Nan::ObjectWrap {
 
   oboe_metadata_t metadata;
   static Nan::Persistent<v8::Function> constructor;
+  static Nan::Persistent<v8::FunctionTemplate> tpl;
   static NAN_METHOD(New);
   static NAN_METHOD(fromString);
   static NAN_METHOD(makeRandom);
@@ -74,13 +79,17 @@ class Event : public Nan::ObjectWrap {
   ~Event();
 
   oboe_event_t event;
-  static Nan::Persistent<v8::Function> constructor;
+  int oboe_status;
+  static Nan::Persistent<v8::FunctionTemplate> constructor;
   static NAN_METHOD(New);
   static NAN_METHOD(addInfo);
   static NAN_METHOD(addEdge);
   static NAN_METHOD(getMetadata);
   static NAN_METHOD(toString);
   static NAN_METHOD(startTrace);
+  static NAN_METHOD(X);
+
+  static bool isEvent(v8::Local<v8::Value>);
 
   static v8::Local<v8::Object> NewInstance(Metadata*, bool);
   static v8::Local<v8::Object> NewInstance(Metadata*);

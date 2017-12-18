@@ -1,245 +1,211 @@
 #include "bindings.h"
 
-Nan::Persistent<v8::Function> Event::constructor;
-
-// Construct a blank event from the context metadata
 Event::Event() {
-  oboe_event_init(&event, oboe_context_get());
+  oboe_status = oboe_event_init(&event, oboe_context_get());
 }
 
-// Construct a new event and point an edge at another
-Event::Event(const oboe_metadata_t *md, bool addEdge) {
-  // both methods copy metadata (version, task_id, flags) from
-  // md to this->event and create a new random op_id.
+Event::Event(const oboe_metadata_t* md, bool addEdge) {
   if (addEdge) {
-    // create_event automatically adds edge in event to md
-    // (so event points an edge to the op_id in md).
-    oboe_metadata_create_event(md, &event);
+    oboe_status = oboe_metadata_create_event(md, &event);
   } else {
-    // initializes new Event with md's task_id & new random op_id;
-    // no edges set.
-    // TODO BAM - this can fail. handle?
-    oboe_event_init(&event, md);
+    oboe_status = oboe_event_init(&event, md);
   }
+  std::cout << "oboe_status is " << oboe_status;
 }
 
-// Remember to cleanup the struct when garbage collected
 Event::~Event() {
   oboe_event_destroy(&event);
 }
 
-v8::Local<v8::Object> Event::NewInstance(Metadata* md, bool addEdge) {
-  Nan::EscapableHandleScope scope;
+Nan::Persistent<v8::FunctionTemplate> Event::constructor;
 
-  const unsigned argc = 2;
-  v8::Local<v8::Value> argv[argc] = {
-    Nan::New<v8::External>(md),
-    Nan::New(addEdge)
-  };
-  v8::Local<v8::Function> cons = Nan::New<v8::Function>(constructor);
-  v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
-
-  return scope.Escape(instance);
-}
-
-v8::Local<v8::Object> Event::NewInstance(Metadata* md) {
-  Nan::EscapableHandleScope scope;
-
-  const unsigned argc = 1;
-  v8::Local<v8::Value> argv[argc] = { Nan::New<v8::External>(md) };
-  v8::Local<v8::Function> cons = Nan::New<v8::Function>(constructor);
-  v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
-
-  return scope.Escape(instance);
-}
-
-v8::Local<v8::Object> Event::NewInstance() {
-  Nan::EscapableHandleScope scope;
-
-  const unsigned argc = 0;
-  v8::Local<v8::Value> argv[argc] = {};
-  v8::Local<v8::Function> cons = Nan::New<v8::Function>(constructor);
-  v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
-
-  return scope.Escape(instance);
-}
-
-// Add info to the event
-NAN_METHOD(Event::addInfo) {
-  // Validate arguments
-  if (info.Length() != 2) {
-    return Nan::ThrowError("Wrong number of arguments");
-  }
-  if (!info[0]->IsString()) {
-    return Nan::ThrowTypeError("Key must be a string");
-  }
-  if (!info[1]->IsString() && !info[1]->IsNumber() && !info[1]->IsBoolean()) {
-    return Nan::ThrowTypeError("Value must be a boolean, string or number");
-  }
-
-  // Unwrap event instance from V8
-  Event* self = ObjectWrap::Unwrap<Event>(info.This());
-  oboe_event_t* event = &self->event;
-
-  // Get key string from arguments and prepare a status variable
-  Nan::Utf8String key(info[0]);
-  int status;
-
-  // Handle integer values
-  if (info[1]->IsBoolean()) {
-    bool val = info[1]->BooleanValue();
-    status = oboe_event_add_info_bool(event, *key, val);
-
-  // Handle double values
-  } else if (info[1]->IsInt32()) {
-    int64_t val = info[1]->Int32Value();
-    status = oboe_event_add_info_int64(event, *key, val);
-
-  // Handle double values
-  } else if (info[1]->IsNumber()) {
-    const double val = info[1]->NumberValue();
-    status = oboe_event_add_info_double(event, *key, val);
-
-  // Handle string values
-  } else {
-    // Get value string from arguments
-    Nan::Utf8String value(info[1]);
-
-    // Detect if we should add as binary or a string
-    // TODO: Should probably use buffers for binary data...
-    if (memchr(*value, '\0', value.length())) {
-      status = oboe_event_add_info_binary(event, *key, *value, value.length());
-    } else {
-      status = oboe_event_add_info(event, *key, *value);
-    }
-  }
-
-  if (status < 0) {
-    return Nan::ThrowError("Failed to add info");
-  }
-}
-
-// Add an edge from a metadata instance
-NAN_METHOD(Event::addEdge) {
-  // Validate arguments
-  if (info.Length() != 1) {
-    return Nan::ThrowError("Wrong number of arguments");
-  }
-  if (!info[0]->IsObject() && !info[0]->IsString()) {
-    return Nan::ThrowTypeError("Must supply an edge metadata instance or string");
-  }
-
-  // Unwrap event instance from V8
-  Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
-  int status;
-
-  if (info[0]->IsObject()) {
-    // Unwrap metadata instance from arguments
-    Metadata* metadata = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
-
-    // Attempt to add the edge
-    status = oboe_event_add_edge(&self->event, &metadata->metadata);
-  } else {
-    // Get string data from arguments
-    Nan::Utf8String val(info[0]);
-
-    // Attempt to add edge
-    status = oboe_event_add_edge_fromstr(&self->event, *val, val.length());
-  }
-
-  if (status < 0) {
-    return Nan::ThrowError("Failed to add edge");
-  }
-}
-
-// Get the metadata of an event
-NAN_METHOD(Event::getMetadata) {
-  Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
-  oboe_event_t* event = &self->event;
-  Metadata* metadata = new Metadata(&event->metadata);
-  info.GetReturnValue().Set(Metadata::NewInstance(metadata));
-  delete metadata;
-}
-
-// Get the metadata of an event as a string
-NAN_METHOD(Event::toString) {
-  // Unwrap the event instance from V8
-  Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
-
-  // Get a pointer to the event struct
-  oboe_event_t* event = &self->event;
-
-  // Build a character array from the event metadata content
-  char buf[OBOE_MAX_METADATA_PACK_LEN];
-  int rc = oboe_metadata_tostr(&event->metadata, buf, sizeof(buf) - 1);
-
-  // If we have data, return it as a string
-  if (rc == 0) {
-    info.GetReturnValue().Set(Nan::New(buf).ToLocalChecked());
-
-  // Otherwise, return an empty string
-  } else {
-    info.GetReturnValue().Set(Nan::New("").ToLocalChecked());
-  }
-}
-
-// Start tracing using supplied metadata
-NAN_METHOD(Event::startTrace) {
-  // Validate arguments
-  if (info.Length() != 1) {
-    return Nan::ThrowError("Wrong number of arguments");
-  }
-  if (!info[0]->IsObject()) {
-    return Nan::ThrowTypeError("Must supply a metadata instance");
-  }
-
-  Metadata* metadata = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
-  info.GetReturnValue().Set(Event::NewInstance(metadata, false));
-}
-
-// Creates a new Javascript instance
-NAN_METHOD(Event::New) {
-  if (!info.IsConstructCall()) {
-    return Nan::ThrowError("Event() must be called as a constructor");
-  }
-
-  Event* event;
-  if (info.Length() > 0 && info[0]->IsExternal()) {
-    Metadata* md = static_cast<Metadata*>(info[0].As<v8::External>()->Value());
-    oboe_metadata_t* context = &md->metadata;
-
-    bool addEdge = true;
-    if (info.Length() == 2 && info[1]->IsBoolean()) {
-      addEdge = info[1]->BooleanValue();
-    }
-
-    event = new Event(context, addEdge);
-  } else {
-    event = new Event();
-  }
-
-  event->Wrap(info.This());
-  info.GetReturnValue().Set(info.This());
-}
-
-// Wrap the C++ object so V8 can understand it
-void Event::Init(v8::Local<v8::Object> exports) {
-  Nan::HandleScope scope;
-
-  // Prepare constructor template
+NAN_MODULE_INIT(Event::Init) {
   v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(Event::New);
+  constructor.Reset(ctor);
   ctor->InstanceTemplate()->SetInternalFieldCount(1);
   ctor->SetClassName(Nan::New("Event").ToLocalChecked());
 
-  // Statics
-  Nan::SetMethod(ctor, "startTrace", Event::startTrace);
-
-  // Prototype
   Nan::SetPrototypeMethod(ctor, "addInfo", Event::addInfo);
   Nan::SetPrototypeMethod(ctor, "addEdge", Event::addEdge);
   Nan::SetPrototypeMethod(ctor, "getMetadata", Event::getMetadata);
   Nan::SetPrototypeMethod(ctor, "toString", Event::toString);
 
-  constructor.Reset(ctor->GetFunction());
-  Nan::Set(exports, Nan::New("Event").ToLocalChecked(), ctor->GetFunction());
+  Nan::SetMethod(ctor, "startTrace", Event::startTrace);
+  Nan::SetMethod(ctor, "x", Event::X);
+
+
+  /* From Vector saved for reference.
+  // link our getters and setter to the object property
+  Nan::SetAccessor(ctor->InstanceTemplate(), Nan::New("x").ToLocalChecked(), Event::HandleGetters, Event::HandleSetters);
+  Nan::SetAccessor(ctor->InstanceTemplate(), Nan::New("y").ToLocalChecked(), Event::HandleGetters, Event::HandleSetters);
+  Nan::SetAccessor(ctor->InstanceTemplate(), Nan::New("z").ToLocalChecked(), Event::HandleGetters, Event::HandleSetters);
+
+  Nan::SetPrototypeMethod(ctor, "add", Add);
+  // */
+
+  target->Set(Nan::New("Event").ToLocalChecked(), ctor->GetFunction());
 }
+
+NAN_METHOD(Event::New) {
+  // throw an error if constructor is called without new keyword
+  if(!info.IsConstructCall()) {
+    return Nan::ThrowError(Nan::New("Event::New - called without new keyword").ToLocalChecked());
+  }
+
+  Event* event;
+
+  if (info.Length() == 0) {
+    event = new Event();
+  } else {
+    // TODO BAM make the multiple argument version work because it doesn't.
+    event = new Event();
+  }
+
+  // TODO BAM check event->oboe_status.
+
+  event->Wrap(info.Holder());
+
+  info.GetReturnValue().Set(info.Holder());
+}
+
+NAN_METHOD(Event::toString) {
+  Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
+
+  oboe_event_t* event = &self->event;
+
+  char buf[OBOE_MAX_METADATA_PACK_LEN];
+  int result = oboe_metadata_tostr(&event->metadata, buf, sizeof(buf) - 1);
+
+  // if there was an error make the string null
+  if (result != 0) {
+    buf[0] = '\0';
+  }
+
+  info.GetReturnValue().Set(Nan::New(buf).ToLocalChecked());
+}
+
+NAN_METHOD(Event::getMetadata) {
+  //Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
+
+  info.GetReturnValue().Set(Nan::New("TODO BAM").ToLocalChecked());
+}
+
+NAN_METHOD(Event::startTrace) {
+  info.GetReturnValue().Set(Nan::New("TODO BAM").ToLocalChecked());
+}
+
+NAN_METHOD(Event::addEdge) {
+  info.GetReturnValue().Set(Nan::New("TODO BAM").ToLocalChecked());
+}
+
+NAN_METHOD(Event::addInfo) {
+  info.GetReturnValue().Set(Nan::New("TODO BAM").ToLocalChecked());
+}
+
+bool Event::isEvent(v8::Local<v8::Value> object) {
+  bool is = Nan::New(Event::constructor)->HasInstance(object);
+  return is;
+}
+
+NAN_METHOD(Event::X) {
+  char const* message = "no conditions met";
+
+  if (info.Length() <= 0) {
+      message = "No arguments";
+  } else if (info[0]->IsExternal()) {
+      message = "It is external";
+  } else if (info[0]->IsObject()) {
+      v8::Local<v8::Value> arg = info[0];
+      if (Event::isEvent(arg)) {
+      //if (Nan::New(Event::constructor)->HasInstance(arg)) {
+      //if (Nan::New(Event::constructor)->HasInstance(info[0])) {
+
+          message = "it is an Event instance";
+      } else {
+          message = "it is not an Event instance";
+          /*
+          // presume it's metadata
+          md = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
+          message = "The argument is an object";
+          if (md) message = "The argument is unwrapped and not null";
+          oboe_metadata_t* omd = &md->metadata;
+          if (omd) {
+              int n = sprintf(buffer, "omd version: 0x%02x", (int) omd->version);
+              char * b = new char[n + 1];
+              std::string s(buffer);
+              std::cout << "XXXX" << s.c_str() << std::endl;
+              delete b;
+
+              b = new char[100];
+              oboe_metadata_tostr(omd, b, 100);
+              message = b;
+          }
+          // */
+      }
+  }
+
+  info.GetReturnValue().Set(Nan::New(message).ToLocalChecked());
+
+  //delete message;
+
+}
+
+/*
+NAN_METHOD(Event::Add) {
+  // unwrap this Event
+  Event * self = Nan::ObjectWrap::Unwrap<Event>(info.This());
+
+  if (!Nan::New(Event::constructor)->HasInstance(info[0])) {
+    return Nan::ThrowError(Nan::New("Event::Add - expected argument to be instance of Event").ToLocalChecked());
+  }
+  // unwrap the Event passed as argument
+  Event * otherVec = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
+
+  // specify argument counts and constructor arguments
+  const int argc = 3;
+  v8::Local<v8::Value> argv[argc] = {
+    Nan::New(self->x + otherVec->x),
+    Nan::New(self->y + otherVec->y),
+    Nan::New(self->z + otherVec->z)
+  };
+
+  // get a local handle to our constructor function
+  v8::Local<v8::Function> constructorFunc = Nan::New(Event::constructor)->GetFunction();
+  // create a new JS instance from arguments
+  v8::Local<v8::Object> jsSumVec = Nan::NewInstance(constructorFunc, argc, argv).ToLocalChecked();
+
+  info.GetReturnValue().Set(jsSumVec);
+}
+
+NAN_GETTER(Event::HandleGetters) {
+  Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
+
+  std::string propertyName = std::string(*Nan::Utf8String(property));
+  if (propertyName == "x") {
+    info.GetReturnValue().Set(self->x);
+  } else if (propertyName == "y") {
+    info.GetReturnValue().Set(self->y);
+  } else if (propertyName == "z") {
+    info.GetReturnValue().Set(self->z);
+  } else {
+    info.GetReturnValue().Set(Nan::Undefined());
+  }
+}
+
+NAN_SETTER(Event::HandleSetters) {
+  Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
+
+  if(!value->IsNumber()) {
+    return Nan::ThrowError(Nan::New("expected value to be a number").ToLocalChecked());
+  }
+
+  std::string propertyName = std::string(*Nan::Utf8String(property));
+  if (propertyName == "x") {
+    self->x = value->NumberValue();
+  } else if (propertyName == "y") {
+    self->y = value->NumberValue();
+  } else if (propertyName == "z") {
+    self->z = value->NumberValue();
+  }
+}
+// */
