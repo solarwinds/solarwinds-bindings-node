@@ -2,10 +2,13 @@
 
 Nan::Persistent<v8::FunctionTemplate> Metadata::constructor;
 
-Metadata::Metadata() {}
+Metadata::Metadata() {
+  std::cout << "flow: Metadata()\n";
+}
 
 // Allow construction of clones
 Metadata::Metadata(oboe_metadata_t* md) {
+  std::cout << "flow: Metadata(md)\n";
   oboe_metadata_copy(&metadata, md);
 }
 
@@ -14,8 +17,45 @@ Metadata::~Metadata() {
   oboe_metadata_destroy(&metadata);
 }
 
+// Creates a new Javascript instance
+NAN_METHOD(Metadata::New) {
+  if (!info.IsConstructCall()) {
+    return Nan::ThrowError("Metadata() must be called as a constructor");
+  }
+  std::cout << "flow: New(?)\n";
+
+  Metadata* metadata;
+  if (info.Length() == 0) {
+    std::cout << "flow: New()\n";
+    metadata = new Metadata();
+  } else if (info.Length() != 1) {
+    return Nan::ThrowError("Metadata() only accepts 0 or 1 parameters");
+  } else if (info[0]->IsExternal()) {
+    std::cout << "flow: New(external)\n";
+    Metadata* md = static_cast<Metadata*>(info[0].As<v8::External>()->Value());
+    //oboe_metadata_t* context = &md->metadata;
+    metadata = new Metadata(&md->metadata);
+  } else if (Metadata::isMetadata(info[0])) {
+    std::cout << "flow: New(metadata)\n";
+    Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
+    metadata = new Metadata(&md->metadata);
+  } else {
+    return Nan::ThrowError("Invalid type for new Metadata()");
+  }
+
+
+  metadata->Wrap(info.This());
+  info.GetReturnValue().Set(info.This());
+}
+
+
+//
+// Create a new instance when a Metadata object argument
+//
 v8::Local<v8::Object> Metadata::NewInstance(Metadata* md) {
   Nan::EscapableHandleScope scope;
+
+  std::cout << "flow: NewInstance(md)\n";
 
   const unsigned argc = 1;
   v8::Local<v8::Value> argv[argc] = { Nan::New<v8::External>(md) };
@@ -25,8 +65,13 @@ v8::Local<v8::Object> Metadata::NewInstance(Metadata* md) {
   return scope.Escape(instance);
 }
 
+//
+// Create a new instance when no arguments.
+//
 v8::Local<v8::Object> Metadata::NewInstance() {
   Nan::EscapableHandleScope scope;
+
+  std::cout << "flow: NewInstance()\n";
 
   const unsigned argc = 0;
   v8::Local<v8::Value> argv[argc] = {};
@@ -67,6 +112,7 @@ NAN_METHOD(Metadata::makeRandom) {
 }
 // */
 
+//*
 //
 // Metadata factory for randomized metadata
 //
@@ -76,9 +122,18 @@ NAN_METHOD(Metadata::makeRandom) {
   oboe_metadata_init(&md);
   oboe_metadata_random(&md);
 
+  // create a metadata object so this parallels the JS invocation.
+  // Create intermediate meta so it can be deleted and doesn't leak.
+  Metadata* meta = new Metadata(&md);
+  info.GetReturnValue().Set(Metadata::NewInstance(meta));
+  delete meta;
+
+  /*
+
   // specify argument counts and constructor arguments
   const int argc = 1;
-  v8::Local<v8::Value> argv[argc] = {Nan::New(&md)};
+  //v8::Local<v8::Value> argv[argc] = {Nan::New(&md)};
+  v8::Local<v8::Value> argv[argc] = {Nan::New(new Metadata(&md))};
 
   // get a local handle to our constructor function
   v8::Local<v8::Function> constructorFunc = Nan::New(Metadata::constructor)->GetFunction();
@@ -86,8 +141,9 @@ NAN_METHOD(Metadata::makeRandom) {
   v8::Local<v8::Object> metadata = Nan::NewInstance(constructorFunc, argc, argv).ToLocalChecked();
 
   info.GetReturnValue().Set(metadata);
+  // */
 }
-
+// */
 
 // Copy the contents of the metadata instance to a new instance
 NAN_METHOD(Metadata::copy) {
@@ -143,29 +199,16 @@ NAN_METHOD(Metadata::createEvent) {
   info.GetReturnValue().Set(Event::NewInstance(self));
 }
 
-// Creates a new Javascript instance
-NAN_METHOD(Metadata::New) {
-  if (!info.IsConstructCall()) {
-    return Nan::ThrowError("Metadata() must be called as a constructor");
-  }
-
-  Metadata* metadata;
-  if (info.Length() == 1 && info[0]->IsExternal()) {
-    Metadata* md = static_cast<Metadata*>(info[0].As<v8::External>()->Value());
-    oboe_metadata_t* context = &md->metadata;
-    metadata = new Metadata(context);
-  } else {
-    metadata = new Metadata();
-  }
-
-  metadata->Wrap(info.This());
-  info.GetReturnValue().Set(info.This());
-}
-
+//
+// Internal method to determine if an object is an instance of
+// JavaScript Metadata
+//
 bool Metadata::isMetadata(v8::Local<v8::Value> object) {
   return Nan::New(Metadata::constructor)->HasInstance(object);
 }
 
+// JavaScript callable method to determine if an object is an
+// instance of JavaScript Metadata.
 NAN_METHOD(Metadata::isInstance) {
     bool is = false;
     if (info.Length() == 1) {
@@ -180,7 +223,7 @@ void Metadata::Init(v8::Local<v8::Object> exports) {
   Nan::HandleScope scope;
 
   // Prepare constructor template
-  v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(Event::New);
+  v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(Metadata::New);
   constructor.Reset(ctor);
   ctor->InstanceTemplate()->SetInternalFieldCount(2);
   ctor->SetClassName(Nan::New("Metadata").ToLocalChecked());
