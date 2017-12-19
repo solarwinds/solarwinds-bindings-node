@@ -53,16 +53,41 @@ NAN_METHOD(Metadata::fromString) {
 }
 
 // Make a new metadata instance with randomized data
+/*
 NAN_METHOD(Metadata::makeRandom) {
   oboe_metadata_t md;
   oboe_metadata_init(&md);
   oboe_metadata_random(&md);
 
-  // Use the object as an argument in the event constructor
+  // Use the struct as an argument to the constructor
   Metadata* metadata = new Metadata(&md);
+  // then use that object to construct another instance? Huh?
   info.GetReturnValue().Set(Metadata::NewInstance(metadata));
   delete metadata;
 }
+// */
+
+//
+// Metadata factory for randomized metadata
+//
+//
+NAN_METHOD(Metadata::makeRandom) {
+  oboe_metadata_t md;
+  oboe_metadata_init(&md);
+  oboe_metadata_random(&md);
+
+  // specify argument counts and constructor arguments
+  const int argc = 1;
+  v8::Local<v8::Value> argv[argc] = {Nan::New(&md)};
+
+  // get a local handle to our constructor function
+  v8::Local<v8::Function> constructorFunc = Nan::New(Metadata::constructor)->GetFunction();
+  // create a new JS instance from arguments
+  v8::Local<v8::Object> metadata = Nan::NewInstance(constructorFunc, argc, argv).ToLocalChecked();
+
+  info.GetReturnValue().Set(metadata);
+}
+
 
 // Copy the contents of the metadata instance to a new instance
 NAN_METHOD(Metadata::copy) {

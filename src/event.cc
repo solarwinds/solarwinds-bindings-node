@@ -91,11 +91,19 @@ NAN_METHOD(Event::toString) {
 
   info.GetReturnValue().Set(Nan::New(buf).ToLocalChecked());
 }
-
+/**
+ * Event::getMetadata()
+ *
+ * Return a Metadata object with the metadata from this event.
+ */
 NAN_METHOD(Event::getMetadata) {
-  //Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
+  Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
 
-  info.GetReturnValue().Set(Nan::New("TODO BAM").ToLocalChecked());
+  oboe_event_t* event = &self->event;
+  Metadata* metadata = new Metadata(&event->metadata);
+
+  info.GetReturnValue().Set(Metadata::NewInstance(metadata));
+  delete metadata;
 }
 
 NAN_METHOD(Event::startTrace) {
