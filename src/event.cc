@@ -9,7 +9,7 @@ Event::Event() {
 
 //
 // Create an event using the specified metadata instead of
-// oboe's context. Optionally an and edge to the metadata's
+// oboe's context. Optionally add an edge to the metadata's
 // op ID.
 //
 Event::Event(const oboe_metadata_t* md, bool addEdge) {
@@ -18,7 +18,6 @@ Event::Event(const oboe_metadata_t* md, bool addEdge) {
   } else {
     oboe_status = oboe_event_init(&event, md);
   }
-  std::cout << "oboe_status is " << oboe_status << std::endl;
 }
 
 Event::~Event() {
@@ -203,15 +202,17 @@ NAN_METHOD(Event::addEdge) {
   Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
   int status;
 
-  // TODO BAM should this accept an event as well as metadata?
-  if (Metadata::isMetadata(info[0])) {
+  if (Event::isEvent(info[0])) {
+    Event* e = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
+    status = oboe_event_add_edge(&self->event, &e->event.metadata);
+  } else if (Metadata::isMetadata(info[0])) {
     Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
     status = oboe_event_add_edge(&self->event, &md->metadata);
   } else if (info[0]->IsString()) {
     Nan::Utf8String md_string(info[0]);
     status = oboe_event_add_edge_fromstr(&self->event, *md_string, md_string.length());
   } else {
-    return Nan::ThrowTypeError("event.addEdge requires a metadata instance or string");
+    return Nan::ThrowTypeError("event.addEdge requires a metadata or event instance or string");
   }
 
   if (status < 0) {
