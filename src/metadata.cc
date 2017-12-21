@@ -3,12 +3,10 @@
 Nan::Persistent<v8::FunctionTemplate> Metadata::constructor;
 
 Metadata::Metadata() {
-  std::cout << "flow: Metadata()\n";
 }
 
 // Allow construction of clones
 Metadata::Metadata(oboe_metadata_t* md) {
-  std::cout << "flow: Metadata(md)\n";
   oboe_metadata_copy(&metadata, md);
 }
 
@@ -17,32 +15,43 @@ Metadata::~Metadata() {
   oboe_metadata_destroy(&metadata);
 }
 
-// Creates a new Javascript instance
+/**
+ * JavaScript callable method to create a new Javascript instance
+ *
+ *
+ */
 NAN_METHOD(Metadata::New) {
   if (!info.IsConstructCall()) {
     return Nan::ThrowError("Metadata() must be called as a constructor");
   }
-  std::cout << "flow: New(?)\n";
 
+  // Go through the various calling signatures.
   Metadata* metadata;
+
   if (info.Length() == 0) {
-    std::cout << "flow: New()\n";
+    // returns null metadata
+    // TODO BAM what is the point of this?
     metadata = new Metadata();
   } else if (info.Length() != 1) {
     return Nan::ThrowError("Metadata() only accepts 0 or 1 parameters");
   } else if (info[0]->IsExternal()) {
-    std::cout << "flow: New(external)\n";
-    Metadata* md = static_cast<Metadata*>(info[0].As<v8::External>()->Value());
-    //oboe_metadata_t* context = &md->metadata;
-    metadata = new Metadata(&md->metadata);
+    // this is only used by other C++ methods, not JavaScript. They must pass
+    // the right data!
+    oboe_metadata_t* md = static_cast<oboe_metadata_t*>(info[0].As<v8::External>()->Value());
+    metadata = new Metadata(md);
+    //Metadata* md = static_cast<Metadata*>(info[0].As<v8::External>()->Value());
+    //metadata = new Metadata(&md->metadata);
   } else if (Metadata::isMetadata(info[0])) {
-    std::cout << "flow: New(metadata)\n";
+    // If called from JavaScript with a Metadata instance
     Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
     metadata = new Metadata(&md->metadata);
+  } else if (Event::isEvent(info[0])) {
+    // if called from JavaScript with an Event instance
+    Event* e = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
+    metadata = new Metadata(&e->event.metadata);
   } else {
     return Nan::ThrowError("Invalid type for new Metadata()");
   }
-
 
   metadata->Wrap(info.This());
   info.GetReturnValue().Set(info.This());
@@ -55,10 +64,8 @@ NAN_METHOD(Metadata::New) {
 v8::Local<v8::Object> Metadata::NewInstance(Metadata* md) {
   Nan::EscapableHandleScope scope;
 
-  std::cout << "flow: NewInstance(md)\n";
-
   const unsigned argc = 1;
-  v8::Local<v8::Value> argv[argc] = { Nan::New<v8::External>(md) };
+  v8::Local<v8::Value> argv[argc] = { Nan::New<v8::External>(&md->metadata) };
   v8::Local<v8::Function> cons = Nan::New<v8::FunctionTemplate>(constructor)->GetFunction();
   v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
 
@@ -71,8 +78,6 @@ v8::Local<v8::Object> Metadata::NewInstance(Metadata* md) {
 v8::Local<v8::Object> Metadata::NewInstance() {
   Nan::EscapableHandleScope scope;
 
-  std::cout << "flow: NewInstance()\n";
-
   const unsigned argc = 0;
   v8::Local<v8::Value> argv[argc] = {};
   v8::Local<v8::Function> cons = Nan::New<v8::FunctionTemplate>(constructor)->GetFunction();
@@ -80,6 +85,16 @@ v8::Local<v8::Object> Metadata::NewInstance() {
   //v8::Local<v8::Object> instance = Nan::NewInstance(cons, argc, argv);
 
   return scope.Escape(instance);
+}
+
+/**
+ * JavaScript callable static method to return metadata constructed from the current
+ * oboe context.
+ */
+NAN_METHOD(Metadata::fromContext) {
+  Metadata* md = new Metadata(oboe_context_get());
+  info.GetReturnValue().Set(Metadata::NewInstance(md));
+  delete md;
 }
 
 // Transform a string back into a metadata instance
@@ -97,53 +112,20 @@ NAN_METHOD(Metadata::fromString) {
   delete metadata;
 }
 
-// Make a new metadata instance with randomized data
-/*
-NAN_METHOD(Metadata::makeRandom) {
-  oboe_metadata_t md;
-  oboe_metadata_init(&md);
-  oboe_metadata_random(&md);
-
-  // Use the struct as an argument to the constructor
-  Metadata* metadata = new Metadata(&md);
-  // then use that object to construct another instance? Huh?
-  info.GetReturnValue().Set(Metadata::NewInstance(metadata));
-  delete metadata;
-}
-// */
-
-//*
 //
 // Metadata factory for randomized metadata
 //
-//
 NAN_METHOD(Metadata::makeRandom) {
   oboe_metadata_t md;
   oboe_metadata_init(&md);
   oboe_metadata_random(&md);
 
-  // create a metadata object so this parallels the JS invocation.
-  // Create intermediate meta so it can be deleted and doesn't leak.
+  // create intermediate meta so it can be deleted and doesn't leak memory.
   Metadata* meta = new Metadata(&md);
+  // create a metadata object so this parallels the JS invocation.
   info.GetReturnValue().Set(Metadata::NewInstance(meta));
   delete meta;
-
-  /*
-
-  // specify argument counts and constructor arguments
-  const int argc = 1;
-  //v8::Local<v8::Value> argv[argc] = {Nan::New(&md)};
-  v8::Local<v8::Value> argv[argc] = {Nan::New(new Metadata(&md))};
-
-  // get a local handle to our constructor function
-  v8::Local<v8::Function> constructorFunc = Nan::New(Metadata::constructor)->GetFunction();
-  // create a new JS instance from arguments
-  v8::Local<v8::Object> metadata = Nan::NewInstance(constructorFunc, argc, argv).ToLocalChecked();
-
-  info.GetReturnValue().Set(metadata);
-  // */
 }
-// */
 
 // Copy the contents of the metadata instance to a new instance
 NAN_METHOD(Metadata::copy) {
@@ -178,19 +160,17 @@ NAN_METHOD(Metadata::clearSampleFlag) {
 NAN_METHOD(Metadata::toString) {
   // Unwrap the Metadata instance from V8
   Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
-
-  // Convert the contents to a character array
   char buf[OBOE_MAX_METADATA_PACK_LEN];
-  int rc = oboe_metadata_tostr(&self->metadata, buf, sizeof(buf) - 1);
 
-  // If it worked, return it
-  if (rc == 0) {
-    info.GetReturnValue().Set(Nan::New(buf).ToLocalChecked());
-
-  // Otherwise, return an empty string
+  int rc;
+  // for now any argument counts. maybe accept 'A' or 'a'?
+  if (info.Length() == 1) {
+    rc = format(&self->metadata, sizeof(buf), buf) ? 0 : -1;
   } else {
-    info.GetReturnValue().Set(Nan::New("").ToLocalChecked());
+    rc = oboe_metadata_tostr(&self->metadata, buf, sizeof(buf) - 1);
   }
+
+  info.GetReturnValue().Set(Nan::New(rc == 0 ? buf : "").ToLocalChecked());
 }
 
 // Create an event from this metadata instance
@@ -230,6 +210,7 @@ void Metadata::Init(v8::Local<v8::Object> exports) {
 
   // Statics
   Nan::SetMethod(ctor, "fromString", Metadata::fromString);
+  Nan::SetMethod(ctor, "fromContext", Metadata::fromContext);
   Nan::SetMethod(ctor, "makeRandom", Metadata::makeRandom);
   Nan::SetMethod(ctor, "isInstance", Metadata::isInstance);
 
@@ -242,4 +223,50 @@ void Metadata::Init(v8::Local<v8::Object> exports) {
   Nan::SetPrototypeMethod(ctor, "createEvent", Metadata::createEvent);
 
   Nan::Set(exports, Nan::New("Metadata").ToLocalChecked(), ctor->GetFunction());
+}
+
+bool Metadata::format(oboe_metadata_t* md, size_t len, char* buffer) {
+    char* b = buffer;
+
+    // length counts prefix chars, flag chars, 3 colons and null termination
+    if (2 + md->task_len + md->op_len + 2 + 4 > len) return false;
+
+    // fix up the first byte (because it's not 2B in memory)
+    int task_bits = (md->task_len >> 2) - 1;
+    if (task_bits == 4) task_bits = 3;
+    uint8_t packed = md->version << 4 | ((md->op_len >> 2) - 1) << 3 | task_bits;
+    b = PutHex(packed, b);
+    *b++ = ':';
+
+    // put the task ID
+    uint8_t* mdp = (uint8_t *) &md->ids.task_id;
+    for(unsigned int i = 0; i < md->task_len; i++) {
+        b = PutHex(*mdp++, b);
+    }
+    *b++ = ':';
+
+    // put the op ID
+    mdp = (uint8_t *) &md->ids.op_id;
+    for (unsigned int i = 0; i < md->op_len; i++) {
+        b = PutHex(*mdp++, b);
+    }
+    *b++ = ':';
+
+    // put the flags byte and null terminate the string.
+    b = PutHex(md->flags, b);
+    *b = '\0';
+
+    return true;
+}
+
+char* Metadata::PutHex(uint8_t byte, char *p, char base) {
+    base -= 10;
+    int digit = (byte >> 4);
+    digit += digit <= 9 ? '0' : base;
+    *p++ = (char) digit;
+    digit = byte & 0xF;
+    digit += digit <= 9 ? '0' : base;
+    *p++ = (char) digit;
+
+    return p;
 }

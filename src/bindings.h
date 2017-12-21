@@ -37,12 +37,17 @@ class Metadata : public Nan::ObjectWrap {
   static NAN_METHOD(clearSampleFlag);
   static NAN_METHOD(toString);
   static NAN_METHOD(createEvent);
+  static NAN_METHOD(fromContext);
 
   static v8::Local<v8::Object> NewInstance(Metadata*);
   static v8::Local<v8::Object> NewInstance();
 
   static NAN_METHOD(isInstance);
   static bool isMetadata(v8::Local<v8::Value>);
+  static bool format(oboe_metadata_t*, size_t, char*);
+
+  private:
+    static char* PutHex(uint8_t, char*, char = 'a');
 
   public:
     static void Init(v8::Local<v8::Object>);
@@ -88,8 +93,6 @@ class Event : public Nan::ObjectWrap {
   static NAN_METHOD(addEdge);
   static NAN_METHOD(getMetadata);
   static NAN_METHOD(toString);
-  static NAN_METHOD(startTrace);
-  static NAN_METHOD(X);
 
   static bool isEvent(v8::Local<v8::Value>);
 
