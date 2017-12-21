@@ -59,6 +59,14 @@ describe('addon.context', function () {
     v.should.not.equal('')
     v.should.equal(metadata.toString())
   })
+  it('should set context to metadata instance using JavaScript', function () {
+    var md = bindings.Metadata.fromContext()
+    var event = new bindings.Event(md)
+    bindings.Context.set(event.getMetadata())
+    var v = bindings.Context.toString()
+    v.should.not.equal('')
+    v.should.equal(event.getMetadata().toString())
+  })
   it('should set context from metadata string', function () {
     var event = bindings.Context.createEvent()
     var string = event.getMetadata().toString()

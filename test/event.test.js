@@ -39,6 +39,7 @@ describe('addon.event', function () {
 
   it('should start tracing, returning a new instance', function () {
     var meta = new bindings.Metadata()
-    var event2 = bindings.Event.startTrace(meta)
+    var event = new bindings.Event(meta, false)
+    //var event2 = bindings.Event.startTrace(meta)
   })
 })
