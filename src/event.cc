@@ -76,16 +76,13 @@ NAN_METHOD(Event::New) {
   if (Metadata::isMetadata(info[0])) {
     Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
     mdp = &md->metadata;
-
   } else if (info[0]->IsExternal()) {
     // this is only used by other C++ methods, not JavaScript. They must pass
-    // the right a pointer to an oboe_metadata_t structure.
+    // a pointer to an oboe_metadata_t structure.
     mdp = static_cast<oboe_metadata_t*>(info[0].As<v8::External>()->Value());
-
   } else if (Event::isEvent(info[0])) {
     Event* e = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
     mdp = &e->event.metadata;
-
   } else if (info[0]->IsString()) {
     Nan::Utf8String xtrace(info[0]);
     int status = oboe_metadata_fromstr(&converted_md, *xtrace, xtrace.length());
@@ -156,8 +153,8 @@ NAN_METHOD(Event::toString) {
   char buf[OBOE_MAX_METADATA_PACK_LEN];
 
   int rc;
-  // TODO BAM for now any argument counts. maybe accept 'A' or 'a'?
-  if (info.Length() == 1) {
+  // TODO BAM for now any true counts. maybe accept 'A' or 'a'?
+  if (info.Length() == 1 && info[0]->ToBoolean()->BooleanValue()) {
     rc = Metadata::format(md, sizeof(buf), buf) ? 0 : -1;
   } else {
     rc = oboe_metadata_tostr(md, buf, sizeof(buf) - 1);
