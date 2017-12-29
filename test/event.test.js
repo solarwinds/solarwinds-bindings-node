@@ -21,10 +21,21 @@ describe('addon.event', function () {
     event.addInfo('key', 'val')
   })
 
-  it('should add edge as metadata', function () {
+  it('should add edge from metadata', function () {
     // base the metadata on the same task ID
     var meta = new bindings.Metadata(random);
     event.addEdge(meta)
+  })
+
+  it('should add edge as from an event', function () {
+    var e = new bindings.Event(event)
+    event.addEdge(e)
+  })
+
+  it('should add edge from a string', function () {
+    var e = new bindings.Event(event)
+    var meta = e.toString()
+    event.addEdge(meta.toString())
   })
 
   it('should not add edge when task IDs do not match', function () {
@@ -35,8 +46,6 @@ describe('addon.event', function () {
     // invalid metadata. So it doesn't fail even though it didn't
     // add an edge. Hmmm.
     var e = new bindings.Event(bindings.Metadata.makeRandom())
-    console.log(md.toString(1))
-    console.log(e.toString(1))
     // it seems that .should.throw() doesn't work quite right.
     var threw = false
     try {
@@ -45,17 +54,6 @@ describe('addon.event', function () {
       threw = true
     }
     threw.should.equal(true)
-  })
-
-  it('should add edge as an event', function () {
-    var e = new bindings.Event(event)
-    event.addEdge(e)
-  })
-
-  it('should add edge as string', function () {
-    var e = new bindings.Event(event)
-    var meta = e.toString()
-    event.addEdge(meta.toString())
   })
 
   it('should get metadata', function () {

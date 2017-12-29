@@ -114,23 +114,29 @@ NAN_METHOD(OboeContext::sampleTrace) {
   info.GetReturnValue().Set(array);
 }
 
+// Serialize a metadata object to a string
 NAN_METHOD(OboeContext::toString) {
   char buf[OBOE_MAX_METADATA_PACK_LEN];
+  oboe_metadata_t* md = oboe_context_get();
 
-  oboe_metadata_t *md = oboe_context_get();
-  int rc = oboe_metadata_tostr(md, buf, sizeof(buf) - 1);
-  if (rc == 0) {
-    info.GetReturnValue().Set(Nan::New(buf).ToLocalChecked());
+  int rc;
+  // for now any argument counts. maybe accept 'A' or 'a'?
+  if (info.Length() == 1) {
+    rc = Metadata::format(md, sizeof(buf), buf) ? 0 : -1;
   } else {
-    info.GetReturnValue().Set(Nan::New("").ToLocalChecked());
+    rc = oboe_metadata_tostr(md, buf, sizeof(buf) - 1);
   }
+
+  info.GetReturnValue().Set(Nan::New(rc == 0 ? buf : "").ToLocalChecked());
 }
+
 
 NAN_METHOD(OboeContext::set) {
   // Validate arguments
   if (info.Length() != 1) {
     return Nan::ThrowError("Wrong number of arguments");
   }
+  // TODO BAM validate that it is Metadata,  not just object.
   if (!info[0]->IsObject() && !info[0]->IsString()) {
     return Nan::ThrowTypeError("You must supply a Metadata instance or string");
   }

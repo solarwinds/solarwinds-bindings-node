@@ -129,12 +129,12 @@ NAN_GETTER(Reporter::getChannel) {
 }
 
 
-// Transform a string back into a metadata instance
+// Send an event to the reporter
 NAN_METHOD(Reporter::sendReport) {
   if (info.Length() < 1) {
     return Nan::ThrowError("Wrong number of arguments");
   }
-  if (!info[0]->IsObject()) {
+  if (!Event::isEvent(info[0])) {
     return Nan::ThrowTypeError("Must supply an event instance");
   }
 
@@ -154,18 +154,23 @@ NAN_METHOD(Reporter::sendReport) {
 }
 
 NAN_METHOD(Reporter::sendStatus) {
-    if (info.Length() != 1) {
-        return Nan::ThrowError("Reporter::sendStatus requires exactly one argument");
+    if (info.Length() < 1) {
+        return Nan::ThrowError("Reporter::sendStatus - wrong number of arguments");
     }
-    if (!info[0]->IsObject()) {
-        return Nan::ThrowError("Reporter::sendStatus argument must be an event instance");
+    if (!Event::isEvent(info[0])) {
+        return Nan::ThrowError("Reporter::sendStatus - requires an event instance");
     }
 
     Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
     Event* event = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
 
     // fetch the (possibly new) context
-    oboe_metadata_t* md = oboe_context_get();
+    oboe_metadata_t* md;
+    if (info.Length() >= 2 && Metadata::isMetadata(info[1])) {
+        md = &Nan::ObjectWrap::Unwrap<Metadata>(info[1]->ToObject())->metadata;
+    } else {
+        md = oboe_context_get();
+    }
 
     int status = self->send_status(md, &event->event);
     info.GetReturnValue().Set(Nan::New(status));

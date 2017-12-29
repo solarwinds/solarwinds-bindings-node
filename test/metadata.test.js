@@ -18,6 +18,7 @@ describe('addon.metadata', function () {
   it('should set the sample flag', function () {
     var md = metadata.toString()
     metadata.setSampleFlag()
+    // it shouldn't modify anything but the sample flag
     metadata.toString().slice(0, -2).should.equal(md.slice(0, -2))
     metadata.toString().slice(-2).should.equal('01')
   })
