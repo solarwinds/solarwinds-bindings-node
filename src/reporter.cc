@@ -142,7 +142,7 @@ NAN_METHOD(Reporter::sendReport) {
   Event* event = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
 
   oboe_metadata_t *md;
-  if (info.Length() == 2 && info[1]->IsObject()) {
+  if (info.Length() >= 2 && Metadata::isMetadata(info[1])) {
     Metadata* metadata = Nan::ObjectWrap::Unwrap<Metadata>(info[1]->ToObject());
     md = &metadata->metadata;
   } else {
