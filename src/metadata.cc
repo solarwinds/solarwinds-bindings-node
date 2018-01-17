@@ -120,8 +120,19 @@ NAN_METHOD(Metadata::makeRandom) {
   oboe_metadata_init(&md);
   oboe_metadata_random(&md);
 
+  // set or clear the sample flag appropriately if an argument specified.
+  if (info.Length() == 1) {
+      if (info[0]->ToBoolean()->BooleanValue()) {
+          md.flags |= XTR_FLAGS_SAMPLED;
+      } else {
+          md.flags &= ~XTR_FLAGS_SAMPLED;
+      }
+  }
+
   // create intermediate meta so it can be deleted and doesn't leak memory.
   Metadata* meta = new Metadata(&md);
+
+
   // create a metadata object so this parallels the JS invocation.
   info.GetReturnValue().Set(Metadata::NewInstance(meta));
   delete meta;
