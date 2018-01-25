@@ -14,7 +14,7 @@ NAN_METHOD(oboeInit) {
         return Nan::ThrowError("oboeInit requires one string argument - the service key");
     }
     Nan::Utf8String service_key(info[0]);
-    oboe_init(*service_key);
+    oboe_init(*service_key, "");
 }
 
 extern "C" {

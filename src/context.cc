@@ -86,7 +86,8 @@ NAN_METHOD(OboeContext::sampleTrace) {
 
   // If the second argument is present, it must be a string
   // TODO BAM - why can't it be an object, i.e., metadata?
-  // BAM - because oboe wants a string here.
+  // BAM - because oboe wants a string here. but still, this
+  // should accept either, formatting it if necessary.
   if (info.Length() >= 2) {
     if ( ! info[1]->IsString()) {
       return Nan::ThrowTypeError("X-Trace ID must be a string");
@@ -104,8 +105,6 @@ NAN_METHOD(OboeContext::sampleTrace) {
   );
 
   // Store rc, sample_source and sample_rate in an array
-  // TODO BAM - this is 3 elements, does the array expand
-  // automatically? (it's a JS array, so probably).
   v8::Local<v8::Array> array = Nan::New<v8::Array>(3);
   Nan::Set(array, 0, Nan::New(rc));
   Nan::Set(array, 1, Nan::New(sample_source));

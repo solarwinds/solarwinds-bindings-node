@@ -286,11 +286,12 @@ ssize_t oboe_reporter_udp_send(void *desc, const char *data, size_t len);   /* D
  * file options, and whether a tracelyzer is installed.
  *
  * @param access_key  Client access key
+ * @param hostname_alias optional hostname alias
  * @param log_level Level at which log messages will be written to log file
  * @param log_file_path file name including path for log file
  * @return true if initialization succeeded, false otherwise
  */
-int oboe_init_log(const char *access_key, int log_level, const char* log_file_path);
+int oboe_init_log(const char *access_key, const char *hostname_alias, int log_level, const char* log_file_path);
 
 /**
  * Initialize the Oboe subsystems.
@@ -299,9 +300,10 @@ int oboe_init_log(const char *access_key, int log_level, const char* log_file_pa
  * oboe_init or oboe_init_log should be called to initialize the oboe subsystem).
  *
  * @param access_key  Client access key
+ * @param hostname_alias optional hostname alias
  * @return true if initialization succeeded, false otherwise
  */
-int oboe_init(const char *access_key);
+int oboe_init(const char *access_key, const char *hostname_alias);
 
 /**
  * Initialize the Oboe subsytems using a specific reporter configuration.
