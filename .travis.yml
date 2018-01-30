@@ -14,9 +14,6 @@ node_js:
   - "6"
   - "5"
   - "4"
-  - "3"
-  - "0.12"
-  - "0.10"
 
 install:
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
