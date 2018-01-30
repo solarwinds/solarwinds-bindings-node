@@ -25,7 +25,7 @@ function setupLiboboe(cb) {
 
   var liboboeName
   fs.readdirSync(dir).forEach(function (f) {
-    if (f.indexOf('liboboe') === 0) {
+    if (f.indexOf('liboboe') === 0 && !f.endsWith('.sha256')) {
       // if the file is a link delete it
       if (fs.lstatSync(dir + f).isSymbolicLink()) {
         fs.unlinkSync(dir + f)
