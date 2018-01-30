@@ -33,6 +33,7 @@ class Metadata : public Nan::ObjectWrap {
   static NAN_METHOD(makeRandom);
   static NAN_METHOD(copy);
   static NAN_METHOD(isValid);
+  static NAN_METHOD(getSampleFlag);
   static NAN_METHOD(setSampleFlag);
   static NAN_METHOD(clearSampleFlag);
   static NAN_METHOD(toString);

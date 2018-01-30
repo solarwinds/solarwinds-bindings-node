@@ -151,6 +151,12 @@ NAN_METHOD(Metadata::isValid) {
   info.GetReturnValue().Set(Nan::New(status));
 }
 
+NAN_METHOD(Metadata::getSampleFlag) {
+    Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
+    bool sampleFlag = self->metadata.flags & XTR_FLAGS_SAMPLED;
+    info.GetReturnValue().Set(Nan::New(sampleFlag));
+}
+
 // Set the sample flag and return the previous value
 NAN_METHOD(Metadata::setSampleFlag) {
     Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
@@ -228,6 +234,7 @@ void Metadata::Init(v8::Local<v8::Object> exports) {
   // Prototype
   Nan::SetPrototypeMethod(ctor, "copy", Metadata::copy);
   Nan::SetPrototypeMethod(ctor, "isValid", Metadata::isValid);
+  Nan::SetPrototypeMethod(ctor, "getSampleFlag", Metadata::getSampleFlag);
   Nan::SetPrototypeMethod(ctor, "setSampleFlag", Metadata::setSampleFlag);
   Nan::SetPrototypeMethod(ctor, "clearSampleFlag", Metadata::clearSampleFlag);
   Nan::SetPrototypeMethod(ctor, "toString", Metadata::toString);

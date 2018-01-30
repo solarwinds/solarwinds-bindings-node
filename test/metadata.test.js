@@ -13,6 +13,14 @@ describe('addon.metadata', function () {
     metadata = bindings.Metadata.makeRandom()
     metadata.toString().should.not.equal('')
     metadata.toString().should.match(/2B[A-F0-9]{56}00/)
+    metadata.getSampleFlag().should.equal(false)
+  })
+
+  it('should construct with random data with sample flag', function () {
+    metadata = bindings.Metadata.makeRandom(1)
+    metadata.toString().should.not.equal('')
+    metadata.toString().should.match(/2B[A-F0-9]{56}01/)
+    metadata.getSampleFlag().should.equal(true)
   })
 
   it('should set the sample flag', function () {
@@ -21,6 +29,7 @@ describe('addon.metadata', function () {
     // it shouldn't modify anything but the sample flag
     metadata.toString().slice(0, -2).should.equal(md.slice(0, -2))
     metadata.toString().slice(-2).should.equal('01')
+    metadata.getSampleFlag().should.equal(true)
   })
 
   it('should clear the sample flag', function () {
@@ -28,6 +37,7 @@ describe('addon.metadata', function () {
     metadata.clearSampleFlag()
     metadata.toString().slice(0, -2).should.equal(md.slice(0, -2))
     metadata.toString().slice(-2).should.equal('00')
+    metadata.getSampleFlag().should.equal(false)
   })
 
   it('should construct using metadata', function () {
