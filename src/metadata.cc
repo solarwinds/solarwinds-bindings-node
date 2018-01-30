@@ -15,6 +15,10 @@ Metadata::~Metadata() {
   oboe_metadata_destroy(&metadata);
 }
 
+bool Metadata::sampleFlagIsOn() {
+  return metadata.flags & XTR_FLAGS_SAMPLED;
+}
+
 /**
  * JavaScript callable method to create a new Javascript instance
  *
@@ -153,7 +157,7 @@ NAN_METHOD(Metadata::isValid) {
 
 NAN_METHOD(Metadata::getSampleFlag) {
     Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
-    bool sampleFlag = self->metadata.flags & XTR_FLAGS_SAMPLED;
+    bool sampleFlag = self->sampleFlagIsOn();
     info.GetReturnValue().Set(Nan::New(sampleFlag));
 }
 

@@ -40,6 +40,7 @@ NAN_MODULE_INIT(Event::Init) {
   Nan::SetPrototypeMethod(ctor, "addEdge", Event::addEdge);
   Nan::SetPrototypeMethod(ctor, "getMetadata", Event::getMetadata);
   Nan::SetPrototypeMethod(ctor, "toString", Event::toString);
+  Nan::SetPrototypeMethod(ctor, "getSampleFlag", Event::getSampleFlag);
 
   target->Set(Nan::New("Event").ToLocalChecked(), ctor->GetFunction());
 }
@@ -161,6 +162,17 @@ NAN_METHOD(Event::toString) {
   }
 
   info.GetReturnValue().Set(Nan::New(rc == 0 ? buf : "").ToLocalChecked());
+}
+
+/**
+ * JavaScript callable method to get the sample flag from
+ * the event metadata.
+ */
+NAN_METHOD(Event::getSampleFlag) {
+    Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
+
+    bool sampleFlag = self->event.metadata.flags & XTR_FLAGS_SAMPLED;
+    info.GetReturnValue().Set(Nan::New(sampleFlag));
 }
 
 

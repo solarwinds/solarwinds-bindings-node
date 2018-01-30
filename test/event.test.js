@@ -3,6 +3,7 @@ var bindings = require('../')
 describe('addon.event', function () {
   var event
   var random = bindings.Metadata.makeRandom()
+  var randomSample = bindings.Metadata.makeRandom(1)
 
   bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY)
 
@@ -15,6 +16,12 @@ describe('addon.event', function () {
     event = new bindings.Event(random)
     // They should share the same task ID
     event.toString().slice(0, 42).should.equal(beginning)
+    event.getSampleFlag().should.equal(false)
+  })
+
+  it('should construct an event with the sample flag set', function () {
+    var event = new bindings.Event(randomSample)
+    event.getSampleFlag().should.equal(true)
   })
 
   it('should add info', function () {

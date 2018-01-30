@@ -25,6 +25,7 @@ class Metadata : public Nan::ObjectWrap {
   ~Metadata();
   Metadata();
   Metadata(oboe_metadata_t*);
+  bool sampleFlagIsOn();
 
   oboe_metadata_t metadata;
   static Nan::Persistent<v8::FunctionTemplate> constructor;
@@ -94,6 +95,7 @@ class Event : public Nan::ObjectWrap {
   static NAN_METHOD(addEdge);
   static NAN_METHOD(getMetadata);
   static NAN_METHOD(toString);
+  static NAN_METHOD(getSampleFlag);
 
   static bool isEvent(v8::Local<v8::Value>);
 
