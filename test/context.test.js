@@ -101,13 +101,14 @@ describe('addon.context', function () {
     bindings.Context.setTracingMode(bindings.TRACE_ALWAYS)
     bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE)
     var event = bindings.Context.startTrace()
-    var xid = event.getMetadata().toString().slice(0, -1) + '\u0001'
+    var metadata = event.getMetadata().setSampleFlag()
+    var xid = metadata.toString();
     var counter = 8
     // poll to give time for the SSL connection to complete
     var id = setInterval(function() {
       // AO sampleRequest() requires service-name and X-Trace ID to check if sampling.
       var check = bindings.Context.sampleTrace('bruce-test', xid)
-      if (--counter <= 0 || typeof check === 'object') {
+      if (--counter <= 0 || typeof check === 'object' && check.source !== 2) {
         clearInterval(id)
         check.should.have.property('sample', true)
         check.should.have.property('source', 1)
