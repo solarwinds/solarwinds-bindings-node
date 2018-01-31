@@ -61,6 +61,22 @@ describe('addon.metadata', function () {
     metadata.toString().should.equal(string)
   })
 
+  it('should correctly test for the sample flag', function () {
+    var mdNoSample = bindings.Metadata.makeRandom()
+    var mdSample = bindings.Metadata.makeRandom(1)
+    bindings.Metadata.sampleFlagIsSet(mdNoSample).should.equal(false)
+    bindings.Metadata.sampleFlagIsSet(mdSample).should.equal(true)
+    var e = new bindings.Event(mdNoSample)
+    bindings.Metadata.sampleFlagIsSet(e).should.equal(false)
+    bindings.Metadata.sampleFlagIsSet(e.toString()).should.equal(false)
+    e = new bindings.Event(mdSample)
+    bindings.Metadata.sampleFlagIsSet(e).should.equal(true)
+    bindings.Metadata.sampleFlagIsSet(e.toString()).should.equal(true)
+
+    var result = typeof bindings.Metadata.sampleFlagIsSet('')
+    result.should.equal('undefined')
+  })
+
   it('should clone itself', function () {
     var rand = bindings.Metadata.makeRandom()
     rand.copy().toString().should.equal(rand.toString())
