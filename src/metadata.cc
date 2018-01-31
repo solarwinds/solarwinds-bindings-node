@@ -219,6 +219,40 @@ NAN_METHOD(Metadata::isInstance) {
     info.GetReturnValue().Set(is);
 }
 
+// JavaScript callable static method to determine if the argument
+// (event, metadata, or string) has the sample flag turned on.
+
+NAN_METHOD(Metadata::sampleFlagIsSet) {
+    bool sampleFlag = false;
+
+    if (info.Length() >= 1) {
+        if (Metadata::isMetadata(info[0])) {
+            // If called with a Metadata instance
+            Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
+            sampleFlag = md->metadata.flags & XTR_FLAGS_SAMPLED;
+        } else if (Event::isEvent(info[0])) {
+            // if called with an Event instance
+            Event* e = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
+            sampleFlag = e->event.metadata.flags & XTR_FLAGS_SAMPLED;
+        } else if (info[0]->IsString()) {
+            // TODO BAM duplicates some code in metadata.cc - refactor into C++ callable method.
+            Nan::Utf8String str(info[0]);
+
+            oboe_metadata_t md;
+            int status = oboe_metadata_fromstr(&md, *str, str.length());
+            if (status < 0) {
+                info.GetReturnValue().Set(Nan::Undefined());
+                return;
+                //return Nan::ThrowError("Failed to convert Metadata from string");
+
+            }
+            sampleFlag = md.flags & XTR_FLAGS_SAMPLED;
+        }
+    }
+
+    info.GetReturnValue().Set(Nan::New(sampleFlag));
+}
+
 // Wrap the C++ object so V8 can understand it
 void Metadata::Init(v8::Local<v8::Object> exports) {
   Nan::HandleScope scope;
@@ -234,6 +268,7 @@ void Metadata::Init(v8::Local<v8::Object> exports) {
   Nan::SetMethod(ctor, "fromContext", Metadata::fromContext);
   Nan::SetMethod(ctor, "makeRandom", Metadata::makeRandom);
   Nan::SetMethod(ctor, "isInstance", Metadata::isInstance);
+  Nan::SetMethod(ctor, "sampleFlagIsSet", Metadata::sampleFlagIsSet);
 
   // Prototype
   Nan::SetPrototypeMethod(ctor, "copy", Metadata::copy);
