@@ -73,6 +73,7 @@ describe('addon.metadata', function () {
     bindings.Metadata.sampleFlagIsSet(e).should.equal(true)
     bindings.Metadata.sampleFlagIsSet(e.toString()).should.equal(true)
 
+    // if there is an error it should return undefined.
     var result = typeof bindings.Metadata.sampleFlagIsSet('')
     result.should.equal('undefined')
   })

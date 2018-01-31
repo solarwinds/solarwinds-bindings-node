@@ -62,12 +62,12 @@ NAN_METHOD(OboeContext::setDefaultSampleRate) {
  * Different layers may have special rules.  Also special rules for AppView
  * Web synthetic traces apply if in_tv_meta is given a non-empty string.
  *
- * This is designed to be called once per layer per request.
+ * This is designed to be called once per request at the entry layer.
  *
  * @param layer Name of the layer being considered for tracing
  * @param in_xtrace Incoming X-Trace ID (NULL or empty string if not present)
- * @param in_tv_meta AppView Web ID from X-TV-Meta HTTP header or higher layer (NULL or empty string if not present).
- * @return {Array} [sample, sampleRateUsed, sampleSource] sample is truthy if it should be sampled.
+ * @return {Object} {sample, source, rate}
+ * TODO BAM update comments when done
  */
 NAN_METHOD(OboeContext::sampleTrace) {
   // Validate arguments
@@ -104,13 +104,16 @@ NAN_METHOD(OboeContext::sampleTrace) {
     &sample_source
   );
 
-  // Store rc, sample_source and sample_rate in an array
-  v8::Local<v8::Array> array = Nan::New<v8::Array>(3);
-  Nan::Set(array, 0, Nan::New(rc));
-  Nan::Set(array, 1, Nan::New(sample_source));
-  Nan::Set(array, 2, Nan::New(sample_rate));
+  v8::Local<v8::String> sample = Nan::New<v8::String>("sample").ToLocalChecked();
+  v8::Local<v8::String> source = Nan::New<v8::String>("source").ToLocalChecked();
+  v8::Local<v8::String> rate = Nan::New<v8::String>("rate").ToLocalChecked();
 
-  info.GetReturnValue().Set(array);
+  v8::Local<v8::Object> o = Nan::New<v8::Object>();
+  Nan::Set(o, sample, Nan::New<v8::Boolean>(rc));
+  Nan::Set(o, source, Nan::New<v8::Number>(sample_source));
+  Nan::Set(o, rate, Nan::New<v8::Number>(sample_rate));
+
+  info.GetReturnValue().Set(o);
 }
 
 // Serialize a metadata object to a string

@@ -106,13 +106,12 @@ describe('addon.context', function () {
     // poll to give time for the SSL connection to complete
     var id = setInterval(function() {
       // AO sampleRequest() requires service-name and X-Trace ID to check if sampling.
-      var check = bindings.Context.sampleTrace('bruce-test', xid, 'c')
-      if (--counter <= 0 || Array.isArray(check) && check[0] === 1) {
+      var check = bindings.Context.sampleTrace('bruce-test', xid)
+      if (--counter <= 0 || typeof check === 'object') {
         clearInterval(id)
-        check.should.be.an.instanceof(Array)
-        check.should.have.property(0, 1)
-        check.should.have.property(1, 1)
-        check.should.have.property(2, bindings.MAX_SAMPLE_RATE)
+        check.should.have.property('sample', true)
+        check.should.have.property('source', 1)
+        check.should.have.property('rate', bindings.MAX_SAMPLE_RATE)
         done()
         return
       }
