@@ -7,7 +7,7 @@ if [[ -z "$AO_TOKEN_STG" ]]; then
 fi
 
 # define this for all consitions
-export APPOPTICS_SERVICE_KEY=${AO_TOKEN_STG}:node-bindings-text
+export APPOPTICS_SERVICE_KEY=${AO_TOKEN_STG}:node-bindings-test
 
 if [[ -z "$ARG" ]]; then
     echo "source this script with an argument of udp or ssl. it"
