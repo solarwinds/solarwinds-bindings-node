@@ -19,6 +19,7 @@ describe('addon.context', function () {
 
     throw new Error('setTracingMode should fail on invalid inputs')
   })
+
   it('should throw setting invalid tracing mode type', function () {
     try {
       bindings.Context.setTracingMode('foo')
@@ -34,16 +35,17 @@ describe('addon.context', function () {
   it('should set valid sample rate', function () {
     bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE / 10)
   })
-  it('should throw setting invalid sample rate', function () {
+
+  it('should not throw when setting invalid sample rate', function () {
+    var threw = false
     try {
+      bindings.Context.setDefaultSampleRate(0)
       bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE + 1)
     } catch (e) {
-      if (e.message === 'Sample rate out of range') {
-        return
-      }
+      threw = true
     }
 
-    throw new Error('setDefaultSampleRate should fail on invalid inputs')
+    threw.should.equal(false, 'setting invalid rates threw')
   })
 
   it('should serialize context to string', function () {

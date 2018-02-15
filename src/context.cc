@@ -46,8 +46,10 @@ NAN_METHOD(OboeContext::setDefaultSampleRate) {
   }
 
   int rate = info[0]->NumberValue();
-  if (rate < 1 || rate > OBOE_SAMPLE_RESOLUTION) {
-    return Nan::ThrowRangeError("Sample rate out of range");
+  if (rate < 0) {
+      rate = 0;
+  } else if (rate > OBOE_SAMPLE_RESOLUTION) {
+      rate = OBOE_SAMPLE_RESOLUTION;
   }
 
   oboe_settings_rate_set(rate);
