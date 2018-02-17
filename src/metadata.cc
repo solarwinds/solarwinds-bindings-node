@@ -108,7 +108,8 @@ NAN_METHOD(Metadata::fromString) {
   oboe_metadata_t md;
   int status = oboe_metadata_fromstr(&md, *str, str.length());
   if (status < 0) {
-    return Nan::ThrowError("Failed to convert Metadata from string");
+    info.GetReturnValue().Set(Nan::Undefined());
+    return;
   }
 
   Metadata* metadata = new Metadata(&md);
