@@ -40,11 +40,9 @@ NAN_METHOD(Metadata::New) {
     return Nan::ThrowError("Metadata() only accepts 0 or 1 parameters");
   } else if (info[0]->IsExternal()) {
     // this is only used by other C++ methods, not JavaScript. They must pass
-    // the right data!
+    // the right data - an oboe_metadata_t*.
     oboe_metadata_t* md = static_cast<oboe_metadata_t*>(info[0].As<v8::External>()->Value());
     metadata = new Metadata(md);
-    //Metadata* md = static_cast<Metadata*>(info[0].As<v8::External>()->Value());
-    //metadata = new Metadata(&md->metadata);
   } else if (Metadata::isMetadata(info[0])) {
     // If called from JavaScript with a Metadata instance
     Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
