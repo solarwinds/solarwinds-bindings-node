@@ -72,6 +72,7 @@ class OboeContext {
   static NAN_METHOD(isValid);
   static NAN_METHOD(init);
   static NAN_METHOD(createEvent);
+  static NAN_METHOD(createEventX);
   static NAN_METHOD(startTrace);
 
   public:
