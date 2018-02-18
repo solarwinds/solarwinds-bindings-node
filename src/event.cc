@@ -14,10 +14,16 @@ Event::Event() {
 //
 Event::Event(const oboe_metadata_t* md, bool addEdge) {
   if (addEdge) {
+    // all this does is call oboe_event_init() followed by
+    // oboe_event_add_edge().
     oboe_status = oboe_metadata_create_event(md, &event);
   } else {
+    // this copies md to the event metadata except for the opId.
+    // It creates a new random opId for the event.
     oboe_status = oboe_event_init(&event, md);
   }
+
+  // TODO BAM this can fail (oboe_status is non-zero). How to handle?
 }
 
 Event::~Event() {
