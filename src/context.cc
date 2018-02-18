@@ -140,7 +140,38 @@ NAN_METHOD(OboeContext::set) {
   if (info.Length() != 1) {
     return Nan::ThrowError("Wrong number of arguments");
   }
-  // TODO BAM validate that it is Metadata,  not just object.
+  // TODO BAM this exact sequence is also used in createEventX. Refactor.
+  Metadata* metadata;
+
+  if (Metadata::isMetadata(info[0])) {
+    // it's a metadata instance
+    Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
+    metadata = new Metadata(&md->metadata);
+  } else if (Event::isEvent(info[0])) {
+    // it's an event instance
+    Event* e = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
+    metadata = new Metadata(&e->event.metadata);
+  } else if (info[0]->IsString()) {
+    // it's a string, this can fail and return undefined.
+    // TODO BAM duplicates code in metadata.cc - refactor to C++ callable method?
+    Nan::Utf8String str(info[0]);
+
+    oboe_metadata_t md;
+    int status = oboe_metadata_fromstr(&md, *str, str.length());
+    if (status < 0) {
+      info.GetReturnValue().Set(Nan::Undefined());
+      return;
+    }
+    metadata = new Metadata(&md);
+  } else {
+    return Nan::ThrowTypeError("Invalid argument for Context::set");
+  }
+
+  // Set the context
+  oboe_context_set(&metadata->metadata);
+
+
+  /*
   if (!info[0]->IsObject() && !info[0]->IsString()) {
     return Nan::ThrowTypeError("You must supply a Metadata instance or string");
   }
@@ -161,6 +192,7 @@ NAN_METHOD(OboeContext::set) {
       return Nan::ThrowError("Could not set context by metadata string id");
     }
   }
+  // */
 }
 
 NAN_METHOD(OboeContext::copy) {
@@ -183,6 +215,55 @@ NAN_METHOD(OboeContext::createEvent) {
   delete md;
 }
 
+//
+// Extended method to create events. Replaces startTrace and
+// createEvent. Accepts an argument
+//
+NAN_METHOD(OboeContext::createEventX) {
+  //
+  // This signature gets oboe's thread-specific context and uses that to
+  // create a new event. It will create blank metadata (i.e., the IDs
+  // will be 0, not random data).
+  //
+  if (info.Length() == 0) {
+    Metadata* md = new Metadata(oboe_context_get());
+    info.GetReturnValue().Set(Event::NewInstance(md));
+    delete md;
+    return;
+  }
+
+  //
+  // there is at least one argument. it must be metadata in some form.
+  //
+  Metadata* metadata;
+
+  if (Metadata::isMetadata(info[0])) {
+    // it's a metadata instance
+    Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
+    metadata = new Metadata(&md->metadata);
+  } else if (Event::isEvent(info[0])) {
+    // it's an event instance
+    Event* e = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
+    metadata = new Metadata(&e->event.metadata);
+  } else if (info[0]->IsString()) {
+    // it's a string, this can fail and return undefined.
+    // TODO BAM duplicates code in metadata.cc - refactor to C++ callable method.
+    Nan::Utf8String str(info[0]);
+
+    oboe_metadata_t md;
+    int status = oboe_metadata_fromstr(&md, *str, str.length());
+    if (status < 0) {
+      info.GetReturnValue().Set(Nan::Undefined());
+      return;
+    }
+    metadata = new Metadata(&md);
+  } else {
+    return Nan::ThrowError("Invalid argument for createEventX()");
+  }
+
+  info.GetReturnValue().Set(Event::NewInstance(metadata));
+}
+
 NAN_METHOD(OboeContext::startTrace) {
   oboe_metadata_t* md = oboe_context_get();
   oboe_metadata_random(md);
@@ -202,6 +283,7 @@ void OboeContext::Init(v8::Local<v8::Object> module) {
   Nan::SetMethod(exports, "clear", OboeContext::clear);
   Nan::SetMethod(exports, "isValid", OboeContext::isValid);
   Nan::SetMethod(exports, "createEvent", OboeContext::createEvent);
+  Nan::SetMethod(exports, "createEventX", OboeContext::createEventX);
   Nan::SetMethod(exports, "startTrace", OboeContext::startTrace);
 
   Nan::Set(module, Nan::New("Context").ToLocalChecked(), exports);
