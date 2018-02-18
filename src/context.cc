@@ -170,29 +170,6 @@ NAN_METHOD(OboeContext::set) {
   // Set the context
   oboe_context_set(&metadata->metadata);
 
-
-  /*
-  if (!info[0]->IsObject() && !info[0]->IsString()) {
-    return Nan::ThrowTypeError("You must supply a Metadata instance or string");
-  }
-
-  if (info[0]->IsObject()) {
-    // Unwrap metadata instance from arguments
-    Metadata* metadata = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
-
-    // Set the context data from the metadata instance
-    oboe_context_set(&metadata->metadata);
-  } else {
-    // Get string data from arguments
-    Nan::Utf8String val(info[0]);
-
-    // Set the context data from the converted string
-    int status = oboe_context_set_fromstr(*val, val.length());
-    if (status != 0) {
-      return Nan::ThrowError("Could not set context by metadata string id");
-    }
-  }
-  // */
 }
 
 NAN_METHOD(OboeContext::copy) {
