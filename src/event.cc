@@ -126,6 +126,27 @@ NAN_METHOD(Event::New) {
 
 /**
  * C++ callable function to create a JavaScript Metadata object.
+ *
+ * This signature includes a boolean for whether an edge is set or not.
+ */
+v8::Local<v8::Object> Event::NewInstance(Metadata* md, bool edge) {
+  Nan::EscapableHandleScope scope;
+
+  const unsigned argc = 2;
+  v8::Local<v8::Value> argv[argc] = {
+      Nan::New<v8::External>(&md->metadata),
+      Nan::New(edge)
+  };
+  v8::Local<v8::Function> cons = Nan::New<v8::FunctionTemplate>(constructor)->GetFunction();
+  // Now invoke the JavaScript callable constructor (Event::New).
+  v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
+
+  return scope.Escape(instance);
+}
+
+
+/**
+ * C++ callable function to create a JavaScript Metadata object.
  */
 v8::Local<v8::Object> Event::NewInstance(Metadata* md) {
   Nan::EscapableHandleScope scope;
