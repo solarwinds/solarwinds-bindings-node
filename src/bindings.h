@@ -98,6 +98,7 @@ class Event : public Nan::ObjectWrap {
   static NAN_METHOD(getMetadata);
   static NAN_METHOD(toString);
   static NAN_METHOD(setSampleFlag);
+  static NAN_METHOD(clearSampleFlag);
   static NAN_METHOD(getSampleFlag);
 
   static bool isEvent(v8::Local<v8::Value>);

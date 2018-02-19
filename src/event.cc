@@ -47,6 +47,7 @@ NAN_MODULE_INIT(Event::Init) {
   Nan::SetPrototypeMethod(ctor, "getMetadata", Event::getMetadata);
   Nan::SetPrototypeMethod(ctor, "toString", Event::toString);
   Nan::SetPrototypeMethod(ctor, "setSampleFlag", Event::setSampleFlag);
+  Nan::SetPrototypeMethod(ctor, "clearSampleFlag", Event::clearSampleFlag);
   Nan::SetPrototypeMethod(ctor, "getSampleFlag", Event::getSampleFlag);
 
   target->Set(Nan::New("Event").ToLocalChecked(), ctor->GetFunction());
@@ -202,6 +203,19 @@ NAN_METHOD(Event::setSampleFlag) {
     Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
     bool previous = self->event.metadata.flags & XTR_FLAGS_SAMPLED;
     self->event.metadata.flags |= XTR_FLAGS_SAMPLED;
+    info.GetReturnValue().Set(Nan::New(previous));
+}
+
+/**
+ * JavaScript callable method to clear the sample flag in the event.
+ *
+ * returns the previous value of the flag.
+ */
+// Clear the sample flag and return the previous value
+NAN_METHOD(Event::clearSampleFlag) {
+    Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
+    bool previous = self->event.metadata.flags & XTR_FLAGS_SAMPLED;
+    self->event.metadata.flags &= ~XTR_FLAGS_SAMPLED;
     info.GetReturnValue().Set(Nan::New(previous));
 }
 
