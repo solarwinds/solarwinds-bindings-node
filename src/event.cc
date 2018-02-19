@@ -46,6 +46,7 @@ NAN_MODULE_INIT(Event::Init) {
   Nan::SetPrototypeMethod(ctor, "addEdge", Event::addEdge);
   Nan::SetPrototypeMethod(ctor, "getMetadata", Event::getMetadata);
   Nan::SetPrototypeMethod(ctor, "toString", Event::toString);
+  Nan::SetPrototypeMethod(ctor, "setSampleFlag", Event::setSampleFlag);
   Nan::SetPrototypeMethod(ctor, "getSampleFlag", Event::getSampleFlag);
 
   target->Set(Nan::New("Event").ToLocalChecked(), ctor->GetFunction());
@@ -189,6 +190,19 @@ NAN_METHOD(Event::toString) {
   }
 
   info.GetReturnValue().Set(Nan::New(rc == 0 ? buf : "").ToLocalChecked());
+}
+
+/**
+ * JavaScript callable method to set the sample falg in
+ * the event.
+ *
+ * returns the previous value of the flag.
+ */
+NAN_METHOD(Event::setSampleFlag) {
+    Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
+    bool previous = self->event.metadata.flags & XTR_FLAGS_SAMPLED;
+    self->event.metadata.flags |= XTR_FLAGS_SAMPLED;
+    info.GetReturnValue().Set(Nan::New(previous));
 }
 
 /**
