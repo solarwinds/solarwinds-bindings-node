@@ -1,6 +1,6 @@
 {
   "name": "appoptics-bindings",
-  "version": "2.3.1",
+  "version": "3.0.0",
   "description": "Bindings to liboboe for AppOptics",
   "author": "Stephen Belanger <sbelanger@appneta.com>",
   "contributors": [
