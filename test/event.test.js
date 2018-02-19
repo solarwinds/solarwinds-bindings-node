@@ -16,6 +16,8 @@ describe('addon.event', function () {
     event = new bindings.Event(random)
     // They should share the same task ID
     event.toString().slice(0, 42).should.equal(beginning)
+    // they should have different op IDs.
+    event.toString().slice(42, 58).should.not.equal(random.toString().slice(42, 58))
     event.getSampleFlag().should.equal(false)
   })
 
