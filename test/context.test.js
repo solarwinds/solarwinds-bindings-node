@@ -99,6 +99,31 @@ describe('addon.context', function () {
     event.should.be.an.instanceof(bindings.Event)
   })
 
+  it('should allow any signature of createEventX', function () {
+    var string = '2B0000000000000000000000000000000000000000000000000000000000'
+    var md = bindings.Metadata.makeRandom()
+    var event = bindings.Context.createEventX()
+    event.should.be.an.instanceof(bindings.Event)
+
+    event = bindings.Context.createEventX(string)
+    event.should.be.an.instanceof(bindings.Event)
+
+    event = bindings.Context.createEventX(event)
+    event.should.be.an.instanceof(bindings.Event)
+
+    event = bindings.Context.createEventX(md)
+    event.should.be.an.instanceof(bindings.Event)
+
+    event = bindings.Context.createEventX(md, false)
+    event.should.be.an.instanceof(bindings.Event)
+
+    event = bindings.Context.createEventX(md, undefined)
+    event.should.be.an.instanceof(bindings.Event)
+
+    event = bindings.Context.createEventX(md, true)
+    event.should.be.an.instanceof(bindings.Event)
+  })
+
   it('should get verification that a request should be sampled', function (done) {
     bindings.Context.setTracingMode(bindings.TRACE_ALWAYS)
     bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE)

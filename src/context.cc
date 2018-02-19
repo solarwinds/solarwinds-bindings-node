@@ -199,8 +199,7 @@ NAN_METHOD(OboeContext::createEvent) {
 NAN_METHOD(OboeContext::createEventX) {
   //
   // This signature gets oboe's thread-specific context and uses that to
-  // create a new event. It will create blank metadata (i.e., the IDs
-  // will be 0, not random data).
+  // create a new event.
   //
   if (info.Length() == 0) {
     Metadata* md = new Metadata(oboe_context_get());
@@ -238,7 +237,12 @@ NAN_METHOD(OboeContext::createEventX) {
     return Nan::ThrowError("Invalid argument for createEventX()");
   }
 
-  info.GetReturnValue().Set(Event::NewInstance(metadata));
+  bool add_edge = true;
+  if (info.Length() >= 2) {
+      add_edge = info[0]->BooleanValue();
+  }
+
+  info.GetReturnValue().Set(Event::NewInstance(metadata, add_edge));
 }
 
 NAN_METHOD(OboeContext::startTrace) {
