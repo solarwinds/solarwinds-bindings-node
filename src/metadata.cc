@@ -105,7 +105,8 @@ NAN_METHOD(Metadata::fromString) {
 
   oboe_metadata_t md;
   int status = oboe_metadata_fromstr(&md, *str, str.length());
-  if (status < 0) {
+  // status can be zero with a version other than 2, so check that too.
+  if (status < 0 || md.version != 2) {
     info.GetReturnValue().Set(Nan::Undefined());
     return;
   }

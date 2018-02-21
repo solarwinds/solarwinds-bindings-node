@@ -61,6 +61,25 @@ describe('addon.metadata', function () {
     metadata.toString().should.equal(string)
   })
 
+  it('should not construct from invalid metadata', function () {
+    var results = {}
+    var xtrace = string.slice()
+    var md = bindings.Metadata.fromString('0' + xtrace)
+    results['xtrace too long'] = md
+    md = bindings.Metadata.fromString('1' + xtrace.slice(1))
+    results['invalid version'] = md
+    md = bindings.Metadata.fromString('X' + xtrace.slice(1))
+    results['invalid character'] = md
+    md = bindings.Metadata.fromString('2b' + xtrace.slice(2))
+    results['lowercase hex'] = md
+
+    Object.keys(results).forEach(function (k) {
+      var correct = results[k] === undefined
+      correct.should.equal(true, k)
+    })
+
+  })
+
   it('should correctly test for the sample flag', function () {
     var mdNoSample = bindings.Metadata.makeRandom()
     var mdSample = bindings.Metadata.makeRandom(1)
