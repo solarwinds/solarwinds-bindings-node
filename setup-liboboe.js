@@ -1,4 +1,4 @@
-var spawn = require('child_process').spawnSync
+var spawn = require('child_process').spawn
 var fs = require('fs')
 
 var dir = './oboe/'
