@@ -5,8 +5,7 @@
  *
  * @param newMode One of
  * - OBOE_TRACE_NEVER(0) to disable tracing,
- * - OBOE_TRACE_ALWAYS(1) to start a new trace if needed, or
- * - OBOE_TRACE_THROUGH(2) to only add to an existing trace.
+ * - OBOE_TRACE_ALWAYS(1) to start a new trace if needed
  */
 NAN_METHOD(OboeContext::setTracingMode) {
   // Validate arguments
@@ -32,7 +31,7 @@ NAN_METHOD(OboeContext::setTracingMode) {
  * This rate is used until overridden by the AppOptics servers.  If not set then the
  * value 300,000 will be used (ie. 30%).
  *
- * The rate is interpreted as a ratio out of OBOE_SAMPLE_RESOLUTION (currently 1,000,000).
+ * The rate is interpreted as a ratio out of OBOE_SAMPLE_RESOLUTION (1,000,000).
  *
  * @param newRate A number between 0 (none) and OBOE_SAMPLE_RESOLUTION (a million)
  */
@@ -140,31 +139,13 @@ NAN_METHOD(OboeContext::set) {
   if (info.Length() != 1) {
     return Nan::ThrowError("Wrong number of arguments");
   }
-  // TODO BAM this exact sequence is also used in createEventX. Refactor.
+
   Metadata* metadata;
 
-  if (Metadata::isMetadata(info[0])) {
-    // it's a metadata instance
-    Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
-    metadata = new Metadata(&md->metadata);
-  } else if (Event::isEvent(info[0])) {
-    // it's an event instance
-    Event* e = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
-    metadata = new Metadata(&e->event.metadata);
-  } else if (info[0]->IsString()) {
-    // it's a string, this can fail and return undefined.
-    // TODO BAM duplicates code in metadata.cc - refactor to C++ callable method?
-    Nan::Utf8String str(info[0]);
+  metadata = Metadata::getMetadata(info[0]);
 
-    oboe_metadata_t md;
-    int status = oboe_metadata_fromstr(&md, *str, str.length());
-    if (status < 0) {
-      info.GetReturnValue().Set(Nan::Undefined());
-      return;
-    }
-    metadata = new Metadata(&md);
-  } else {
-    return Nan::ThrowTypeError("Invalid argument for Context::set");
+  if (metadata == NULL) {
+      return Nan::ThrowTypeError("Invalid argument to Context::set()");
   }
 
   // Set the context
@@ -193,8 +174,9 @@ NAN_METHOD(OboeContext::createEvent) {
 }
 
 //
-// Extended method to create events. Replaces startTrace and
-// createEvent. Accepts an argument
+// Extended method to create events. Replaces createEvent but allows
+// an argument of the metadata to use to create the event. With no
+// argument it uses oboe's context as the metadata.
 //
 NAN_METHOD(OboeContext::createEventX) {
   //
@@ -213,27 +195,9 @@ NAN_METHOD(OboeContext::createEventX) {
   //
   Metadata* metadata;
 
-  if (Metadata::isMetadata(info[0])) {
-    // it's a metadata instance
-    Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
-    metadata = new Metadata(&md->metadata);
-  } else if (Event::isEvent(info[0])) {
-    // it's an event instance
-    Event* e = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
-    metadata = new Metadata(&e->event.metadata);
-  } else if (info[0]->IsString()) {
-    // it's a string, this can fail and return undefined.
-    // TODO BAM duplicates code in metadata.cc - refactor to C++ callable method.
-    Nan::Utf8String str(info[0]);
+  metadata = Metadata::getMetadata(info[0]);
 
-    oboe_metadata_t md;
-    int status = oboe_metadata_fromstr(&md, *str, str.length());
-    if (status < 0) {
-      info.GetReturnValue().Set(Nan::Undefined());
-      return;
-    }
-    metadata = new Metadata(&md);
-  } else {
+  if (metadata == NULL) {
     return Nan::ThrowError("Invalid argument for createEventX()");
   }
 

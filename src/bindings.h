@@ -47,6 +47,7 @@ class Metadata : public Nan::ObjectWrap {
   static NAN_METHOD(isInstance);
   static NAN_METHOD(sampleFlagIsSet);
   static bool isMetadata(v8::Local<v8::Value>);
+  static Metadata* getMetadata(v8::Local<v8::Value>);
   static bool format(oboe_metadata_t*, size_t, char*);
 
   private:

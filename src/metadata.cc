@@ -20,7 +20,7 @@ bool Metadata::sampleFlagIsOn() {
 }
 
 /**
- * JavaScript callable method to create a new Javascript instance
+ * JavaScript & C++ callable method to create a new Javascript instance
  *
  *
  */
@@ -30,32 +30,31 @@ NAN_METHOD(Metadata::New) {
   }
 
   // Go through the various calling signatures.
-  Metadata* metadata;
+  Metadata* md;
 
   if (info.Length() == 0) {
     // returns null metadata
     // TODO BAM what is the point of this?
-    metadata = new Metadata();
+    md = new Metadata();
   } else if (info.Length() != 1) {
-    return Nan::ThrowError("Metadata() only accepts 0 or 1 parameters");
-  } else if (info[0]->IsExternal()) {
-    // this is only used by other C++ methods, not JavaScript. They must pass
-    // the right data - an oboe_metadata_t*.
-    oboe_metadata_t* md = static_cast<oboe_metadata_t*>(info[0].As<v8::External>()->Value());
-    metadata = new Metadata(md);
-  } else if (Metadata::isMetadata(info[0])) {
-    // If called from JavaScript with a Metadata instance
-    Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
-    metadata = new Metadata(&md->metadata);
-  } else if (Event::isEvent(info[0])) {
-    // if called from JavaScript with an Event instance
-    Event* e = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
-    metadata = new Metadata(&e->event.metadata);
-  } else {
-    return Nan::ThrowError("Invalid type for new Metadata()");
+    return Nan::ThrowError("new Metadata() accepts at most 1 parameter");
   }
 
-  metadata->Wrap(info.This());
+  // there is one argument
+  if (info[0]->IsExternal()) {
+    // this can only be used by C++ methods, not JavaScript. They must pass
+    // the right data - an oboe_metadata_t*.
+    oboe_metadata_t* omd = static_cast<oboe_metadata_t*>(info[0].As<v8::External>()->Value());
+    md = new Metadata(omd);
+  } else {
+      // convert Metadata, Event, or String.
+      md = Metadata::getMetadata(info[0]);
+      if (md == NULL) {
+          return Nan::ThrowError("Invalid argument for new Metadata()");
+      }
+  }
+
+  md->Wrap(info.This());
   info.GetReturnValue().Set(info.This());
 }
 
@@ -207,6 +206,43 @@ NAN_METHOD(Metadata::createEvent) {
 bool Metadata::isMetadata(v8::Local<v8::Value> object) {
   return Nan::New(Metadata::constructor)->HasInstance(object);
 }
+
+//
+// Internal method to return metadata if an object contains metadata.
+//
+Metadata* Metadata::getMetadata(v8::Local<v8::Value> object) {
+    Metadata* metadata;
+
+    if (Metadata::isMetadata(object)) {
+        // it's a metadata instance
+        Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(object->ToObject());
+        metadata = new Metadata(&md->metadata);
+    } else if (Event::isEvent(object)) {
+        // it's an event instance
+        Event* e = Nan::ObjectWrap::Unwrap<Event>(object->ToObject());
+        metadata = new Metadata(&e->event.metadata);
+    } else if (object->IsString()) {
+        // it's a string, this can fail and return undefined.
+        Nan::Utf8String str(object);
+
+        oboe_metadata_t md;
+        int status = oboe_metadata_fromstr(&md, *str, str.length());
+        if (status < 0) {
+            return NULL;
+        }
+        metadata = new Metadata(&md);
+    } else {
+        // it's not something we know how to convert
+        return NULL;
+    }
+
+    return metadata;
+}
+
+
+
+
+
 
 // JavaScript callable method to determine if an object is an
 // instance of JavaScript Metadata.
