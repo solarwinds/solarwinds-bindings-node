@@ -1,4 +1,4 @@
-var spawn = require('child_process').spawn
+var spawn = require('child_process').spawnSync
 var fs = require('fs')
 
 var dir = './oboe/'
@@ -21,7 +21,7 @@ function spinner(fps, fn) {
 function setupLiboboe(cb) {
   var soname
   var childOutput = []
-  var showOutput = process.env.APPOPTICS_NODE_DBG_SETUP
+  var showOutput = process.env.APPOPTICS_SHOW_OBOE_SETUP
 
   var liboboeName
   fs.readdirSync(dir).forEach(function (f) {
@@ -48,7 +48,7 @@ function setupLiboboe(cb) {
     var spin = spinner(15, function (c) {
       process.stdout.clearLine()
       process.stdout.cursorTo(0)
-      process.stdout.write(c + ' building AppOptics native bindings')
+      process.stdout.write(c + ' setting up liboboe for AppOptics native bindings')
     })
   }
 
@@ -75,7 +75,7 @@ function setupLiboboe(cb) {
     }
 
     if (err || !soname) {
-      console.warn('AppOptics liboboe setup failed, tracing will be disabled')
+      console.warn('AppOptics liboboe setup failed')
       if (showOutput) {
         childOutput = childOutput.join('').toString('utf8')
         console.warn(childOutput)
