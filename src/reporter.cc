@@ -14,8 +14,6 @@ Reporter::Reporter() {
       p = "";
   }
   protocol = p;
-  initDone = false;
-  channel = OBOE_SEND_STATUS;
 }
 
 Reporter::~Reporter() {
@@ -106,29 +104,6 @@ NAN_GETTER(Reporter::getPort) {
   info.GetReturnValue().Set(Nan::New(self->port).ToLocalChecked());
 }
 
-// TODO remove initDone altogether.
-NAN_SETTER(Reporter::setInitDone) {
-    /* let it be truthy of falsey, no need to be boolean.
-    if (!value->IsBoolean()) {
-        return Nan::ThrowTypeError("init value must be boolean");
-    }
-    */
-    Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
-    self->initDone = value->BooleanValue();
-
-    self->channel = self->initDone ? OBOE_SEND_EVENT : OBOE_SEND_STATUS;
-}
-NAN_GETTER(Reporter::getInitDone) {
-    Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
-    info.GetReturnValue().Set(Nan::New(self->initDone));
-}
-
-NAN_GETTER(Reporter::getChannel) {
-    Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
-    info.GetReturnValue().Set(Nan::New(self->channel));
-}
-
-
 // Send an event to the reporter
 NAN_METHOD(Reporter::sendReport) {
   if (info.Length() < 1) {
@@ -176,37 +151,98 @@ NAN_METHOD(Reporter::sendStatus) {
     info.GetReturnValue().Set(Nan::New(status));
 }
 
+bool http_span_args_are_good(Nan::NAN_METHOD_ARGS_TYPE info) {
+    // anything in JavaScript has a boolean value so no need to check.
+    return info.Length() == 5 && info[0]->IsString() && info[1]->IsNumber() &&
+        info[2]->IsInt32() && info[3]->IsString(); // && info[4]->IsBoolean();
+}
+
+NAN_METHOD(Reporter::sendHttpSpanName) {
+    // transaction name (or req.base_url) {char *} "name"
+    // req.base_url (or transaction name) {char *} "url"
+    // duration - microseconds {int64}             "duration"
+    // status - HTTP status code {int}             "status"
+    // req.request_method - HTTP method {char *}   "method"
+    // error - 1 if transaction contains error else 0 {int}  "error"
+    if (!http_span_args_are_good(info)) {
+        info.GetReturnValue().Set(Nan::New(false));
+        return;
+    }
+
+    std::string name = *Nan::Utf8String(info[0]);
+    char *url __attribute__((unused)) = NULL;
+    // Number.MAX_SAFE_INTEGER is big enough for any reasonable transaction time.
+    // max_safe_seconds = MAX_SAFE_INTEGER / 1000000 microseconds
+    // max_safe_days = MAX_SAFE_SECONDS / 86400 seconds
+    // max_safe_days > 100000. Seems long enough to me.
+    int64_t duration = info[1]->IntegerValue();
+    int status = info[2]->IntegerValue();
+    std::string method = *Nan::Utf8String(info[3]);
+    int error = info[4]->BooleanValue();
+
+    /*
+    std::cout << "name: " << name
+        << " duration: " << duration
+        << " status: " << status
+        << " method: " << method
+        << " error: " << error << std::endl;
+    // */
+
+    oboe_http_span(name.c_str(), url, duration, status, method.c_str(), error);
+
+    info.GetReturnValue().Set(Nan::New(true));
+}
+
+NAN_METHOD(Reporter::sendHttpSpanUrl) {
+    if (!http_span_args_are_good(info)) {
+        info.GetReturnValue().Set(Nan::New(false));
+        return;
+    }
+
+    char* name = NULL;
+    std::string url = *Nan::Utf8String(info[0]);
+    // see comment in sendHttpSpanName()
+    int64_t duration = info[1]->IntegerValue();
+    int status = info[2]->IntegerValue();
+    std::string method = *Nan::Utf8String(info[3]);
+    int error = info[4]->BooleanValue();
+
+    oboe_http_span(name, url.c_str(), duration, status, method.c_str(), error);
+
+    info.GetReturnValue().Set(Nan::New(true));
+}
+
 // Creates a new Javascript instance
 NAN_METHOD(Reporter::New) {
-  if (!info.IsConstructCall()) {
-    return Nan::ThrowError("Reporter() must be called as a constructor");
-  }
-  Reporter* reporter = new Reporter();
-  reporter->Wrap(info.This());
-  info.GetReturnValue().Set(info.This());
+    if (!info.IsConstructCall()) {
+        return Nan::ThrowError("Reporter() must be called as a constructor");
+    }
+    Reporter* reporter = new Reporter();
+    reporter->Wrap(info.This());
+    info.GetReturnValue().Set(info.This());
 }
 
 // Wrap the C++ object so V8 can understand it
 void Reporter::Init(v8::Local<v8::Object> exports) {
-  Nan::HandleScope scope;
+    Nan::HandleScope scope;
 
-  // Prepare constructor template
-  v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(New);
-  ctor->InstanceTemplate()->SetInternalFieldCount(1);
-  ctor->SetClassName(Nan::New("Reporter").ToLocalChecked());
+    // Prepare constructor template
+    v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(New);
+    ctor->InstanceTemplate()->SetInternalFieldCount(1);
+    ctor->SetClassName(Nan::New("Reporter").ToLocalChecked());
 
-  // Assign host/port to change reporter target
-  Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
-  Nan::SetAccessor(proto, Nan::New("address").ToLocalChecked(), getAddress, setAddress);
-  Nan::SetAccessor(proto, Nan::New("host").ToLocalChecked(), getHost, setHost);
-  Nan::SetAccessor(proto, Nan::New("port").ToLocalChecked(), getPort, setPort);
-  Nan::SetAccessor(proto, Nan::New("initDone").ToLocalChecked(), getInitDone, setInitDone);
-  Nan::SetAccessor(proto, Nan::New("channel").ToLocalChecked(), getChannel);
+    // Assign host/port to change reporter target
+    Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
+    Nan::SetAccessor(proto, Nan::New("address").ToLocalChecked(), getAddress, setAddress);
+    Nan::SetAccessor(proto, Nan::New("host").ToLocalChecked(), getHost, setHost);
+    Nan::SetAccessor(proto, Nan::New("port").ToLocalChecked(), getPort, setPort);
 
-  // Prototype
-  Nan::SetPrototypeMethod(ctor, "sendReport", Reporter::sendReport);
-  Nan::SetPrototypeMethod(ctor, "sendStatus", Reporter::sendStatus);
+    // Prototype
+    Nan::SetPrototypeMethod(ctor, "sendReport", Reporter::sendReport);
+    Nan::SetPrototypeMethod(ctor, "sendStatus", Reporter::sendStatus);
+    Nan::SetPrototypeMethod(ctor, "sendHttpSpanName", Reporter::sendHttpSpanName);
+    Nan::SetPrototypeMethod(ctor, "sendHttpSpanUrl", Reporter::sendHttpSpanUrl);
 
-  constructor.Reset(ctor->GetFunction());
-  Nan::Set(exports, Nan::New("Reporter").ToLocalChecked(), ctor->GetFunction());
+    constructor.Reset(ctor->GetFunction());
+    Nan::Set(exports, Nan::New("Reporter").ToLocalChecked(), ctor->GetFunction());
 }

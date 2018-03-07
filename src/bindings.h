@@ -122,12 +122,12 @@ class Reporter : public Nan::ObjectWrap {
     std::string port;
     std::string protocol;
     bool connected;
-    int channel;
-    bool initDone;
     static Nan::Persistent<v8::Function> constructor;
     static NAN_METHOD(New);
     static NAN_METHOD(sendReport);
     static NAN_METHOD(sendStatus);
+    static NAN_METHOD(sendHttpSpanName);
+    static NAN_METHOD(sendHttpSpanUrl);
 
     static NAN_SETTER(setAddress);
     static NAN_GETTER(getAddress);
@@ -137,9 +137,6 @@ class Reporter : public Nan::ObjectWrap {
 
     static NAN_SETTER(setHost);
     static NAN_GETTER(getHost);
-
-    static NAN_SETTER(setInitDone);
-    static NAN_GETTER(getInitDone);
 
     static NAN_GETTER(getChannel);
 
