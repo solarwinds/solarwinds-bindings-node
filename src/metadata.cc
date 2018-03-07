@@ -38,20 +38,20 @@ NAN_METHOD(Metadata::New) {
     md = new Metadata();
   } else if (info.Length() != 1) {
     return Nan::ThrowError("new Metadata() accepts at most 1 parameter");
-  }
-
-  // there is one argument
-  if (info[0]->IsExternal()) {
-    // this can only be used by C++ methods, not JavaScript. They must pass
-    // the right data - an oboe_metadata_t*.
-    oboe_metadata_t* omd = static_cast<oboe_metadata_t*>(info[0].As<v8::External>()->Value());
-    md = new Metadata(omd);
   } else {
-      // convert Metadata, Event, or String.
-      md = Metadata::getMetadata(info[0]);
-      if (md == NULL) {
-          return Nan::ThrowError("Invalid argument for new Metadata()");
-      }
+    // there is one argument
+    if (info[0]->IsExternal()) {
+        // this can only be used by C++ methods, not JavaScript. They must pass
+        // the right data - an oboe_metadata_t*.
+        oboe_metadata_t* omd = static_cast<oboe_metadata_t*>(info[0].As<v8::External>()->Value());
+        md = new Metadata(omd);
+    } else {
+        // convert Metadata, Event, or String.
+        md = Metadata::getMetadata(info[0]);
+        if (md == NULL) {
+            return Nan::ThrowError("Invalid argument for new Metadata()");
+        }
+    }
   }
 
   md->Wrap(info.This());
