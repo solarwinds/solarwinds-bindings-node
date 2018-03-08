@@ -117,12 +117,13 @@ class Reporter : public Nan::ObjectWrap {
     ~Reporter();
     int send_event(oboe_metadata_t*, oboe_event_t*);
     int send_status(oboe_metadata_t*, oboe_event_t*);
+    int send_event_x(Nan::NAN_METHOD_ARGS_TYPE, int);
 
     std::string host;
     std::string port;
     std::string protocol;
     bool connected;
-    static Nan::Persistent<v8::Function> constructor;
+    static Nan::Persistent<v8::FunctionTemplate> constructor;
     static NAN_METHOD(New);
     static NAN_METHOD(sendReport);
     static NAN_METHOD(sendStatus);

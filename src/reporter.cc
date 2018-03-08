@@ -1,6 +1,6 @@
 #include "bindings.h"
 
-Nan::Persistent<v8::Function> Reporter::constructor;
+Nan::Persistent<v8::FunctionTemplate> Reporter::constructor;
 
 // Construct with an address and port to report to
 Reporter::Reporter() {
@@ -25,7 +25,7 @@ v8::Local<v8::Object> Reporter::NewInstance() {
 
     const unsigned argc = 0;
     v8::Local<v8::Value> argv[argc] = {};
-    v8::Local<v8::Function> cons = Nan::New<v8::Function>(constructor);
+    v8::Local<v8::Function> cons = Nan::New<v8::FunctionTemplate>(constructor)->GetFunction();
     v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
 
     return scope.Escape(instance);
@@ -104,6 +104,23 @@ NAN_GETTER(Reporter::getPort) {
   info.GetReturnValue().Set(Nan::New(self->port).ToLocalChecked());
 }
 
+int Reporter::send_event_x(Nan::NAN_METHOD_ARGS_TYPE info, int channel) {
+    //Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
+    // TODO BAM this requires that the event argument is correct.
+    Event* event = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
+
+    // either get the metadata passed in or grab it from oboe.
+    oboe_metadata_t *md;
+    if (info.Length() >= 2 && Metadata::isMetadata(info[1])) {
+        md = &Nan::ObjectWrap::Unwrap<Metadata>(info[1]->ToObject())->metadata;
+    } else {
+        md = oboe_context_get();
+    }
+
+    return oboe_event_send(channel, &event->event, md);
+}
+
+
 // Send an event to the reporter
 NAN_METHOD(Reporter::sendReport) {
   if (info.Length() < 1) {
@@ -118,8 +135,7 @@ NAN_METHOD(Reporter::sendReport) {
 
   oboe_metadata_t *md;
   if (info.Length() >= 2 && Metadata::isMetadata(info[1])) {
-    Metadata* metadata = Nan::ObjectWrap::Unwrap<Metadata>(info[1]->ToObject());
-    md = &metadata->metadata;
+    md = &Nan::ObjectWrap::Unwrap<Metadata>(info[1]->ToObject())->metadata;
   } else {
     md = oboe_context_get();
   }
@@ -227,15 +243,17 @@ void Reporter::Init(v8::Local<v8::Object> exports) {
     Nan::HandleScope scope;
 
     // Prepare constructor template
-    v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(New);
-    ctor->InstanceTemplate()->SetInternalFieldCount(1);
+    v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(Reporter::New);
+    constructor.Reset(ctor);
     ctor->SetClassName(Nan::New("Reporter").ToLocalChecked());
+    // internal field count and accessors must be set on the instance template.
+    v8::Local<v8::ObjectTemplate> instance = ctor->InstanceTemplate();
+    instance->SetInternalFieldCount(1);
 
     // Assign host/port to change reporter target
-    Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
-    Nan::SetAccessor(proto, Nan::New("address").ToLocalChecked(), getAddress, setAddress);
-    Nan::SetAccessor(proto, Nan::New("host").ToLocalChecked(), getHost, setHost);
-    Nan::SetAccessor(proto, Nan::New("port").ToLocalChecked(), getPort, setPort);
+    Nan::SetAccessor(instance, Nan::New("address").ToLocalChecked(), getAddress, setAddress);
+    Nan::SetAccessor(instance, Nan::New("host").ToLocalChecked(), getHost, setHost);
+    Nan::SetAccessor(instance, Nan::New("port").ToLocalChecked(), getPort, setPort);
 
     // Prototype
     Nan::SetPrototypeMethod(ctor, "sendReport", Reporter::sendReport);
@@ -243,6 +261,6 @@ void Reporter::Init(v8::Local<v8::Object> exports) {
     Nan::SetPrototypeMethod(ctor, "sendHttpSpanName", Reporter::sendHttpSpanName);
     Nan::SetPrototypeMethod(ctor, "sendHttpSpanUrl", Reporter::sendHttpSpanUrl);
 
-    constructor.Reset(ctor->GetFunction());
     Nan::Set(exports, Nan::New("Reporter").ToLocalChecked(), ctor->GetFunction());
 }
+
