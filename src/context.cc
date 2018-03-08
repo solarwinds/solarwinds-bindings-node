@@ -193,9 +193,7 @@ NAN_METHOD(OboeContext::createEventX) {
   //
   // there is at least one argument. it must be metadata in some form.
   //
-  Metadata* metadata;
-
-  metadata = Metadata::getMetadata(info[0]);
+  Metadata* metadata = Metadata::getMetadata(info[0]);
 
   if (metadata == NULL) {
     return Nan::ThrowError("Invalid argument for createEventX()");

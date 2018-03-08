@@ -46,9 +46,9 @@ NAN_MODULE_INIT(Event::Init) {
   Nan::SetPrototypeMethod(ctor, "addEdge", Event::addEdge);
   Nan::SetPrototypeMethod(ctor, "getMetadata", Event::getMetadata);
   Nan::SetPrototypeMethod(ctor, "toString", Event::toString);
+  Nan::SetPrototypeMethod(ctor, "getSampleFlag", Event::getSampleFlag);
   Nan::SetPrototypeMethod(ctor, "setSampleFlag", Event::setSampleFlag);
   Nan::SetPrototypeMethod(ctor, "clearSampleFlag", Event::clearSampleFlag);
-  Nan::SetPrototypeMethod(ctor, "getSampleFlag", Event::getSampleFlag);
 
   target->Set(Nan::New("Event").ToLocalChecked(), ctor->GetFunction());
 }
