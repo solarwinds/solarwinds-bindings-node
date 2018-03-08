@@ -76,9 +76,11 @@ describe('addon.event', function () {
     meta.should.match(/2B[A-F0-9]{58}/)
   })
 
-  it('should start tracing, returning a new instance', function () {
-    var meta = new bindings.Metadata.makeRandom()
-    var event2 = new bindings.Event(meta, false)
-    //var event2 = bindings.Event.startTrace(meta)
+  it('should start tracing without adding an edge', function () {
+    var event2 = new bindings.Event(bindings.Metadata.makeRandom(), false)
+  })
+
+  it('should not crash node when getting the prototype of an event', function () {
+    var p = Object.getPrototypeOf(event)
   })
 })

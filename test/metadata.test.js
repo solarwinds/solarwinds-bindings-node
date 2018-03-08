@@ -110,4 +110,8 @@ describe('addon.metadata', function () {
     var event = metadata.createEvent()
     event.should.be.an.instanceof(bindings.Event)
   })
+
+  it('should not crash node when getting the prototype of an metadata instance', function () {
+    var p = Object.getPrototypeOf(bindings.Metadata.makeRandom())
+  })
 })
