@@ -123,25 +123,28 @@ int Reporter::send_event_x(Nan::NAN_METHOD_ARGS_TYPE info, int channel) {
 
 // Send an event to the reporter
 NAN_METHOD(Reporter::sendReport) {
-  if (info.Length() < 1) {
-    return Nan::ThrowError("Wrong number of arguments");
-  }
-  if (!Event::isEvent(info[0])) {
-    return Nan::ThrowTypeError("Must supply an event instance");
-  }
+    if (info.Length() < 1) {
+        return Nan::ThrowError("Reporter::sendReport - Wrong number of arguments");
+    }
+    if (!Event::isEvent(info[0])) {
+        return Nan::ThrowTypeError("Reporter::sendReport - Must supply an event instance");
+    }
+    Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
+    int status = self->send_event_x(info, OBOE_SEND_EVENT);
 
-  Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
-  Event* event = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
+    /*
+    Event* event = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
 
-  oboe_metadata_t *md;
-  if (info.Length() >= 2 && Metadata::isMetadata(info[1])) {
-    md = &Nan::ObjectWrap::Unwrap<Metadata>(info[1]->ToObject())->metadata;
-  } else {
-    md = oboe_context_get();
-  }
+    oboe_metadata_t *md;
+    if (info.Length() >= 2 && Metadata::isMetadata(info[1])) {
+        md = &Nan::ObjectWrap::Unwrap<Metadata>(info[1]->ToObject())->metadata;
+    } else {
+        md = oboe_context_get();
+    }
 
-  int status = self->send_event(md, &event->event);
-  info.GetReturnValue().Set(Nan::New(status));
+    int status = self->send_event(md, &event->event);
+    // */
+    info.GetReturnValue().Set(Nan::New(status));
 }
 
 NAN_METHOD(Reporter::sendStatus) {
@@ -151,8 +154,10 @@ NAN_METHOD(Reporter::sendStatus) {
     if (!Event::isEvent(info[0])) {
         return Nan::ThrowError("Reporter::sendStatus - requires an event instance");
     }
-
     Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
+    int status = self->send_event_x(info, OBOE_SEND_STATUS);
+
+    /*
     Event* event = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
 
     // fetch the (possibly new) context
@@ -164,6 +169,7 @@ NAN_METHOD(Reporter::sendStatus) {
     }
 
     int status = self->send_status(md, &event->event);
+    // */
     info.GetReturnValue().Set(Nan::New(status));
 }
 
