@@ -36,22 +36,27 @@ NAN_METHOD(OboeContext::setTracingMode) {
  * @param newRate A number between 0 (none) and OBOE_SAMPLE_RESOLUTION (a million)
  */
 NAN_METHOD(OboeContext::setDefaultSampleRate) {
-  // Validate arguments
-  if (info.Length() != 1) {
-    return Nan::ThrowError("Wrong number of arguments");
-  }
-  if (!info[0]->IsNumber()) {
-    return Nan::ThrowTypeError("Sample rate must be a number");
-  }
+    // Validate arguments
+    if (info.Length() != 1 || !info[0]->IsNumber()) {
+        info.GetReturnValue().Set(Nan::New(false));
+        return;
+    }
 
-  int rate = info[0]->NumberValue();
-  if (rate < 0) {
-      rate = 0;
-  } else if (rate > OBOE_SAMPLE_RESOLUTION) {
-      rate = OBOE_SAMPLE_RESOLUTION;
-  }
+    // presume success
+    bool status = true;
 
-  oboe_settings_rate_set(rate);
+    int rate = info[0]->NumberValue();
+    if (rate < 0) {
+        rate = 0;
+        status = false;
+    } else if (rate > OBOE_SAMPLE_RESOLUTION) {
+        rate = OBOE_SAMPLE_RESOLUTION;
+        status = false;
+    }
+
+    oboe_settings_rate_set(rate);
+
+    info.GetReturnValue().Set(Nan::New(status));
 }
 
 /**
