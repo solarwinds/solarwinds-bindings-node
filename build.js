@@ -47,7 +47,7 @@ function build (cb) {
     }
 
     if (err) {
-      console.warn('AppOptics oboe library not found, tracing disabled')
+      console.warn('AppOptics bindings - failed to build, tracing disabled')
       if (showOutput) {
           childOutput = childOutput.join('').toString('utf8')
           console.warn(childOutput)
