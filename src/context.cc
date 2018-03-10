@@ -41,9 +41,11 @@ NAN_METHOD(OboeContext::setDefaultSampleRate) {
 
     // Validate arguments, if bad return -1 (impossible rate)
     if (info.Length() == 1 && info[0]->IsNumber()) {
-        int rate = info[0]->NumberValue();
+        double check = info[0]->NumberValue();
+        int rate = check;
+        //int rate = info[0]->NumberValue();
         // make sure it's not NaN
-        if (!std::isnan(rate)) {
+        if (!std::isnan(check)) {
             // it's a valid number but maybe not in range.
             if (rate < 0) {
                 rate = 0;
