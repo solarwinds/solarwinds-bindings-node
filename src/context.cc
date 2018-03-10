@@ -43,7 +43,7 @@ NAN_METHOD(OboeContext::setDefaultSampleRate) {
     if (info.Length() == 1 && info[0]->IsNumber()) {
         int rate = info[0]->NumberValue();
         // make sure it's not NaN
-        if (!isnan(rate)) {
+        if (!std::isnan(rate)) {
             // it's a valid number but maybe not in range.
             if (rate < 0) {
                 rate = 0;
