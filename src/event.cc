@@ -4,7 +4,7 @@
 // Create an event using oboe's context.
 //
 Event::Event() {
-  oboe_status = oboe_event_init(&event, oboe_context_get());
+  oboe_status = oboe_event_init(&event, oboe_context_get(), NULL);
 }
 
 //
@@ -20,7 +20,7 @@ Event::Event(const oboe_metadata_t* md, bool addEdge) {
   } else {
     // this copies md to the event metadata except for the opId.
     // It creates a new random opId for the event.
-    oboe_status = oboe_event_init(&event, md);
+    oboe_status = oboe_event_init(&event, md, NULL);
   }
 
   // TODO BAM this can fail (oboe_status is non-zero). How to handle?

@@ -165,7 +165,7 @@ int oboe_metadata_is_sampled(oboe_metadata_t *md);
 #ifdef _FUTURE_PLANS_
 oboe_event_t *oboe_event_new(const oboe_metadata_t *);
 #endif /* _FUTURE_PLANS_ */
-int oboe_event_init     (oboe_event_t *, const oboe_metadata_t *);
+int oboe_event_init     (oboe_event_t *, const oboe_metadata_t *, const uint8_t* event_op_id);
 int oboe_event_destroy  (oboe_event_t *);
 
 int oboe_event_add_info (oboe_event_t *, const char *, const char *);
