@@ -192,7 +192,7 @@ NAN_METHOD(Reporter::sendHttpSpanName) {
     }
 
     std::string name = *Nan::Utf8String(info[0]);
-    char *url __attribute__((unused)) = NULL;
+    char *url = NULL;
     // Number.MAX_SAFE_INTEGER is big enough for any reasonable transaction time.
     // max_safe_seconds = MAX_SAFE_INTEGER / 1000000 microseconds
     // max_safe_days = MAX_SAFE_SECONDS / 86400 seconds
