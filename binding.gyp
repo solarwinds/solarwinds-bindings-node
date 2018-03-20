@@ -22,7 +22,7 @@
             '-loboe',
             '-L<(module_root_dir)/oboe/',
             '-Wl,-rpath-link,<(module_root_dir)/oboe/',
-            '-Wl,-rpath,<(module_root_dir)/oboe/'
+            '-Wl,-rpath,\$$ORIGIN/../../oboe/'
         ],
         }]
     ]
