@@ -96,7 +96,7 @@ NAN_METHOD(OboeContext::sampleTrace) {
   // BAM - because oboe wants a string here. but still, this
   // should accept either, formatting it if necessary.
   if (info.Length() >= 2) {
-    if ( ! info[1]->IsString()) {
+    if (!info[1]->IsString()) {
       return Nan::ThrowTypeError("X-Trace ID must be a string");
     }
     in_xtrace = *Nan::Utf8String(info[1]);
