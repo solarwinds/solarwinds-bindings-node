@@ -25,7 +25,7 @@ describe('addon.metadata', function () {
 
   it('should set the sample flag', function () {
     var md = metadata.toString()
-    metadata.setSampleFlag()
+    metadata.setSampleFlagTo(1)
     // it shouldn't modify anything but the sample flag
     metadata.toString().slice(0, -2).should.equal(md.slice(0, -2))
     metadata.toString().slice(-2).should.equal('01')
@@ -34,10 +34,29 @@ describe('addon.metadata', function () {
 
   it('should clear the sample flag', function () {
     var md = metadata.toString()
-    metadata.clearSampleFlag()
+    metadata.setSampleFlagTo(0)
     metadata.toString().slice(0, -2).should.equal(md.slice(0, -2))
     metadata.toString().slice(-2).should.equal('00')
     metadata.getSampleFlag().should.equal(false)
+  })
+
+  it('should set, clear, and return previous sample flag', function () {
+    var md = metadata.toString()
+    var onEntry = metadata.getSampleFlag()
+    var previous
+
+    previous = metadata.setSampleFlagTo(0)
+    metadata.toString().slice(0, -2).should.equal(md.slice(0, -2))
+    metadata.toString().slice(-2).should.equal('00')
+    previous.should.equal(onEntry)
+
+    previous = metadata.setSampleFlagTo(1)
+    metadata.toString().slice(0, -2).should.equal(md.slice(0, -2))
+    metadata.toString().slice(-2).should.equal('01')
+    previous.should.equal(false)
+
+    previous = metadata.setSampleFlagTo(onEntry)
+    previous.should.equal(true)
   })
 
   it('should construct using metadata', function () {

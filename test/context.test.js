@@ -129,7 +129,7 @@ describe('addon.context', function () {
     bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE)
     var event = bindings.Context.startTrace()
     var metadata = event.getMetadata()
-    metadata.setSampleFlag()
+    metadata.setSampleFlagTo(1)
     var xid = metadata.toString();
     var counter = 8
     // poll to give time for the SSL connection to complete

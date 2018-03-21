@@ -76,6 +76,25 @@ describe('addon.event', function () {
     meta.should.match(/2B[A-F0-9]{58}/)
   })
 
+  it('should set, clear, and return previous sample flag', function () {
+    var e = event.toString()
+    var onEntry = event.getSampleFlag()
+    var previous
+
+    previous = event.setSampleFlagTo(0)
+    event.toString().slice(0, -2).should.equal(e.slice(0, -2))
+    event.toString().slice(-2).should.equal('00')
+    previous.should.equal(onEntry)
+
+    previous = event.setSampleFlagTo(1)
+    event.toString().slice(0, -2).should.equal(e.slice(0, -2))
+    event.toString().slice(-2).should.equal('01')
+    previous.should.equal(false)
+
+    previous = event.setSampleFlagTo(onEntry)
+    previous.should.equal(true)
+  })
+
   it('should start tracing without adding an edge', function () {
     var event2 = new bindings.Event(bindings.Metadata.makeRandom(), false)
   })

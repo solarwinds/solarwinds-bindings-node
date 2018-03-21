@@ -160,19 +160,20 @@ NAN_METHOD(Metadata::getSampleFlag) {
     info.GetReturnValue().Set(Nan::New(sampleFlag));
 }
 
-// Set the sample flag and return the previous value
-NAN_METHOD(Metadata::setSampleFlag) {
-    Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
-    bool previous = self->metadata.flags & XTR_FLAGS_SAMPLED;
-    self->metadata.flags |= XTR_FLAGS_SAMPLED;
-    info.GetReturnValue().Set(Nan::New(previous));
-}
+NAN_METHOD(Metadata::setSampleFlagTo) {
+    if (info.Length() != 1) {
+        return Nan::ThrowError("setSampleFlagTo requires one argument");
+    }
 
-// Clear the sample flag and return the previous value
-NAN_METHOD(Metadata::clearSampleFlag) {
     Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
     bool previous = self->metadata.flags & XTR_FLAGS_SAMPLED;
-    self->metadata.flags &= ~XTR_FLAGS_SAMPLED;
+
+    // truthy to set it, falsey to clear it
+    if (info[0]->ToBoolean()->BooleanValue()) {
+        self->metadata.flags |= XTR_FLAGS_SAMPLED;
+    } else {
+        self->metadata.flags &= ~XTR_FLAGS_SAMPLED;
+    }
     info.GetReturnValue().Set(Nan::New(previous));
 }
 
@@ -310,8 +311,7 @@ void Metadata::Init(v8::Local<v8::Object> exports) {
   Nan::SetPrototypeMethod(ctor, "copy", Metadata::copy);
   Nan::SetPrototypeMethod(ctor, "isValid", Metadata::isValid);
   Nan::SetPrototypeMethod(ctor, "getSampleFlag", Metadata::getSampleFlag);
-  Nan::SetPrototypeMethod(ctor, "setSampleFlag", Metadata::setSampleFlag);
-  Nan::SetPrototypeMethod(ctor, "clearSampleFlag", Metadata::clearSampleFlag);
+  Nan::SetPrototypeMethod(ctor, "setSampleFlagTo", Metadata::setSampleFlagTo);
   Nan::SetPrototypeMethod(ctor, "toString", Metadata::toString);
   Nan::SetPrototypeMethod(ctor, "createEvent", Metadata::createEvent);
 
