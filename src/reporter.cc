@@ -123,11 +123,8 @@ int Reporter::send_event_x(Nan::NAN_METHOD_ARGS_TYPE info, int channel) {
 
 // Send an event to the reporter
 NAN_METHOD(Reporter::sendReport) {
-    if (info.Length() < 1) {
-        return Nan::ThrowError("Reporter::sendReport - Wrong number of arguments");
-    }
-    if (!Event::isEvent(info[0])) {
-        return Nan::ThrowTypeError("Reporter::sendReport - Must supply an event instance");
+    if (info.Length() < 1 || !Event::isEvent(info[0])) {
+        return Nan::ThrowTypeError("Reporter::sendReport() - Must supply an event instance");
     }
     Reporter* self = Nan::ObjectWrap::Unwrap<Reporter>(info.This());
     int status = self->send_event_x(info, OBOE_SEND_EVENT);
