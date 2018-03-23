@@ -213,6 +213,10 @@ NAN_METHOD(OboeContext::createEventX) {
   info.GetReturnValue().Set(Event::NewInstance(metadata, add_edge));
 }
 
+/**
+ * JavaScript callable method to create an event with the sample bit
+ * set as specified by the optional argument.
+ */
 NAN_METHOD(OboeContext::startTrace) {
     bool sample = false;
     if (info.Length() == 1) {
@@ -220,13 +224,6 @@ NAN_METHOD(OboeContext::startTrace) {
     }
 
     oboe_metadata_t *md = oboe_context_get();
-    char b[1000];
-    Metadata::format(md, 1000, b);
-    std::cout << "startTrace() md " << b << std::endl;
-
-    oboe_metadata_random(md);
-    Metadata::format(md, 1000, b);
-    std::cout << "startTrace() random md " << b << std::endl;
 
     if (sample) {
         md->flags |= XTR_FLAGS_SAMPLED;
