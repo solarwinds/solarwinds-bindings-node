@@ -207,16 +207,34 @@ NAN_METHOD(OboeContext::createEventX) {
 
   bool add_edge = true;
   if (info.Length() >= 2) {
-      add_edge = info[0]->BooleanValue();
+      add_edge = info[1]->BooleanValue();
   }
 
   info.GetReturnValue().Set(Event::NewInstance(metadata, add_edge));
 }
 
 NAN_METHOD(OboeContext::startTrace) {
-  oboe_metadata_t* md = oboe_context_get();
-  oboe_metadata_random(md);
-  info.GetReturnValue().Set(Event::NewInstance());
+    bool sample = false;
+    if (info.Length() == 1) {
+        sample = info[0]->BooleanValue();
+    }
+
+    oboe_metadata_t *md = oboe_context_get();
+    char b[1000];
+    Metadata::format(md, 1000, b);
+    std::cout << "startTrace() md " << b << std::endl;
+
+    oboe_metadata_random(md);
+    Metadata::format(md, 1000, b);
+    std::cout << "startTrace() random md " << b << std::endl;
+
+    if (sample) {
+        md->flags |= XTR_FLAGS_SAMPLED;
+    } else {
+        md->flags &= ~XTR_FLAGS_SAMPLED;
+    }
+
+    info.GetReturnValue().Set(Event::NewInstance());
 }
 
 void OboeContext::Init(v8::Local<v8::Object> module) {
