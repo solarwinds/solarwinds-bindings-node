@@ -127,7 +127,7 @@ describe('addon.context', function () {
   it('should get verification that a request should be sampled', function (done) {
     bindings.Context.setTracingMode(bindings.TRACE_ALWAYS)
     bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE)
-    var event = bindings.Context.startTrace()
+    var event = bindings.Context.startTrace(1)
     var metadata = event.getMetadata()
     metadata.setSampleFlagTo(1)
     var xid = metadata.toString();
@@ -154,5 +154,14 @@ describe('addon.context', function () {
   it('should be valid when not empty', function () {
     var event = bindings.Context.startTrace()
     bindings.Context.isValid().should.equal(true)
+  })
+
+  it('should not set sample bit unless specified', function () {
+    var event = bindings.Context.startTrace()
+    event.getSampleFlag().should.equal(false)
+    event.toString().slice(-2).should.equal('00')
+    event = bindings.Context.startTrace(1)
+    event.getSampleFlag().should.equal(true)
+    event.toString().slice(-2).should.equal('01')
   })
 })

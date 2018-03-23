@@ -224,6 +224,7 @@ NAN_METHOD(OboeContext::startTrace) {
     }
 
     oboe_metadata_t *md = oboe_context_get();
+    oboe_metadata_random(md);
 
     if (sample) {
         md->flags |= XTR_FLAGS_SAMPLED;
