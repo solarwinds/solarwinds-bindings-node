@@ -15,8 +15,9 @@ cache:
   directories:
   - node_modules
 node_js:
+- '9'
+- '8'
 - '6'
-- '5'
 - '4'
 install:
 - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test

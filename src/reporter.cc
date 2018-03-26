@@ -9,7 +9,6 @@ Reporter::Reporter() {
   host = "";
   port = "443";
   const char *p = getenv("APPOPTICS_REPORTER");
-  // handle null, thanks.
   if (p == 0 || p[0] == '\0') {
       p = "";
   }

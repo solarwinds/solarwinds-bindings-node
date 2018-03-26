@@ -22,12 +22,11 @@ Event::Event(const oboe_metadata_t* md, bool addEdge) {
     // It creates a new random opId for the event.
     oboe_status = oboe_event_init(&event, md, NULL);
   }
-
   // TODO BAM this can fail (oboe_status is non-zero). How to handle?
 }
 
 Event::~Event() {
-  oboe_event_destroy(&event);
+    oboe_event_destroy(&event);
 }
 
 Nan::Persistent<v8::FunctionTemplate> Event::constructor;
