@@ -3,11 +3,12 @@ PARAM=$2
 
 if [[ -z "$AO_TOKEN_STG" ]]; then
     echo "AO_TOKEN_STG must be defined and contain a valid token"
-    echo "for accessing collector-stg.appoptics.com"
+    echo "for accessing the appoptics collector specified by"
+    echo "AO\_TEST_COLLECTOR"
     return
 fi
 
-# define this for all consitions
+# define this in all cases.
 export APPOPTICS_SERVICE_KEY=${AO_TOKEN_STG}:node-bindings-test
 
 if [[ -z "$ARG" ]]; then
@@ -23,7 +24,7 @@ elif [[ "$ARG" = "udp" ]]; then
     export APPOPTICS_REPORTER_UDP=localhost:7832
 elif [[ "$ARG" = "ssl" ]]; then
     export APPOPTICS_REPORTER=ssl
-    export APPOPTICS_COLLECTOR=collector-stg.appoptics.com
+    export APPOPTICS_COLLECTOR=${AO_TEST_COLLECTOR:-collector.appoptics.com}
 elif [[ "$ARG" = "debug" ]]; then
     export APPOPTICS_DEBUG_LEVEL=6
     export APPOPTICS_SHOW_GYP=1
@@ -33,7 +34,7 @@ elif [[ "$ARG" = "get-new-oboe" ]]; then
     # c-lib/latest/liboboe-1.0-x86_64.so.0.0.0
     if [[ -z "$PARAM" ]]; then
         echo "Must supply a version (which will be used as the destination"
-        echo "directory. N.B. this isn't bullet-proof. It presumes sha256sum"
+        echo "directory). N.B. this isn't bullet-proof. It presumes sha256sum"
         echo "exists and that you're running bash."
         echo "example:"
         echo "$ . env.sh get-new-oboe latest"
@@ -44,8 +45,8 @@ elif [[ "$ARG" = "get-new-oboe" ]]; then
     mkdir -p "./$PARAM"
     for f in oboe.h oboe_debug.h VERSION "$OBOE_NAME" "$OBOE_NAME.sha256"
     do
-        echo "pretending to download $f"
-        #curl -o "./$PARAM/$f" "${URL}$f"
+        #echo "pretending to download $f"
+        curl -o "./$PARAM/$f" "${URL}$f"
     done
     # check the sha256
     correct=$(cat "./$PARAM/$OBOE_NAME.sha256")
