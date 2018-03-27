@@ -156,6 +156,7 @@ NAN_METHOD(OboeContext::set) {
   // Set the context
   oboe_context_set(&metadata->metadata);
 
+  delete metadata;
 }
 
 NAN_METHOD(OboeContext::copy) {
@@ -209,7 +210,12 @@ NAN_METHOD(OboeContext::createEventX) {
       add_edge = info[1]->BooleanValue();
   }
 
-  info.GetReturnValue().Set(Event::NewInstance(metadata, add_edge));
+  v8::Local<v8::Object> event = Event::NewInstance(metadata, add_edge);
+
+  info.GetReturnValue().Set(event);
+
+  delete metadata;
+  //info.GetReturnValue().Set(Event::NewInstance(metadata, add_edge));
 }
 
 /**
