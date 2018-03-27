@@ -9,7 +9,7 @@ performance information. Each event has a:
 
 ```
 label: (string - typically entry or exit)
-layer: (string - the name of the layer being instrumented)
+span: (string - the name of the span being instrumented)
 timestamp: (integer - unix timestamp)
 hostname: (string)
 X-trace ID: <header><task ID><op ID><flags>
@@ -22,6 +22,8 @@ is unique for each event in a trace, and a flag byte. In this implementation the
 manipulated as binary data (via Metadata and Event objects) or as a string of 60 hex digits.
 As a string, the header is 2 characters, the task ID is 40 characters, the op ID is 16
 characters, and the flag byte is 2 characters.
+
+Note: layer is a legacy term for span. It is being replaced but still appears in the code.
 
 
 ## Dev environment
