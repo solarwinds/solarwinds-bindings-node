@@ -13,7 +13,7 @@
         'src/bindings.cc'
     ],
     'conditions': [
-        ['OS in "linux mac"', {
+        ['OS in "linux"', {
         # includes reference oboe/oboe.h, so
         'include_dirs': [
             '<(module_root_dir)/'
