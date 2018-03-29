@@ -10,7 +10,7 @@ describe('addon.reporters.udp', function () {
   // Intercept tracelyzer messages for analysis
   //
   before(function (done) {
-    emitter = helper.tracelyzer(done)
+    emitter = helper.appoptics(done)
     tv.sampleRate = tv.addon.MAX_SAMPLE_RATE
     tv.traceMode = 'always'
   })

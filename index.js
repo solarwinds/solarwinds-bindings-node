@@ -1,1 +1,1 @@
-module.exports = require('bindings')('traceview-bindings.node')
+module.exports = require('bindings')('appoptics-bindings.node')

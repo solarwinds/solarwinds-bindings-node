@@ -1,3 +1,3 @@
-# node-traceview-bindings
+# node-appoptics-bindings
 
-These are the native bindings to liboboe for use in [node-traceview](https://github.com/tracelytics/node-traceview). You probably want that.
+These are the native bindings to liboboe for use in [node-appoptics](https://github.com/librato/node-appoptics). You probably want that.

@@ -1,8 +1,11 @@
 {
-  "name": "traceview-bindings",
-  "version": "1.0.11",
-  "description": "Bindings to liboboe for TraceView",
+  "name": "appoptics-bindings",
+  "version": "4.3.0",
+  "description": "Bindings to liboboe for AppOptics",
   "author": "Stephen Belanger <sbelanger@appneta.com>",
+  "contributors": [
+    "Bruce A. MacNaughton <bruce@librato.com>"
+  ],
   "main": "index.js",
   "gypfile": true,
   "license": {
@@ -11,13 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tracelytics/node-traceview-bindings"
+    "url": "https://github.com/librato/node-appoptics-bindings"
   },
   "bugs": {
-    "url": "https://github.com/tracelytics/node-traceview-bindings/issues"
+    "url": "https://github.com/librato/node-appoptics-bindings/issues"
   },
   "scripts": {
     "test": "gulp test",
+    "preinstall": "node setup-liboboe",
     "install": "node build",
     "rebuild": "node-gyp rebuild"
   },

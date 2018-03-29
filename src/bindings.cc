@@ -6,8 +6,15 @@
 #include "context.cc"
 #include "config.cc"
 #include "event.cc"
-#include "reporters/udp.cc"
-#include "reporters/file.cc"
+#include "reporter.cc"
+
+NAN_METHOD(oboeInit) {
+    if (info.Length() != 1 || !info[0]->IsString()) {
+        return Nan::ThrowError("oboeInit requires one string argument - the service key");
+    }
+    Nan::Utf8String service_key(info[0]);
+    oboe_init(*service_key, "");
+}
 
 extern "C" {
 
@@ -21,19 +28,18 @@ void init(v8::Local<v8::Object> exports) {
   Nan::Set(exports, Nan::New("MAX_OP_ID_LEN").ToLocalChecked(), Nan::New(OBOE_MAX_OP_ID_LEN));
   Nan::Set(exports, Nan::New("TRACE_NEVER").ToLocalChecked(), Nan::New(OBOE_TRACE_NEVER));
   Nan::Set(exports, Nan::New("TRACE_ALWAYS").ToLocalChecked(), Nan::New(OBOE_TRACE_ALWAYS));
-  Nan::Set(exports, Nan::New("TRACE_THROUGH").ToLocalChecked(), Nan::New(OBOE_TRACE_THROUGH));
 
-  FileReporter::Init(exports);
-  UdpReporter::Init(exports);
+  Nan::SetMethod(exports, "oboeInit", oboeInit);
+
+  Reporter::Init(exports);
   OboeContext::Init(exports);
   Sanitizer::Init(exports);
   Metadata::Init(exports);
   Event::Init(exports);
   Config::Init(exports);
 
-  oboe_init();
 }
 
-NODE_MODULE(traceview_bindings, init)
+NODE_MODULE(appoptics_bindings, init)
 
 }
