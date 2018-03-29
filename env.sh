@@ -29,6 +29,8 @@ elif [[ "$ARG" = "debug" ]]; then
     export APPOPTICS_DEBUG_LEVEL=6
     export APPOPTICS_SHOW_GYP=1
 elif [[ "$ARG" = "get-new-oboe" ]]; then
+    # N.B. if installing a new version of oboe "npm run preinstall" must be
+    # run before building in order to set up symlinks.
     # can't really use https://files.appoptics.com/c-lib (only .so and oboe.h)
     # https://s3-us-west-2.amazonaws.com/rc-files-t2/c-lib/latest/
     # c-lib/latest/liboboe-1.0-x86_64.so.0.0.0
