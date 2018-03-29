@@ -22,7 +22,6 @@ Event::Event(const oboe_metadata_t* md, bool addEdge) {
     // It creates a new random opId for the event.
     oboe_status = oboe_event_init(&event, md, NULL);
   }
-  // TODO BAM this can fail (oboe_status is non-zero). How to handle?
 }
 
 Event::~Event() {
@@ -109,19 +108,12 @@ NAN_METHOD(Event::New) {
     add_edge = info[1]->BooleanValue();
   }
 
-  // now make the event using the metadata specified.
+  // now make the event using the metadata specified. in no case is
+  // metadata allocated so there is no need to delete it.
   event = new Event(mdp, add_edge);
   event->Wrap(info.This());
   info.GetReturnValue().Set(info.This());
 
-
-  // TODO BAM check event->oboe_status.
-  // TODO BAM should this use info.Holder()
-  /*
-  event->Wrap(info.Holder());
-
-  info.GetReturnValue().Set(info.Holder());
-  // */
 }
 
 /**
@@ -181,7 +173,7 @@ NAN_METHOD(Event::toString) {
   char buf[OBOE_MAX_METADATA_PACK_LEN];
 
   int rc;
-  // TODO BAM for now any true counts. maybe accept 'A' or 'a'?
+  // TODO consider accept an argument to select upper or lower case.
   if (info.Length() == 1 && info[0]->ToBoolean()->BooleanValue()) {
     rc = Metadata::format(md, sizeof(buf), buf) ? 0 : -1;
   } else {
@@ -330,7 +322,7 @@ NAN_METHOD(Event::addInfo) {
     Nan::Utf8String value(info[1]);
 
     // Detect if we should add as binary or a string
-    // TODO: Should probably use buffers for binary data...
+    // TODO evaluate using buffers for binary data...
     if (memchr(*value, '\0', value.length())) {
       status = oboe_event_add_info_binary(event, *key, *value, value.length());
     } else {
