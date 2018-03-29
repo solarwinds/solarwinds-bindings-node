@@ -28,8 +28,8 @@ NAN_METHOD(OboeContext::setTracingMode) {
 /**
  * Set the default sample rate.
  *
- * This rate is used until overridden by the AppOptics servers.  If not set then the
- * value 300,000 will be used (ie. 30%).
+ * This rate is used until overridden by the AppOptics servers.  If not set then
+ * oboe supplies a default value (300,000, i.e., 30%) at time of this writing.
  *
  * The rate is interpreted as a ratio out of OBOE_SAMPLE_RESOLUTION (1,000,000).
  *

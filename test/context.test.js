@@ -39,13 +39,29 @@ describe('addon.context', function () {
   it('should not throw when setting invalid sample rate', function () {
     var threw = false
     try {
-      bindings.Context.setDefaultSampleRate(0)
+      bindings.Context.setDefaultSampleRate(-1)
       bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE + 1)
     } catch (e) {
       threw = true
     }
 
     threw.should.equal(false, 'setting invalid rates threw')
+  })
+
+  it('should handle bad sample rates correctly', function () {
+    var rateUsed
+    rateUsed = bindings.Context.setDefaultSampleRate(-1)
+    rateUsed.should.equal(0)
+    rateUsed = bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE + 1)
+    rateUsed.should.equal(bindings.MAX_SAMPLE_RATE)
+
+    rateUsed = bindings.Context.setDefaultSampleRate(100000)
+    rateUsed.should.equal(100000)
+    // the C++ code cannot ask oboe what rate was in effect. NaN doesn't not
+    // change the value because it cannot be compared, so the addon returns -1.
+    // appoptics-apm keeps a local copy of the value and handles this correctly.
+    rateUsed = bindings.Context.setDefaultSampleRate(NaN)
+    rateUsed.should.equal(-1)
   })
 
   it('should serialize context to string', function () {
