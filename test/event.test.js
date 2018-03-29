@@ -95,7 +95,7 @@ describe('addon.event', function () {
     previous.should.equal(true)
   })
 
-  it('should start tracing without adding an edge', function () {
+  it('should create an event without adding an edge', function () {
     var event2 = new bindings.Event(bindings.Metadata.makeRandom(), false)
   })
 

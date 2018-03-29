@@ -34,7 +34,6 @@ NAN_METHOD(Metadata::New) {
 
   if (info.Length() == 0) {
     // returns null metadata
-    // TODO BAM what is the point of this?
     md = new Metadata();
   } else if (info.Length() != 1) {
     return Nan::ThrowError("new Metadata() accepts at most 1 parameter");
@@ -256,23 +255,27 @@ NAN_METHOD(Metadata::isInstance) {
     info.GetReturnValue().Set(is);
 }
 
+//
 // JavaScript callable static method to determine if the argument
 // (event, metadata, or string) has the sample flag turned on.
-
+//
+// returns a boolean indicating the state of the sample flag
+//
+// if a string argument cannot be converted to metadata it
+// returns undefined
+//
 NAN_METHOD(Metadata::sampleFlagIsSet) {
     bool sampleFlag = false;
 
+    // handle each argument type appropriately
     if (info.Length() >= 1) {
         if (Metadata::isMetadata(info[0])) {
-            // If called with a Metadata instance
             Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
             sampleFlag = md->metadata.flags & XTR_FLAGS_SAMPLED;
         } else if (Event::isEvent(info[0])) {
-            // if called with an Event instance
             Event* e = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
             sampleFlag = e->event.metadata.flags & XTR_FLAGS_SAMPLED;
         } else if (info[0]->IsString()) {
-            // TODO BAM duplicates some code in metadata.cc - refactor into C++ callable method.
             Nan::Utf8String str(info[0]);
 
             oboe_metadata_t md;
@@ -280,8 +283,6 @@ NAN_METHOD(Metadata::sampleFlagIsSet) {
             if (status < 0) {
                 info.GetReturnValue().Set(Nan::Undefined());
                 return;
-                //return Nan::ThrowError("Failed to convert Metadata from string");
-
             }
             sampleFlag = md.flags & XTR_FLAGS_SAMPLED;
         }

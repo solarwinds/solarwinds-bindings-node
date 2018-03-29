@@ -62,38 +62,33 @@ NAN_METHOD(OboeContext::setDefaultSampleRate) {
 /**
  * Check if the current request should be traced based on the current settings.
  *
- * If xtrace is empty, or if it is identified as a foreign (ie. cross customer)
- * trace, then sampling will be considered as a new trace.
- * Otherwise sampling will be considered as adding to the current trace.
- * Different layers may have special rules.  Also special rules for AppView
- * Web synthetic traces apply if in_tv_meta is given a non-empty string.
+ * If xtrace is empty, or if it is not valid then it will be considered a
+ * new trace. Otherwise sampling will add to the existing trace.
+ * Different layers may have special rules.
  *
  * This is designed to be called once per request at the entry layer.
  *
  * @param layer Name of the layer being considered for tracing
  * @param in_xtrace Incoming X-Trace ID (NULL or empty string if not present)
  * @return {Object} {sample, source, rate}
- * TODO BAM update comments when done
  */
 NAN_METHOD(OboeContext::sampleTrace) {
   // Validate arguments
   if (info.Length() < 1) {
     return Nan::ThrowError("Wrong number of arguments");
   }
+  if (!info[0]->IsString()) {
+    return Nan::ThrowTypeError("Layer name must be a string");
+  }
 
   std::string layer_name;
   std::string in_xtrace;
 
-  // The first argument must be a string
-  if (!info[0]->IsString()) {
-    return Nan::ThrowTypeError("Layer name must be a string");
-  }
   layer_name = *Nan::Utf8String(info[0]);
 
   // If the second argument is present, it must be a string
-  // TODO BAM - why can't it be an object, i.e., metadata?
-  // BAM - because oboe wants a string here. but still, this
-  // should accept either, formatting it if necessary.
+  // TODO even though oboe requires a string this could accept
+  // any form of metadata (i.e., string, metadata, or event).
   if (info.Length() >= 2) {
     if (!info[1]->IsString()) {
       return Nan::ThrowTypeError("X-Trace ID must be a string");
@@ -215,7 +210,6 @@ NAN_METHOD(OboeContext::createEventX) {
   info.GetReturnValue().Set(event);
 
   delete metadata;
-  //info.GetReturnValue().Set(Event::NewInstance(metadata, add_edge));
 }
 
 /**

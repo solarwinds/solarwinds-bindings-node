@@ -11,10 +11,6 @@
 
 #include <oboe/oboe.h>
 
-// TODO BAM remove - for debugging only
-#include <sstream>
-#include <iomanip>
-
 class Event;
 
 class Metadata : public Nan::ObjectWrap {
@@ -117,27 +113,12 @@ class Reporter : public Nan::ObjectWrap {
     int send_status(oboe_metadata_t*, oboe_event_t*);
     int send_event_x(Nan::NAN_METHOD_ARGS_TYPE, int);
 
-    std::string host;
-    std::string port;
-    std::string protocol;
-    bool connected;
     static Nan::Persistent<v8::FunctionTemplate> constructor;
     static NAN_METHOD(New);
     static NAN_METHOD(sendReport);
     static NAN_METHOD(sendStatus);
     static NAN_METHOD(sendHttpSpanName);
     static NAN_METHOD(sendHttpSpanUrl);
-
-    static NAN_SETTER(setAddress);
-    static NAN_GETTER(getAddress);
-
-    static NAN_SETTER(setPort);
-    static NAN_GETTER(getPort);
-
-    static NAN_SETTER(setHost);
-    static NAN_GETTER(getHost);
-
-    static NAN_GETTER(getChannel);
 
     static v8::Local<v8::Object> NewInstance();
 
@@ -148,9 +129,9 @@ class Reporter : public Nan::ObjectWrap {
 
 
 class Config {
-  static NAN_METHOD(getRevision);
-  static NAN_METHOD(getVersion);
-  static NAN_METHOD(checkVersion);
+    static NAN_METHOD(getRevision);
+    static NAN_METHOD(getVersion);
+    static NAN_METHOD(checkVersion);
 
   public:
     static void Init(v8::Local<v8::Object>);
@@ -160,13 +141,6 @@ class Sanitizer {
   static NAN_METHOD(sanitize);
 
   public:
-    static void Init(v8::Local<v8::Object>);
-};
-
-class Utility {
-    static NAN_METHOD(getBuffer);
-
-public:
     static void Init(v8::Local<v8::Object>);
 };
 
