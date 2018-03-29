@@ -4,7 +4,7 @@ PARAM=$2
 if [[ -z "$AO_TOKEN_STG" ]]; then
     echo "AO_TOKEN_STG must be defined and contain a valid token"
     echo "for accessing the appoptics collector specified by"
-    echo "AO\_TEST_COLLECTOR"
+    echo "AO_TEST_COLLECTOR"
     return
 fi
 
