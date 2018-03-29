@@ -180,36 +180,36 @@ NAN_METHOD(OboeContext::createEvent) {
 // argument it uses oboe's context as the metadata.
 //
 NAN_METHOD(OboeContext::createEventX) {
-  //
-  // This signature gets oboe's thread-specific context and uses that to
-  // create a new event.
-  //
-  if (info.Length() == 0) {
-    Metadata* md = new Metadata(oboe_context_get());
-    info.GetReturnValue().Set(Event::NewInstance(md));
+    Metadata* md;
+    bool add_edge = true;
+
+    //
+    // One signature gets oboe's thread-specific context and uses that to
+    // create a new event. The other signature supplies the metadata.
+    //
+    if (info.Length() == 0) {
+        md = new Metadata(oboe_context_get());
+    } else {
+        md = Metadata::getMetadata(info[0]);
+    }
+
+    if (md == NULL) {
+        return Nan::ThrowError("Invalid argument for createEventX()");
+    }
+
+    if (info.Length() >= 2) {
+        add_edge = info[1]->BooleanValue();
+    }
+
+    v8::Local<v8::Object> event = Event::NewInstance(md, add_edge);
     delete md;
-    return;
-  }
 
-  //
-  // there is at least one argument. it must be metadata in some form.
-  //
-  Metadata* metadata = Metadata::getMetadata(info[0]);
+    Event* e = Nan::ObjectWrap::Unwrap<Event>(event);
+    if (e->oboe_status != 0) {
+        return Nan::ThrowError("Oboe failed to create event");
+    }
 
-  if (metadata == NULL) {
-    return Nan::ThrowError("Invalid argument for createEventX()");
-  }
-
-  bool add_edge = true;
-  if (info.Length() >= 2) {
-      add_edge = info[1]->BooleanValue();
-  }
-
-  v8::Local<v8::Object> event = Event::NewInstance(metadata, add_edge);
-
-  info.GetReturnValue().Set(event);
-
-  delete metadata;
+    info.GetReturnValue().Set(event);
 }
 
 /**
@@ -231,7 +231,14 @@ NAN_METHOD(OboeContext::startTrace) {
         md->flags &= ~XTR_FLAGS_SAMPLED;
     }
 
-    info.GetReturnValue().Set(Event::NewInstance());
+    v8::Local<v8::Object> event = Event::NewInstance();
+
+    Event *e = Nan::ObjectWrap::Unwrap<Event>(event);
+    if (e->oboe_status != 0) {
+        return Nan::ThrowError("Oboe failed to create event");
+    }
+
+    info.GetReturnValue().Set(event);
 }
 
 void OboeContext::Init(v8::Local<v8::Object> module) {
