@@ -7,7 +7,6 @@
 #include "config.cc"
 #include "event.cc"
 #include "reporter.cc"
-#include "utility.cc"
 
 NAN_METHOD(oboeInit) {
     if (info.Length() != 1 || !info[0]->IsString()) {
@@ -38,7 +37,6 @@ void init(v8::Local<v8::Object> exports) {
   Metadata::Init(exports);
   Event::Init(exports);
   Config::Init(exports);
-  Utility::Init(exports);
 
 }
 
