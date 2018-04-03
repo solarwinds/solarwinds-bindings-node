@@ -1,9 +1,16 @@
 #include "bindings.h"
 
+// currently active
+static int event_count = 0;
+// at destruction - size and average size
+static int event_size_total = 0;
+static int event_size_total_count = 0;
+
 //
 // Create an event using oboe's context.
 //
 Event::Event() {
+    event_count++;
     oboe_status = oboe_event_init(&event, oboe_context_get(), NULL);
 }
 
@@ -13,18 +20,22 @@ Event::Event() {
 // op ID.
 //
 Event::Event(const oboe_metadata_t* md, bool addEdge) {
-  if (addEdge) {
-    // all this does is call oboe_event_init() followed by
-    // oboe_event_add_edge().
-    oboe_status = oboe_metadata_create_event(md, &event);
-  } else {
-    // this copies md to the event metadata except for the opId.
-    // It creates a new random opId for the event.
-    oboe_status = oboe_event_init(&event, md, NULL);
-  }
+    event_count++;
+    if (addEdge) {
+        // all this does is call oboe_event_init() followed by
+        // oboe_event_add_edge().
+        oboe_status = oboe_metadata_create_event(md, &event);
+    } else {
+        // this copies md to the event metadata except for the opId.
+        // It creates a new random opId for the event.
+        oboe_status = oboe_event_init(&event, md, NULL);
+    }
 }
 
 Event::~Event() {
+    event_count--;
+    event_size_total += sizeof(event) + event.bbuf.bufSize;
+    event_size_total_count += 1;
     oboe_event_destroy(&event);
 }
 
@@ -39,6 +50,8 @@ NAN_MODULE_INIT(Event::Init) {
     constructor.Reset(ctor);
     ctor->InstanceTemplate()->SetInternalFieldCount(1);
     ctor->SetClassName(Nan::New("Event").ToLocalChecked());
+
+    Nan::SetMethod(ctor, "getEventData", Event::getEventData);
 
     Nan::SetPrototypeMethod(ctor, "addInfo", Event::addInfo);
     Nan::SetPrototypeMethod(ctor, "addEdge", Event::addEdge);
@@ -116,7 +129,7 @@ NAN_METHOD(Event::New) {
 }
 
 /**
- * C++ callable function to create a JavaScript Metadata object.
+ * C++ callable function to create a JavaScript Event object.
  *
  * This signature includes a boolean for whether an edge is set or not.
  */
@@ -165,6 +178,18 @@ v8::Local<v8::Object> Event::NewInstance() {
     return scope.Escape(instance);
 }
 
+NAN_METHOD(Event::getEventData) {
+    v8::Local<v8::String> active = Nan::New<v8::String>("active").ToLocalChecked();
+    v8::Local<v8::String> freedBytes = Nan::New<v8::String>("freedBytes").ToLocalChecked();
+    v8::Local<v8::String> freedCount = Nan::New<v8::String>("freedCount").ToLocalChecked();
+
+    v8::Local<v8::Object> o = Nan::New<v8::Object>();
+    Nan::Set(o, active, Nan::New<v8::Number>(event_count));
+    Nan::Set(o, freedBytes, Nan::New<v8::Number>(event_size_total));
+    Nan::Set(o, freedCount, Nan::New<v8::Number>(event_size_total_count));
+
+    info.GetReturnValue().Set(o);
+}
 
 NAN_METHOD(Event::toString) {
     // Unwrap the Event instance from V8 and get the metadata reference.
@@ -241,7 +266,7 @@ NAN_METHOD(Event::getMetadata) {
  *
  * event.addEdge(edge)
  *
- * @param {Metadata | string} X-Trace ID to edge back to
+ * @param {Event | Metadata | string} X-Trace ID to edge back to
  */
 NAN_METHOD(Event::addEdge) {
     // Validate arguments
@@ -251,8 +276,8 @@ NAN_METHOD(Event::addEdge) {
 
     // Unwrap event instance from V8
     Event* self = Nan::ObjectWrap::Unwrap<Event>(info.This());
-    int status;
 
+    int status;
     if (Event::isEvent(info[0])) {
         Event* e = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
         status = oboe_event_add_edge(&self->event, &e->event.metadata);
@@ -299,12 +324,12 @@ NAN_METHOD(Event::addInfo) {
     Nan::Utf8String key(info[0]);
     int status;
 
-    // Handle integer values
+    // Handle boolean values
     if (info[1]->IsBoolean()) {
         bool val = info[1]->BooleanValue();
         status = oboe_event_add_info_bool(event, *key, val);
 
-    // Handle double values
+    // Handle integer values
     } else if (info[1]->IsInt32()) {
         int64_t val = info[1]->Int32Value();
         status = oboe_event_add_info_int64(event, *key, val);

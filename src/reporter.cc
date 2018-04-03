@@ -22,15 +22,6 @@ v8::Local<v8::Object> Reporter::NewInstance() {
     return scope.Escape(instance);
   }
 
-int Reporter::send_event(oboe_metadata_t* meta, oboe_event_t* event) {
-  return oboe_event_send(OBOE_SEND_EVENT, event, meta);
-}
-
-int Reporter::send_status(oboe_metadata_t* meta, oboe_event_t* event) {
-    return oboe_event_send(OBOE_SEND_STATUS, event, meta);
-}
-
-
 int Reporter::send_event_x(Nan::NAN_METHOD_ARGS_TYPE info, int channel) {
     // info.This() is not a Reporter in this case - it's been passed from
     // a C++ function using that function's info. As this is called only
@@ -47,7 +38,9 @@ int Reporter::send_event_x(Nan::NAN_METHOD_ARGS_TYPE info, int channel) {
         md = oboe_context_get();
     }
 
-    return oboe_event_send(channel, &event->event, md);
+    int status = oboe_event_send(channel, &event->event, md);
+
+    return status;
 }
 
 

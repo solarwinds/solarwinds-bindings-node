@@ -26,6 +26,7 @@ class Metadata : public Nan::ObjectWrap {
   oboe_metadata_t metadata;
   static Nan::Persistent<v8::FunctionTemplate> constructor;
   static NAN_METHOD(New);
+  static NAN_METHOD(getMetadataData);
   static NAN_METHOD(fromString);
   static NAN_METHOD(makeRandom);
   static NAN_METHOD(copy);
@@ -89,6 +90,7 @@ class Event : public Nan::ObjectWrap {
   int oboe_status;
   static Nan::Persistent<v8::FunctionTemplate> constructor;
   static NAN_METHOD(New);
+  static NAN_METHOD(getEventData);
   static NAN_METHOD(addInfo);
   static NAN_METHOD(addEdge);
   static NAN_METHOD(getMetadata);
@@ -109,8 +111,6 @@ class Event : public Nan::ObjectWrap {
 class Reporter : public Nan::ObjectWrap {
     Reporter();
     ~Reporter();
-    int send_event(oboe_metadata_t*, oboe_event_t*);
-    int send_status(oboe_metadata_t*, oboe_event_t*);
     int send_event_x(Nan::NAN_METHOD_ARGS_TYPE, int);
 
     static Nan::Persistent<v8::FunctionTemplate> constructor;

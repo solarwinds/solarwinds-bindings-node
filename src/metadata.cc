@@ -2,17 +2,28 @@
 
 Nan::Persistent<v8::FunctionTemplate> Metadata::constructor;
 
+// currently active
+static int metadata_count = 0;
+// at destruction - size and average size
+static int metadata_deleted_size = 0;
+static int metadata_deleted_count = 0;
+
 Metadata::Metadata() {
+    metadata_count += 1;
 }
 
 // Allow construction of clones
 Metadata::Metadata(oboe_metadata_t* md) {
-  oboe_metadata_copy(&metadata, md);
+    metadata_count += 1;
+    oboe_metadata_copy(&metadata, md);
 }
 
 // Remember to cleanup the metadata struct when garbage collected
 Metadata::~Metadata() {
-  oboe_metadata_destroy(&metadata);
+    metadata_count -= 1;
+    metadata_deleted_size += sizeof(metadata);
+    metadata_deleted_count += 1;
+    oboe_metadata_destroy(&metadata);
 }
 
 bool Metadata::sampleFlagIsOn() {
@@ -76,15 +87,28 @@ v8::Local<v8::Object> Metadata::NewInstance(Metadata* md) {
 // Create a new instance when no arguments.
 //
 v8::Local<v8::Object> Metadata::NewInstance() {
-  Nan::EscapableHandleScope scope;
+    Nan::EscapableHandleScope scope;
 
-  const unsigned argc = 0;
-  v8::Local<v8::Value> argv[argc] = {};
-  v8::Local<v8::Function> cons = Nan::New<v8::FunctionTemplate>(constructor)->GetFunction();
-  v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
-  //v8::Local<v8::Object> instance = Nan::NewInstance(cons, argc, argv);
+    const unsigned argc = 0;
+    v8::Local<v8::Value> argv[argc] = {};
+    v8::Local<v8::Function> cons = Nan::New<v8::FunctionTemplate>(constructor)->GetFunction();
+    v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
+    //v8::Local<v8::Object> instance = Nan::NewInstance(cons, argc, argv);
 
-  return scope.Escape(instance);
+    return scope.Escape(instance);
+}
+
+NAN_METHOD(Metadata::getMetadataData) {
+    v8::Local<v8::String> active = Nan::New<v8::String>("active").ToLocalChecked();
+    v8::Local<v8::String> freedBytes = Nan::New<v8::String>("freedBytes").ToLocalChecked();
+    v8::Local<v8::String> freedCount = Nan::New<v8::String>("freedCount").ToLocalChecked();
+
+    v8::Local<v8::Object> o = Nan::New<v8::Object>();
+    Nan::Set(o, active, Nan::New<v8::Number>(metadata_count));
+    Nan::Set(o, freedBytes, Nan::New<v8::Number>(metadata_deleted_size));
+    Nan::Set(o, freedCount, Nan::New<v8::Number>(metadata_deleted_count));
+
+    info.GetReturnValue().Set(o);
 }
 
 /**
@@ -92,9 +116,9 @@ v8::Local<v8::Object> Metadata::NewInstance() {
  * oboe context.
  */
 NAN_METHOD(Metadata::fromContext) {
-  Metadata* md = new Metadata(oboe_context_get());
-  info.GetReturnValue().Set(Metadata::NewInstance(md));
-  delete md;
+    Metadata* md = new Metadata(oboe_context_get());
+    info.GetReturnValue().Set(Metadata::NewInstance(md));
+    delete md;
 }
 
 // Transform a string back into a metadata instance
@@ -118,39 +142,38 @@ NAN_METHOD(Metadata::fromString) {
 // Metadata factory for randomized metadata
 //
 NAN_METHOD(Metadata::makeRandom) {
-  oboe_metadata_t md;
-  oboe_metadata_init(&md);
-  oboe_metadata_random(&md);
+    oboe_metadata_t md;
+    oboe_metadata_init(&md);
+    oboe_metadata_random(&md);
 
-  // set or clear the sample flag appropriately if an argument specified.
-  if (info.Length() == 1) {
-      if (info[0]->ToBoolean()->BooleanValue()) {
-          md.flags |= XTR_FLAGS_SAMPLED;
-      } else {
-          md.flags &= ~XTR_FLAGS_SAMPLED;
-      }
-  }
+    // set or clear the sample flag appropriately if an argument specified.
+    if (info.Length() == 1) {
+        if (info[0]->ToBoolean()->BooleanValue()) {
+            md.flags |= XTR_FLAGS_SAMPLED;
+        } else {
+            md.flags &= ~XTR_FLAGS_SAMPLED;
+        }
+    }
 
-  // create intermediate meta so it can be deleted and doesn't leak memory.
-  Metadata* meta = new Metadata(&md);
+    // create intermediate metadata so it can be deleted and doesn't leak memory.
+    Metadata* metadata = new Metadata(&md);
 
-
-  // create a metadata object so this parallels the JS invocation.
-  info.GetReturnValue().Set(Metadata::NewInstance(meta));
-  delete meta;
+    // create a metadata object so this parallels the JS invocation.
+    info.GetReturnValue().Set(Metadata::NewInstance(metadata));
+    delete metadata;
 }
 
 // Copy the contents of the metadata instance to a new instance
 NAN_METHOD(Metadata::copy) {
-  Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
-  info.GetReturnValue().Set(Metadata::NewInstance(self));
+    Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
+    info.GetReturnValue().Set(Metadata::NewInstance(self));
 }
 
 // Verify that the state of the metadata instance is valid
 NAN_METHOD(Metadata::isValid) {
-  Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
-  bool status = oboe_metadata_is_valid(&self->metadata);
-  info.GetReturnValue().Set(Nan::New(status));
+    Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
+    bool status = oboe_metadata_is_valid(&self->metadata);
+    info.GetReturnValue().Set(Nan::New(status));
 }
 
 NAN_METHOD(Metadata::getSampleFlag) {
@@ -208,7 +231,8 @@ bool Metadata::isMetadata(v8::Local<v8::Value> object) {
 }
 
 //
-// Internal method to return metadata if an object contains metadata.
+// Internal method to return new metadata object if an object
+// represents metadata.
 //
 Metadata* Metadata::getMetadata(v8::Local<v8::Value> object) {
     Metadata* metadata;
@@ -222,7 +246,7 @@ Metadata* Metadata::getMetadata(v8::Local<v8::Value> object) {
         Event* e = Nan::ObjectWrap::Unwrap<Event>(object->ToObject());
         metadata = new Metadata(&e->event.metadata);
     } else if (object->IsString()) {
-        // it's a string, this can fail and return undefined.
+        // it's a string, this can fail and return NULL.
         Nan::Utf8String str(object);
 
         oboe_metadata_t md;
@@ -238,11 +262,6 @@ Metadata* Metadata::getMetadata(v8::Local<v8::Value> object) {
 
     return metadata;
 }
-
-
-
-
-
 
 // JavaScript callable method to determine if an object is an
 // instance of JavaScript Metadata.
@@ -302,6 +321,7 @@ void Metadata::Init(v8::Local<v8::Object> exports) {
   ctor->SetClassName(Nan::New("Metadata").ToLocalChecked());
 
   // Statics
+  Nan::SetMethod(ctor, "getMetadataData", Metadata::getMetadataData);
   Nan::SetMethod(ctor, "fromString", Metadata::fromString);
   Nan::SetMethod(ctor, "fromContext", Metadata::fromContext);
   Nan::SetMethod(ctor, "makeRandom", Metadata::makeRandom);
@@ -319,6 +339,9 @@ void Metadata::Init(v8::Local<v8::Object> exports) {
   Nan::Set(exports, Nan::New("Metadata").ToLocalChecked(), ctor->GetFunction());
 }
 
+//
+// function to format an x-trace with components split by ':'
+//
 bool Metadata::format(oboe_metadata_t* md, size_t len, char* buffer) {
     char* b = buffer;
 
