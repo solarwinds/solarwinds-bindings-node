@@ -2,7 +2,7 @@
 
 ## Two minutes on how it works
 
-[node-appoptics-bindings](https://github.com/librato/node-appoptics-bindings)
+[appoptics-bindings](https://github.com/appoptics/appoptics-bindings-node)
 implements the low-level interface to liboboe. liboboe implements core functions
 to enable tracing. Traces are sequences of entry and exit events which capture
 performance information. Each event has a:

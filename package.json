@@ -1,10 +1,10 @@
 {
   "name": "appoptics-bindings",
   "version": "4.5.0",
-  "description": "Bindings to liboboe for AppOptics",
-  "author": "Stephen Belanger <sbelanger@appneta.com>",
+  "description": "Bindings to liboboe for the AppOptics APM agent",
+  "author": "Bruce A. MacNaughton <bruce@solarwinds.cloud>",
   "contributors": [
-    "Bruce A. MacNaughton <bruce@librato.com>"
+    "Stephen Belanger <admin@stephenbelanger.com>"
   ],
   "main": "index.js",
   "gypfile": true,
@@ -14,10 +14,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/librato/node-appoptics-bindings"
+    "url": "https://github.com/appoptics/appoptics-bindings-node"
   },
   "bugs": {
-    "url": "https://github.com/librato/node-appoptics-bindings/issues"
+    "url": "https://github.com/appoptics/appoptics-bindings-node/issues"
   },
   "scripts": {
     "test": "gulp test",
