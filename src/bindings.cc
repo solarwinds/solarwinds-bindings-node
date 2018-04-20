@@ -9,11 +9,42 @@
 #include "reporter.cc"
 
 NAN_METHOD(oboeInit) {
-    if (info.Length() != 1 || !info[0]->IsString()) {
-        return Nan::ThrowError("oboeInit requires one string argument - the service key");
+
+    if (info.Length() < 1 || !info[0]->IsString() || (info.Length() > 1 && !info[1]->IsObject())) {
+        return Nan::ThrowError("oboeInit - invalid calling signature");
     }
     Nan::Utf8String service_key(info[0]);
-    oboe_init(*service_key, "");
+
+    // setup the options
+    oboe_init_options_t options;
+    options.version = 1;
+    options.hostname_alias = NULL;
+    options.log_level = 0;
+    options.log_file_path = NULL;
+    options.max_transactions = 0;
+
+    // if not options supplied then init with an empty struct.
+    if (info.Length() == 1) {
+        oboe_init(*service_key, &options);
+        return;
+    }
+
+    v8::Local<v8::Object> opts = info[1]->ToObject();
+    // this is the only field in oboe_init_options_t that node uses at this point
+    v8::Local<v8::String> hostnameAlias = Nan::New<v8::String>("hostnameAlias").ToLocalChecked();
+    std::string alias;
+
+    if (Nan::Has(opts, hostnameAlias).FromMaybe(false)) {
+        Nan::MaybeLocal<v8::Value> value = Nan::Get(opts, hostnameAlias);
+        if (!value.IsEmpty()) {
+            alias = *Nan::Utf8String(value.ToLocalChecked()->ToString());
+            options.hostname_alias = alias.c_str();
+        } else {
+            // there is no hostnameAlias available. just leave it empty.
+        }
+    }
+
+    oboe_init(*service_key, &options);
 }
 
 extern "C" {

@@ -3,7 +3,10 @@ var bindings = require('../')
 describe('addon.metadata', function () {
   var metadata
   var string
-  bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY)
+
+  it('should initialize oboe without options', function () {
+    bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY)
+  })
 
   it('should construct', function () {
     metadata = new bindings.Metadata()
