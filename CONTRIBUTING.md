@@ -3,8 +3,8 @@
 ## Two minutes on how it works
 
 [appoptics-bindings](https://github.com/appoptics/appoptics-bindings-node)
-implements the low-level interface to liboboe. liboboe implements core functions
-to enable tracing. Traces are sequences of entry and exit events which capture
+implements the low-level interface to liboboe. liboboe implements communications and aggregation functions
+to enable the efficient sampling of traces. Traces are sequences of entry and exit events which capture
 performance information. Each event has a:
 
 ```
@@ -23,7 +23,7 @@ manipulated as binary data (via Metadata and Event objects) or as a string of 60
 As a string, the header is 2 characters, the task ID is 40 characters, the op ID is 16
 characters, and the flag byte is 2 characters.
 
-Note: layer is a legacy term for span. It is being replaced but still appears in the code.
+Note: layer is a legacy term for span. It has been replaced in the code but still appears in event messages as Layer and in the liboboe interface.
 
 
 ## Dev environment
@@ -37,7 +37,8 @@ for different purposes. There is also an option to download a new version of obo
 
 Generally the command `$ . env.sh ssl` is the most useful - it sets up the environment
 variables to work against a real appoptics collector. This is used during the test suite
-to verify that basic connectivity exists.
+to verify that basic connectivity exists. It does require `AO_TOKEN_STG` be defined
+with a valid service key.
 
 
 ## Testing
@@ -72,10 +73,9 @@ altogether. You can also set `APPOPTICS\_SHOW_GYP` to any non-empty value.
 ### Developing
 
 Just like `appoptics-apm`, this repo uses simple feature branches that only
-get merged to master at release time.
+get merged to master via a pull request.
 
 ### Releasing
 
-Again, like `appoptics-apm` the `npm version patch|minor|major` tool is used
-to create a version bump commit and tag to push to github, then you can simply
-run `npm publish` to publish the release.
+Again, like `appoptics-apm` the `npm version major.minor.patch` tool is used
+to commit a version bump and tag to push to github. You must use `git push origin 'tagname'` in order to push the tag along with the changes. If you do not the tag will not be sent to the repo. The versioning should follow [semver](www.semver.org) conventions, most importantly that breaking changes get a major version update. A pull request should be generated on github. Once the PR has been merged to master then, after updating master with `git pull`, you can run `npm publish` to publish the release. This should be done using a `@solarwinds.cloud` email account.
