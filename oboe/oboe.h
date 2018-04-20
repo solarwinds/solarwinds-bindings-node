@@ -137,6 +137,13 @@ typedef struct oboe_metric_tag {
     char *value;
 } oboe_metric_tag_t;
 
+typedef struct oboe_init_options {
+    int version;                    // the version of this structure
+    const char *hostname_alias;     // optional hostname alias
+    int log_level;                  // level at which log messages will be written to log file
+    const char* log_file_path;      // file name including path for log file
+    int max_transactions;           // maximum number of transaction names to track
+} oboe_init_options_t;
 
 // oboe_metadata
 
@@ -275,35 +282,20 @@ ssize_t oboe_reporter_udp_send(void *desc, const char *data, size_t len);   /* D
 /**
  * Initialize the Oboe subsystems.
  *
- * One of oboe_init_log and oboe_init should be called before any other 
- * oboe_* functions.  Use oboe_init_log to specify the log level and log
- * file name when initializing the oboe subsystem.  However, in order
- * to make the library easier to work with, checks are in place so that it
- * will be called by any of the other functions that depend on it.
+ * Should be called before any other oboe_* functions.
+ * However, in order to make the library easier to work with, checks
+ * are in place so that it will be called by any of the other functions
+ * that depend on it.
  *
  * Besides initializing the oboe library, this will also initialize a
  * reporter based on the values of environment variables, configuration
  * file options, and whether a tracelyzer is installed.
  *
  * @param access_key  Client access key
- * @param hostname_alias optional hostname alias
- * @param log_level Level at which log messages will be written to log file
- * @param log_file_path file name including path for log file
+ * @param options additional options
  * @return true if initialization succeeded, false otherwise
  */
-int oboe_init_log(const char *access_key, const char *hostname_alias, int log_level, const char* log_file_path);
-
-/**
- * Initialize the Oboe subsystems.
- *
- * See oboe_init_log description above for more information.  (Note: Either 
- * oboe_init or oboe_init_log should be called to initialize the oboe subsystem).
- *
- * @param access_key  Client access key
- * @param hostname_alias optional hostname alias
- * @return true if initialization succeeded, false otherwise
- */
-int oboe_init(const char *access_key, const char *hostname_alias);
+int oboe_init(const char *access_key, const oboe_init_options_t* options);
 
 /**
  * Initialize the Oboe subsytems using a specific reporter configuration.

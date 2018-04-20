@@ -5,7 +5,9 @@ describe('addon.event', function () {
   var random = bindings.Metadata.makeRandom()
   var randomSample = bindings.Metadata.makeRandom(1)
 
-  bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY)
+  it('should initialize oboe without options', function () {
+    bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY)
+  })
 
   it('should construct an event', function () {
     event = new bindings.Event()
