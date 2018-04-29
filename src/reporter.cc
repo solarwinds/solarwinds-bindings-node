@@ -17,7 +17,8 @@ v8::Local<v8::Object> Reporter::NewInstance() {
     const unsigned argc = 0;
     v8::Local<v8::Value> argv[argc] = {};
     v8::Local<v8::Function> cons = Nan::New<v8::FunctionTemplate>(constructor)->GetFunction();
-    v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
+    //v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
+    v8::Local<v8::Object> instance = Nan::NewInstance(cons, argc, argv).ToLocalChecked();
 
     return scope.Escape(instance);
   }

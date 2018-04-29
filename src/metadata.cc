@@ -78,7 +78,8 @@ v8::Local<v8::Object> Metadata::NewInstance(Metadata* md) {
   const unsigned argc = 1;
   v8::Local<v8::Value> argv[argc] = { Nan::New<v8::External>(&md->metadata) };
   v8::Local<v8::Function> cons = Nan::New<v8::FunctionTemplate>(constructor)->GetFunction();
-  v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
+  //v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
+  v8::Local<v8::Object> instance = Nan::NewInstance(cons, argc, argv).ToLocalChecked();
 
   return scope.Escape(instance);
 }
@@ -92,8 +93,8 @@ v8::Local<v8::Object> Metadata::NewInstance() {
     const unsigned argc = 0;
     v8::Local<v8::Value> argv[argc] = {};
     v8::Local<v8::Function> cons = Nan::New<v8::FunctionTemplate>(constructor)->GetFunction();
-    v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
-    //v8::Local<v8::Object> instance = Nan::NewInstance(cons, argc, argv);
+    //v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
+    v8::Local<v8::Object> instance = Nan::NewInstance(cons, argc, argv).ToLocalChecked();
 
     return scope.Escape(instance);
 }
