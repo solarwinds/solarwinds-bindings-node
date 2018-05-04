@@ -22,7 +22,10 @@ if [[ -z "$ARG" ]]; then
 elif [[ "$ARG" = "udp" ]]; then
     export APPOPTICS_REPORTER=udp
     export APPOPTICS_REPORTER_UDP=localhost:7832
-elif [[ "$ARG" = "ssl" ]]; then
+elif [[ "$ARG" = "stg" ]]; then
+    export APPOPTICS_REPORTER=ssl
+    export APPOPTICS_COLLECTOR=${AO_TEST_COLLECTOR:-collector-stg.appoptics.com}
+elif [[ "$ARG" = "prod" ]]; then
     export APPOPTICS_REPORTER=ssl
     export APPOPTICS_COLLECTOR=${AO_TEST_COLLECTOR:-collector.appoptics.com}
 elif [[ "$ARG" = "debug" ]]; then
@@ -39,27 +42,31 @@ elif [[ "$ARG" = "get-new-oboe" ]]; then
         echo "directory). N.B. this isn't bullet-proof. It presumes sha256sum"
         echo "exists and that you're running bash."
         echo "example:"
-        echo "$ . env.sh get-new-oboe latest"
+        echo "$ . env.sh new-get-new-oboe latest"
         return
     fi
     OBOE_NAME=liboboe-1.0-x86_64.so.0.0.0
     URL="https://s3-us-west-2.amazonaws.com/rc-files-t2/c-lib/$PARAM/"
     mkdir -p "./oboe-$PARAM"
-    for f in oboe.h oboe_debug.h VERSION "$OBOE_NAME" "$OBOE_NAME.sha256"
+    for f in VERSION "$OBOE_NAME" "$OBOE_NAME.sha256" \
+        include/oboe.h include/oboe_debug.h \
+        include/bson/bson.h include/bson/platform_hacks.h
     do
         #echo "pretending to download $f"
         echo downloading $f
-        curl -o "./oboe-$PARAM/$f" "${URL}$f"
+        curl --create-dirs -o "./oboe-$PARAM/$f" "${URL}$f"
     done
+
     # check the sha256
-    correct=$(cat "./$PARAM/$OBOE_NAME.sha256")
-    read -ra sha256 <<< $(sha256sum "./$PARAM/$OBOE_NAME")
+    correct=$(cat "./oboe-$PARAM/$OBOE_NAME.sha256")
+    read -ra sha256 <<< $(sha256sum "./oboe-$PARAM/$OBOE_NAME")
     if [[ "${sha256[0]}" != "$correct" ]]; then
         echo "WARNING: SHA256 DOES NOT MATCH!"
         echo "found    ${sha256[0]} (${#sha256[0]})"
         echo "expected $correct (${#correct})"
+    else
+        echo "SHA256 matches expected value"
     fi
-
 
 else
     echo "ERROR $ARG invalid"
