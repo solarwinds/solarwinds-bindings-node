@@ -1,5 +1,6 @@
 ARG=$1
 PARAM=$2
+PARAM2=$3
 
 if [[ -z "$AO_TOKEN_STG" ]]; then
     echo "AO_TOKEN_STG must be defined and contain a valid token"
@@ -45,6 +46,8 @@ elif [[ "$ARG" = "get-new-oboe" ]]; then
         echo "$ . env.sh new-get-new-oboe latest"
         return
     fi
+    # pretend to download for testing by adding an extra parameter
+    PRETEND=$PARAM2
     OBOE_NAME=liboboe-1.0-x86_64.so.0.0.0
     URL="https://s3-us-west-2.amazonaws.com/rc-files-t2/c-lib/$PARAM/"
     mkdir -p "./oboe-$PARAM"
@@ -52,9 +55,12 @@ elif [[ "$ARG" = "get-new-oboe" ]]; then
         include/oboe.h include/oboe_debug.h \
         include/bson/bson.h include/bson/platform_hacks.h
     do
-        #echo "pretending to download $f"
-        echo downloading $f
-        curl --create-dirs -o "./oboe-$PARAM/$f" "${URL}$f"
+        if [[ -n "$PRETEND" ]]; then
+            echo pretending to download $f into ./oboe-$PARAM/${f#include/}
+        else
+            echo downloading $f as ./oboe-$PARAM/${f#include/}
+            curl --create-dirs -o "./oboe-$PARAM/${f#include/}" "${URL}$f"
+        fi
     done
 
     # check the sha256
