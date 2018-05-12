@@ -76,10 +76,15 @@ bool http_span_args_are_good(Nan::NAN_METHOD_ARGS_TYPE info) {
 }
 
 typedef struct oboe_span_params {
-    char* transaction;
-    int x;
-    int y;
-    char* z;
+    int version; // the version of this structure
+    const char* transaction; // transaction name (will be NULL or empty if url given)
+    const char* url; // the raw url which will be processed and used as transaction name
+        // (if transaction is NULL or empty)
+    const char* domain; // a domain to be prepended to the transaction name (can be NULL)
+    int64_t duration; // the duration of the span in micro seconds (usec)
+    int status; // HTTP status code (e.g. 200, 500, ...)
+    const char* method; // HTTP method (e.g. GET, POST, ...)
+    int has_error; // boolean flag whether this transaction contains an error (1) or not (0)
 } oboe_span_params_t;
 
 // These will be the string object keys for the object that
@@ -94,31 +99,6 @@ static Nan::Persistent<v8::String> kStatus;
 static Nan::Persistent<v8::String> kMethod;
 static Nan::Persistent<v8::String> kError;
 
-inline int get_integer(
-    v8::Local<v8::Object> obj,
-    v8::Local<v8::String> prop,
-    int default_value = 0) {
-
-    if (Nan::Has(obj, prop).FromMaybe(false)) {
-        Nan::MaybeLocal<v8::Value> v = Nan::Get(obj, prop);
-        if (!v.IsEmpty()) {
-            v8::Local<v8::Value> val = v.ToLocalChecked();
-            if (val->IsInt32() || val->IsNumber()) {
-                return val->IntegerValue();
-            }
-        }
-    }
-    return default_value;
-}
-
-bool get_args(v8::Local<v8::Object> obj, oboe_span_params_t* args) {
-
-    args->x = get_integer(obj, Nan::New(kDuration), 0);
-
-    return true;
-
-}
-
 NAN_METHOD(Reporter::sendHttpSpan) {
     if (info.Length() != 1 || !info[0]->IsObject()) {
         info.GetReturnValue().Set(Nan::New(false));
@@ -129,19 +109,39 @@ NAN_METHOD(Reporter::sendHttpSpan) {
 
     v8::Local<v8::Object> obj = info[0]->ToObject();
 
-    int status = get_args(obj, &args);
-    printf("status %d, x = %d\n", status, args.x);
+    args.version = 1;
+    args.duration = Utility::get_integer(obj, Nan::New(kDuration));
+    args.has_error = Utility::get_boolean(obj, Nan::New(kError), false);
+    args.status = Utility::get_integer(obj, Nan::New(kStatus));
 
-/*
-    v8::Local<v8::Array> props = arg->GetPropertyNames();
+    // REMEMBER TO FREE ALL RETURNED STD::STRINGS
+    std::string* txname = Utility::get_string(obj, Nan::New(kTxName));
+    args.transaction = txname->c_str();
 
-    for (unsigned int i = 0; i < props->Length(); i++) {
-        if (i > 0) printf(", ");
-        std::string propName = *Nan::Utf8String(props->Get(i)->ToString());
-        std::string propVal = *Nan::Utf8String(arg->Get(props->Get(i))->ToString());
-        printf("%s: %s", propName.c_str(), propVal.c_str());
-    }
-// */
+    std::string* url = Utility::get_string(obj, Nan::New(kUrl));
+    args.url = url->c_str();
+
+    std::string* domain = Utility::get_string(obj, Nan::New(kDomain));
+    args.domain = domain->c_str();
+
+    std::string* method = Utility::get_string(obj, Nan::New(kMethod));
+    args.method = method->c_str();
+
+    printf("version %d\ntxname %s\nurl %s\ndomain %s\nduration %ld\nstatus %d\nmethod %s\nerror %d\n",
+        args.version,
+        args.transaction,
+        args.url,
+        args.domain,
+        args.duration,
+        args.status,
+        args.method,
+        args.has_error
+    );
+
+    delete txname;
+    delete url;
+    delete domain;
+    delete method;
 }
 
 NAN_METHOD(Reporter::sendHttpSpanName) {
