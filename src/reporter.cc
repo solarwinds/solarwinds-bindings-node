@@ -75,6 +75,75 @@ bool http_span_args_are_good(Nan::NAN_METHOD_ARGS_TYPE info) {
         info[2]->IsInt32() && info[3]->IsString(); // && info[4]->IsBoolean();
 }
 
+typedef struct oboe_span_params {
+    char* transaction;
+    int x;
+    int y;
+    char* z;
+} oboe_span_params_t;
+
+// These will be the string object keys for the object that
+// sendHttpSpan is called with. They will be initialized once
+// so each call to sendHttpSpan doesn't create the strings.
+static Nan::Persistent<v8::String> kName;
+static Nan::Persistent<v8::String> kTxName;
+static Nan::Persistent<v8::String> kUrl;
+static Nan::Persistent<v8::String> kDomain;
+static Nan::Persistent<v8::String> kDuration;
+static Nan::Persistent<v8::String> kStatus;
+static Nan::Persistent<v8::String> kMethod;
+static Nan::Persistent<v8::String> kError;
+
+inline int get_integer(
+    v8::Local<v8::Object> obj,
+    v8::Local<v8::String> prop,
+    int default_value = 0) {
+
+    if (Nan::Has(obj, prop).FromMaybe(false)) {
+        Nan::MaybeLocal<v8::Value> v = Nan::Get(obj, prop);
+        if (!v.IsEmpty()) {
+            v8::Local<v8::Value> val = v.ToLocalChecked();
+            if (val->IsInt32() || val->IsNumber()) {
+                return val->IntegerValue();
+            }
+        }
+    }
+    return default_value;
+}
+
+bool get_args(v8::Local<v8::Object> obj, oboe_span_params_t* args) {
+
+    args->x = get_integer(obj, Nan::New(kDuration), 0);
+
+    return true;
+
+}
+
+NAN_METHOD(Reporter::sendHttpSpan) {
+    if (info.Length() != 1 || !info[0]->IsObject()) {
+        info.GetReturnValue().Set(Nan::New(false));
+        return;
+    }
+
+    oboe_span_params_t args;
+
+    v8::Local<v8::Object> obj = info[0]->ToObject();
+
+    int status = get_args(obj, &args);
+    printf("status %d, x = %d\n", status, args.x);
+
+/*
+    v8::Local<v8::Array> props = arg->GetPropertyNames();
+
+    for (unsigned int i = 0; i < props->Length(); i++) {
+        if (i > 0) printf(", ");
+        std::string propName = *Nan::Utf8String(props->Get(i)->ToString());
+        std::string propVal = *Nan::Utf8String(arg->Get(props->Get(i))->ToString());
+        printf("%s: %s", propName.c_str(), propVal.c_str());
+    }
+// */
+}
+
 NAN_METHOD(Reporter::sendHttpSpanName) {
     // transaction name (or req.base_url) {char *} "name"
     // req.base_url (or transaction name) {char *} "url"
@@ -144,9 +213,20 @@ void Reporter::Init(v8::Local<v8::Object> exports) {
     v8::Local<v8::ObjectTemplate> instance = ctor->InstanceTemplate();
     instance->SetInternalFieldCount(1);
 
+    // initialize object property names in persistent storage
+    kName.Reset(Nan::New<v8::String>("name").ToLocalChecked());
+    kTxName.Reset(Nan::New<v8::String>("txName").ToLocalChecked());
+    kUrl.Reset(Nan::New<v8::String>("url").ToLocalChecked());
+    kDomain.Reset(Nan::New<v8::String>("domain").ToLocalChecked());
+    kDuration.Reset(Nan::New<v8::String>("duration").ToLocalChecked());
+    kStatus.Reset(Nan::New<v8::String>("status").ToLocalChecked());
+    kMethod.Reset(Nan::New<v8::String>("method").ToLocalChecked());
+    kError.Reset(Nan::New<v8::String>("error").ToLocalChecked());
+
     // Prototype
     Nan::SetPrototypeMethod(ctor, "sendReport", Reporter::sendReport);
     Nan::SetPrototypeMethod(ctor, "sendStatus", Reporter::sendStatus);
+    Nan::SetPrototypeMethod(ctor, "sendHttpSpan", Reporter::sendHttpSpan);
     Nan::SetPrototypeMethod(ctor, "sendHttpSpanName", Reporter::sendHttpSpanName);
     Nan::SetPrototypeMethod(ctor, "sendHttpSpanUrl", Reporter::sendHttpSpanUrl);
 

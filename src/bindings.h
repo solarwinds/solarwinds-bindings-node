@@ -117,6 +117,7 @@ class Reporter : public Nan::ObjectWrap {
     static NAN_METHOD(New);
     static NAN_METHOD(sendReport);
     static NAN_METHOD(sendStatus);
+    static NAN_METHOD(sendHttpSpan);
     static NAN_METHOD(sendHttpSpanName);
     static NAN_METHOD(sendHttpSpanUrl);
 
