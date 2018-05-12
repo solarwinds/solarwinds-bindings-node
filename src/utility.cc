@@ -12,7 +12,8 @@ NAN_METHOD(Utility::setFlags) {
     }
     char* buffer = (char*) node::Buffer::Data(info[0]->ToObject());
 }
-// */
+
+
 
 NAN_METHOD(Utility::getBuffer) {
     char* initial = new char[30]();
@@ -32,3 +33,4 @@ void Utility::Init(v8::Local<v8::Object> module) {
 
   Nan::Set(module, Nan::New("Utility").ToLocalChecked(), exports);
 }
+// */
