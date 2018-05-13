@@ -131,6 +131,7 @@ class Reporter : public Nan::ObjectWrap {
 class Utility {
 
   public:
+
     static inline int64_t get_integer(
         v8::Local<v8::Object> obj,
         v8::Local<v8::String> prop,
@@ -189,8 +190,9 @@ class Config {
     static NAN_METHOD(getRevision);
     static NAN_METHOD(getVersion);
     static NAN_METHOD(checkVersion);
+    static NAN_METHOD(getVersionString);
 
-  public:
+public:
     static void Init(v8::Local<v8::Object>);
 };
 
