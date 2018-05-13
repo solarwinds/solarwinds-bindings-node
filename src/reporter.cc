@@ -155,6 +155,10 @@ NAN_METHOD(Reporter::sendHttpSpan) {
     delete domain;
     delete method;
 
+    if (length < 0) {
+        final_txname[0] = '\0';
+    }
+
     // return the transaction name used so it can be used by the agent.
     info.GetReturnValue().Set(Nan::New(final_txname).ToLocalChecked());
 }
