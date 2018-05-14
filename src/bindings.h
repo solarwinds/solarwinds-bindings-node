@@ -115,6 +115,7 @@ class Reporter : public Nan::ObjectWrap {
 
     static Nan::Persistent<v8::FunctionTemplate> constructor;
     static NAN_METHOD(New);
+    static NAN_METHOD(isReadyToSample);
     static NAN_METHOD(sendReport);
     static NAN_METHOD(sendStatus);
     static NAN_METHOD(sendHttpSpan);

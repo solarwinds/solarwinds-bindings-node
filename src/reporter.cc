@@ -44,6 +44,25 @@ int Reporter::send_event_x(Nan::NAN_METHOD_ARGS_TYPE info, int channel) {
     return status;
 }
 
+// Check to see if oboe is ready to issue sampling decisions.
+// Returns true if oboe is ready else numeric error code.
+NAN_METHOD(Reporter::isReadyToSample) {
+    int ms = 0;
+    if (info[0]->IsNumber()) {
+        ms = info[0]->IntegerValue();
+    }
+    int status;
+    status = oboe_is_ready(ms);
+
+    // UNKNOWN 0
+    // OK 1
+    // TRY_LATER 2
+    // LIMIT_EXCEEDED 3
+    // INVALID_API_KEY 4
+    // CONNECT_ERROR 5
+    info.GetReturnValue().Set(Nan::New(status));
+}
+
 
 // Send an event to the reporter
 NAN_METHOD(Reporter::sendReport) {
@@ -69,13 +88,13 @@ NAN_METHOD(Reporter::sendStatus) {
     info.GetReturnValue().Set(Nan::New(status));
 }
 
+/*
 bool http_span_args_are_good(Nan::NAN_METHOD_ARGS_TYPE info) {
     // anything in JavaScript has a boolean value so no need to check.
     return info.Length() == 5 && info[0]->IsString() && info[1]->IsNumber() &&
         info[2]->IsInt32() && info[3]->IsString(); // && info[4]->IsBoolean();
 }
 
-/*
 typedef struct oboe_span_params {
     int version; // the version of this structure
     const char* transaction; // transaction name (will be NULL or empty if url given)
@@ -245,6 +264,7 @@ void Reporter::Init(v8::Local<v8::Object> exports) {
     kError.Reset(Nan::New<v8::String>("error").ToLocalChecked());
 
     // Prototype
+    Nan::SetPrototypeMethod(ctor, "isReadyToSample", Reporter::isReadyToSample);
     Nan::SetPrototypeMethod(ctor, "sendReport", Reporter::sendReport);
     Nan::SetPrototypeMethod(ctor, "sendStatus", Reporter::sendStatus);
     Nan::SetPrototypeMethod(ctor, "sendHttpSpan", Reporter::sendHttpSpan);
