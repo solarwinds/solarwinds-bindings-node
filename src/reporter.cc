@@ -88,31 +88,12 @@ NAN_METHOD(Reporter::sendStatus) {
     info.GetReturnValue().Set(Nan::New(status));
 }
 
-/*
-bool http_span_args_are_good(Nan::NAN_METHOD_ARGS_TYPE info) {
-    // anything in JavaScript has a boolean value so no need to check.
-    return info.Length() == 5 && info[0]->IsString() && info[1]->IsNumber() &&
-        info[2]->IsInt32() && info[3]->IsString(); // && info[4]->IsBoolean();
-}
-
-typedef struct oboe_span_params {
-    int version; // the version of this structure
-    const char* transaction; // transaction name (will be NULL or empty if url given)
-    const char* url; // the raw url which will be processed and used as transaction name
-        // (if transaction is NULL or empty)
-    const char* domain; // a domain to be prepended to the transaction name (can be NULL)
-    int64_t duration; // the duration of the span in micro seconds (usec)
-    int status; // HTTP status code (e.g. 200, 500, ...)
-    const char* method; // HTTP method (e.g. GET, POST, ...)
-    int has_error; // boolean flag whether this transaction contains an error (1) or not (0)
-} oboe_span_params_t;
-// */
-
 // These will be the string object keys for the object that
 // sendHttpSpan is called with. They will be initialized once
-// so each call to sendHttpSpan doesn't create the strings.
+// so each call to sendHttpSpan doesn't create the strings; it
+// only creates a local reference to them.
 static Nan::Persistent<v8::String> kName;
-static Nan::Persistent<v8::String> kTxName;
+static Nan::Persistent<v8::String> kTxname;
 static Nan::Persistent<v8::String> kUrl;
 static Nan::Persistent<v8::String> kDomain;
 static Nan::Persistent<v8::String> kDuration;
@@ -122,13 +103,11 @@ static Nan::Persistent<v8::String> kError;
 
 NAN_METHOD(Reporter::sendHttpSpan) {
     if (info.Length() != 1 || !info[0]->IsObject()) {
-        info.GetReturnValue().Set(Nan::New(false));
-        return;
+        return Nan::ThrowTypeError("Reporter::sendHttpSpan() - requires Object parameter");
     }
+    v8::Local<v8::Object> obj = info[0]->ToObject();
 
     oboe_span_params_t args;
-
-    v8::Local<v8::Object> obj = info[0]->ToObject();
 
     args.version = 1;
     // Number.MAX_SAFE_INTEGER is big enough for any reasonable transaction time.
@@ -141,7 +120,7 @@ NAN_METHOD(Reporter::sendHttpSpan) {
 
     // REMEMBER TO FREE ALL RETURNED STD::STRINGS AFTER PASSING
     // THEM TO OBOE.
-    std::string* txname = Utility::get_string(obj, Nan::New(kTxName));
+    std::string* txname = Utility::get_string(obj, Nan::New(kTxname));
     args.transaction = txname->c_str();
 
     std::string* url = Utility::get_string(obj, Nan::New(kUrl));
@@ -153,17 +132,6 @@ NAN_METHOD(Reporter::sendHttpSpan) {
     std::string* method = Utility::get_string(obj, Nan::New(kMethod));
     args.method = method->c_str();
 
-    printf("version %d\ntxname %s\nurl %s\ndomain %s\nduration %ld\nstatus %d\nmethod %s\nerror %d\n",
-        args.version,
-        args.transaction,
-        args.url,
-        args.domain,
-        args.duration,
-        args.status,
-        args.method,
-        args.has_error
-    );
-
     char final_txname[1024];
 
     int length = oboe_http_span(final_txname, sizeof(final_txname), &args);
@@ -174,6 +142,7 @@ NAN_METHOD(Reporter::sendHttpSpan) {
     delete domain;
     delete method;
 
+    // if an error code return an empty string
     if (length < 0) {
         final_txname[0] = '\0';
     }
@@ -181,55 +150,6 @@ NAN_METHOD(Reporter::sendHttpSpan) {
     // return the transaction name used so it can be used by the agent.
     info.GetReturnValue().Set(Nan::New(final_txname).ToLocalChecked());
 }
-
-/*
-NAN_METHOD(Reporter::sendHttpSpanName) {
-    // transaction name (or req.base_url) {char *} "name"
-    // req.base_url (or transaction name) {char *} "url"
-    // duration - microseconds {int64}             "duration"
-    // status - HTTP status code {int}             "status"
-    // req.request_method - HTTP method {char *}   "method"
-    // error - 1 if transaction contains error else 0 {int}  "error"
-    if (!http_span_args_are_good(info)) {
-        info.GetReturnValue().Set(Nan::New(false));
-        return;
-    }
-
-    std::string name = *Nan::Utf8String(info[0]);
-    char *url = NULL;
-    // Number.MAX_SAFE_INTEGER is big enough for any reasonable transaction time.
-    // max_safe_seconds = MAX_SAFE_INTEGER / 1000000 microseconds
-    // max_safe_days = MAX_SAFE_SECONDS / 86400 seconds
-    // max_safe_days > 100000. Seems long enough to me.
-    int64_t duration = info[1]->IntegerValue();
-    int status = info[2]->IntegerValue();
-    std::string method = *Nan::Utf8String(info[3]);
-    int error = info[4]->BooleanValue();
-
-    //oboe_http_span(name.c_str(), url, duration, status, method.c_str(), error);
-
-    info.GetReturnValue().Set(Nan::New(true));
-}
-
-NAN_METHOD(Reporter::sendHttpSpanUrl) {
-    if (!http_span_args_are_good(info)) {
-        info.GetReturnValue().Set(Nan::New(false));
-        return;
-    }
-
-    char* name = NULL;
-    std::string url = *Nan::Utf8String(info[0]);
-    // see comment in sendHttpSpanName()
-    int64_t duration = info[1]->IntegerValue();
-    int status = info[2]->IntegerValue();
-    std::string method = *Nan::Utf8String(info[3]);
-    int error = info[4]->BooleanValue();
-
-    oboe_http_span(name, url.c_str(), duration, status, method.c_str(), error);
-
-    info.GetReturnValue().Set(Nan::New(true));
-}
-// */
 
 // Creates a new Javascript instance
 NAN_METHOD(Reporter::New) {
@@ -255,7 +175,7 @@ void Reporter::Init(v8::Local<v8::Object> exports) {
 
     // initialize object property names in persistent storage
     kName.Reset(Nan::New<v8::String>("name").ToLocalChecked());
-    kTxName.Reset(Nan::New<v8::String>("txName").ToLocalChecked());
+    kTxname.Reset(Nan::New<v8::String>("txname").ToLocalChecked());
     kUrl.Reset(Nan::New<v8::String>("url").ToLocalChecked());
     kDomain.Reset(Nan::New<v8::String>("domain").ToLocalChecked());
     kDuration.Reset(Nan::New<v8::String>("duration").ToLocalChecked());

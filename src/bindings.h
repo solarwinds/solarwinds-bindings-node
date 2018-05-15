@@ -163,6 +163,7 @@ class Utility {
             if (!v.IsEmpty()) {
                 v8::Local<v8::Value> val = v.ToLocalChecked();
                 if (val->IsString()) {
+                    //std::string* method = Nan::Utf8String(val); ?
                     std::string* string = new std::string(*v8::String::Utf8Value(val->ToString()));
                     return string;
                 }
