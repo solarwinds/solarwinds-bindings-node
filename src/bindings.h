@@ -115,8 +115,10 @@ class Reporter : public Nan::ObjectWrap {
 
     static Nan::Persistent<v8::FunctionTemplate> constructor;
     static NAN_METHOD(New);
+    static NAN_METHOD(isReadyToSample);
     static NAN_METHOD(sendReport);
     static NAN_METHOD(sendStatus);
+    static NAN_METHOD(sendHttpSpan);
     static NAN_METHOD(sendHttpSpanName);
     static NAN_METHOD(sendHttpSpanUrl);
 
@@ -124,16 +126,75 @@ class Reporter : public Nan::ObjectWrap {
 
     public:
       static void Init(v8::Local<v8::Object>);
-  };
+};
 
+
+class Utility {
+
+  public:
+
+    static inline int64_t get_integer(
+        v8::Local<v8::Object> obj,
+        v8::Local<v8::String> prop,
+        int64_t default_value = 0) {
+
+        if (Nan::Has(obj, prop).FromMaybe(false)) {
+            Nan::MaybeLocal<v8::Value> v = Nan::Get(obj, prop);
+            if (!v.IsEmpty()) {
+                v8::Local<v8::Value> val = v.ToLocalChecked();
+                if (val->IsInt32() || val->IsNumber()) {
+                    return val->IntegerValue();
+                }
+            }
+        }
+        return default_value;
+    }
+
+    //
+    // returns a new std::string that must be deleted.
+    //
+    static inline std::string* get_string(
+        v8::Local<v8::Object> obj,
+        v8::Local<v8::String> prop,
+        const char* default_value = "") {
+
+        if (Nan::Has(obj, prop).FromMaybe(false)) {
+            Nan::MaybeLocal<v8::Value> v = Nan::Get(obj, prop);
+            if (!v.IsEmpty()) {
+                v8::Local<v8::Value> val = v.ToLocalChecked();
+                if (val->IsString()) {
+                    //std::string* method = Nan::Utf8String(val); ?
+                    std::string* string = new std::string(*v8::String::Utf8Value(val->ToString()));
+                    return string;
+                }
+            }
+        }
+        return new std::string(default_value);
+    }
+
+    static inline bool get_boolean(
+        v8::Local<v8::Object> obj,
+        v8::Local<v8::String> prop,
+        bool default_value = false) {
+
+        if (Nan::Has(obj, prop).FromMaybe(false)) {
+            Nan::MaybeLocal<v8::Value> v = Nan::Get(obj, prop);
+            if (!v.IsEmpty()) {
+                return Nan::Get(obj, prop).ToLocalChecked()->BooleanValue();
+            }
+        }
+        return default_value;
+    }
+};
 
 
 class Config {
     static NAN_METHOD(getRevision);
     static NAN_METHOD(getVersion);
     static NAN_METHOD(checkVersion);
+    static NAN_METHOD(getVersionString);
 
-  public:
+public:
     static void Init(v8::Local<v8::Object>);
 };
 

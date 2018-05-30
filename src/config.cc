@@ -20,12 +20,17 @@ NAN_METHOD(Config::checkVersion) {
     return Nan::ThrowTypeError("Values must be numbers");
   }
 
-  int version = info[0]->NumberValue();
-  int revision = info[1]->NumberValue();
+  int version = info[0]->IntegerValue();
+  int revision = info[1]->IntegerValue();
 
   bool status = oboe_config_check_version(version, revision) != 0;
 
   info.GetReturnValue().Set(Nan::New(status));
+}
+
+NAN_METHOD(Config::getVersionString) {
+    const char* version = oboe_config_get_version_string();
+    info.GetReturnValue().Set(Nan::New(version).ToLocalChecked());
 }
 
 void Config::Init(v8::Local<v8::Object> module) {
@@ -35,6 +40,7 @@ void Config::Init(v8::Local<v8::Object> module) {
   Nan::SetMethod(exports, "getVersion", Config::getVersion);
   Nan::SetMethod(exports, "getRevision", Config::getRevision);
   Nan::SetMethod(exports, "checkVersion", Config::checkVersion);
+  Nan::SetMethod(exports, "getVersionString", Config::getVersionString);
 
   Nan::Set(module, Nan::New("Config").ToLocalChecked(), exports);
 }

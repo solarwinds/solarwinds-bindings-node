@@ -1,4 +1,5 @@
 #include "bindings.h"
+#include <cmath>
 
 /**
  * Set the tracing mode.
