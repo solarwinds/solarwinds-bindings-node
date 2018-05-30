@@ -118,6 +118,9 @@ NAN_METHOD(Reporter::sendHttpSpan) {
     args.has_error = Utility::get_boolean(obj, Nan::New(kError), false);
     args.status = Utility::get_integer(obj, Nan::New(kStatus));
 
+    // this is not yet implemented
+    args.service = NULL;
+
     // REMEMBER TO FREE ALL RETURNED STD::STRINGS AFTER PASSING
     // THEM TO OBOE.
     std::string* txname = Utility::get_string(obj, Nan::New(kTxname));
@@ -132,7 +135,7 @@ NAN_METHOD(Reporter::sendHttpSpan) {
     std::string* method = Utility::get_string(obj, Nan::New(kMethod));
     args.method = method->c_str();
 
-    char final_txname[1024];
+    char final_txname[OBOE_TRANSACTION_NAME_MAX_LENGTH + 1];
 
     int length = oboe_http_span(final_txname, sizeof(final_txname), &args);
 

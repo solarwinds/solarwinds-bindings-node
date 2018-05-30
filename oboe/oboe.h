@@ -148,6 +148,7 @@ typedef struct oboe_init_options {
 
 typedef struct oboe_span_params {
     int version;                    // the version of this structure
+    const char *service;            // custom service name (will be NULL or empty if default service name should be used)
     const char *transaction;        // transaction name (will be NULL or empty if url given)
     const char *url;                // the raw url which will be processed and used as transaction name
                                     // (if transaction is NULL or empty)
@@ -157,6 +158,9 @@ typedef struct oboe_span_params {
     const char *method;             // HTTP method (e.g. GET, POST, ...)
     int has_error;                  // boolean flag whether this transaction contains an error (1) or not (0)
 } oboe_span_params_t;
+
+#define OBOE_SPAN_PARAMS_VERSION 1              // version of oboe_span_params_t
+#define OBOE_TRANSACTION_NAME_MAX_LENGTH 255    // max allowed length for transaction name
 
 // oboe_metadata
 
@@ -227,11 +231,11 @@ struct oboe_reporter;
 
 /* TODO: Move struct oboe_reporter to private header. */
 typedef int (*reporter_ready)(void *);
-typedef int (*reporter_is_within_limit)(void *, const char *);
+typedef int (*reporter_is_within_limit)(void *, const char *, const char *);
 typedef ssize_t (*reporter_send)(void *, int, const char *, size_t);
-typedef int (*reporter_send_span)(void *, const char *, const int64_t);
-typedef int (*reporter_send_http_span)(void *, const char *, const int64_t, const int, const char *, const int);
-typedef int (*reporter_add_custom_metric)(void *, const char *, const double, const int, const int, const int, const oboe_metric_tag_t*, const size_t);
+typedef int (*reporter_send_span)(void *, const char *, const char *, const int64_t);
+typedef int (*reporter_send_http_span)(void *, const char *, const char *, const int64_t, const int, const char *, const int);
+typedef int (*reporter_add_custom_metric)(void *, const char *, const double, const int, const int, const char *, const int, const oboe_metric_tag_t*, const size_t);
 typedef int (*reporter_destroy)(void *);
 typedef int (*reporter_server_response)(void *);
 typedef struct oboe_reporter {
@@ -420,6 +424,13 @@ void oboe_shutdown();
 #define OBOE_SERVER_RESPONSE_INVALID_API_KEY 4
 #define OBOE_SERVER_RESPONSE_CONNECT_ERROR 5
 
+// these codes are used by oboe_span() and oboe_http_span()
+#define OBOE_SPAN_NULL_PARAMS -1
+#define OBOE_SPAN_NULL_BUFFER -2
+#define OBOE_SPAN_INVALID_VERSION -3
+#define OBOE_SPAN_NO_REPORTER -4
+#define OBOE_SPAN_NOT_READY -5
+
 typedef struct {
     uint32_t magic;
     uint32_t timestamp;
@@ -443,7 +454,6 @@ typedef struct {
 
 typedef struct {
     char name[OBOE_SETTINGS_MAX_STRLEN];
-    token_bucket_t bucket;
     volatile uint32_t request_count;            // all the requests that came through this layer
     volatile uint32_t exhaustion_count;         // # of times the token bucket limiting caused a trace to not occur
     volatile uint32_t trace_count;              // # of traces that were sent (includes "always", "through", or "AVW" traces)
@@ -465,6 +475,7 @@ typedef struct {
     uint32_t last_auto_timestamp; // timestamp from last *settings lookup
     uint32_t last_refresh;        // last refresh time
     entry_layer_t *entry_layer;
+    token_bucket_t bucket;
 } oboe_settings_cfg_t;
 
 int oboe_settings_init_local();
@@ -866,7 +877,12 @@ void oboe_rum_create_digest(const char* access_key, unsigned int uuid_length, un
  * @param params        additional span parameters
  *
  * @return  size of the final transaction name written to buffer
- *          or -1 if an error occurs (invalid reporter, buffer not big enough)
+ *          if an error occurs, these values will be returned:
+ *          - OBOE_SPAN_NULL_PARAMS
+ *          - OBOE_SPAN_NULL_BUFFER
+ *          - OBOE_SPAN_INVALID_VERSION
+ *          - OBOE_SPAN_NO_REPORTER
+ *          - OBOE_SPAN_NOT_READY
  */
 int oboe_span(char *buffer, const uint16_t buffer_length, oboe_span_params_t *params);
 
@@ -878,7 +894,12 @@ int oboe_span(char *buffer, const uint16_t buffer_length, oboe_span_params_t *pa
  * @param params        additional span parameters
  *
  * @return  size of the final transaction name written to buffer
- *          or -1 if an error occurs (invalid reporter, buffer not big enough)
+ *          if an error occurs, these values will be returned:
+ *          - OBOE_SPAN_NULL_PARAMS
+ *          - OBOE_SPAN_NULL_BUFFER
+ *          - OBOE_SPAN_INVALID_VERSION
+ *          - OBOE_SPAN_NO_REPORTER
+ *          - OBOE_SPAN_NOT_READY
  */
 int oboe_http_span(char *buffer, const uint16_t buffer_length, oboe_span_params_t *params);
 
@@ -892,11 +913,16 @@ int64_t oboe_span_stop();
 
 // Custom metrics
 
-int oboe_custom_metric_summary(const char *name, const double value, const int count, const int host_tag,
+int oboe_custom_metric_summary(const char *name, const double value, const int count, const int host_tag, const char *service_name,
         const oboe_metric_tag_t tags[], const size_t tags_count);
 
-int oboe_custom_metric_increment(const char *name, const int count, const int host_tag,
+int oboe_custom_metric_increment(const char *name, const int count, const int host_tag, const char *service_name,
         const oboe_metric_tag_t tags[], const size_t tags_count);
+
+// Service names
+
+char* oboe_get_config_service_name_copy();
+char* oboe_get_env_service_name_copy();
 
 #ifdef __cplusplus
 } // extern "C"
