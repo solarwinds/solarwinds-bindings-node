@@ -3,4 +3,5 @@ build/
 .vagrant
 *.tgz
 oboe-*
-
+oboe/liboboe-1.0.so.0
+oboe/liboboe.so

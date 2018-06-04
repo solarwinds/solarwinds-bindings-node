@@ -6,6 +6,8 @@ rum-templates/
 oracle/
 *.tgz
 oboe-*
+oboe/liboboe-1.0.so.0
+oboe/liboboe.so
 CONTRIBUTING.md
 Gulpfile.js
 env.sh
