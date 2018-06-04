@@ -100,69 +100,25 @@ static Nan::Persistent<v8::String> kDuration;
 static Nan::Persistent<v8::String> kStatus;
 static Nan::Persistent<v8::String> kMethod;
 static Nan::Persistent<v8::String> kError;
+static Nan::Persistent<v8::String> kService;
 
+//
+// send a metrics span using oboe_http_span
+//
 NAN_METHOD(Reporter::sendHttpSpan) {
     send_span(info, oboe_http_span);
-
-    /*
-    if (info.Length() != 1 || !info[0]->IsObject()) {
-        return Nan::ThrowTypeError("Reporter::sendHttpSpan() - requires Object parameter");
-    }
-    v8::Local<v8::Object> obj = info[0]->ToObject();
-
-    oboe_span_params_t args;
-
-    args.version = 1;
-    // Number.MAX_SAFE_INTEGER is big enough for any reasonable transaction time.
-    // max_safe_seconds = MAX_SAFE_INTEGER / 1000000 microseconds
-    // max_safe_days = MAX_SAFE_SECONDS / 86400 seconds
-    // max_safe_days > 100000. Seems long enough to me.
-    args.duration = Utility::get_integer(obj, Nan::New(kDuration));
-    args.has_error = Utility::get_boolean(obj, Nan::New(kError), false);
-    args.status = Utility::get_integer(obj, Nan::New(kStatus));
-
-    // this is not yet implemented
-    args.service = NULL;
-
-    // REMEMBER TO FREE ALL RETURNED STD::STRINGS AFTER PASSING
-    // THEM TO OBOE.
-    std::string* txname = Utility::get_string(obj, Nan::New(kTxname));
-    args.transaction = txname->c_str();
-
-    std::string* url = Utility::get_string(obj, Nan::New(kUrl));
-    args.url = url->c_str();
-
-    std::string* domain = Utility::get_string(obj, Nan::New(kDomain));
-    args.domain = domain->c_str();
-
-    std::string* method = Utility::get_string(obj, Nan::New(kMethod));
-    args.method = method->c_str();
-
-    char final_txname[OBOE_TRANSACTION_NAME_MAX_LENGTH + 1];
-
-    int length = oboe_http_span(final_txname, sizeof(final_txname), &args);
-
-    // don't forget to clean up created strings.
-    delete txname;
-    delete url;
-    delete domain;
-    delete method;
-
-    // if an error code return an empty string
-    if (length < 0) {
-        final_txname[0] = '\0';
-    }
-
-    // return the transaction name used so it can be used by the agent.
-    info.GetReturnValue().Set(Nan::New(final_txname).ToLocalChecked());
-
-    // */
 }
 
+//
+// send a metrics span using oboe_span
+//
 NAN_METHOD(Reporter::sendNonHttpSpan) {
     send_span(info, oboe_span);
 }
 
+//
+// do all the work to send a span
+//
 void Reporter::send_span(Nan::NAN_METHOD_ARGS_TYPE info, send_generic_span_t send_function) {
     if (info.Length() != 1 || !info[0]->IsObject()) {
         return Nan::ThrowTypeError("Reporter::sendXSpan() - requires Object parameter");
@@ -180,9 +136,6 @@ void Reporter::send_span(Nan::NAN_METHOD_ARGS_TYPE info, send_generic_span_t sen
     args.has_error = Utility::get_boolean(obj, Nan::New(kError), false);
     args.status = Utility::get_integer(obj, Nan::New(kStatus));
 
-    // this is not yet implemented
-    args.service = NULL;
-
     // REMEMBER TO FREE ALL RETURNED STD::STRINGS AFTER PASSING
     // THEM TO OBOE.
     std::string* txname = Utility::get_string(obj, Nan::New(kTxname));
@@ -197,6 +150,9 @@ void Reporter::send_span(Nan::NAN_METHOD_ARGS_TYPE info, send_generic_span_t sen
     std::string* method = Utility::get_string(obj, Nan::New(kMethod));
     args.method = method->c_str();
 
+    std::string* service = Utility::get_string(obj, Nan::New(kService));
+    args.service = service->c_str();
+
     char final_txname[OBOE_TRANSACTION_NAME_MAX_LENGTH + 1];
 
     int length = send_function(final_txname, sizeof(final_txname), &args);
@@ -206,6 +162,7 @@ void Reporter::send_span(Nan::NAN_METHOD_ARGS_TYPE info, send_generic_span_t sen
     delete url;
     delete domain;
     delete method;
+    delete service;
 
     // if an error code return an empty string
     if (length < 0) {
@@ -248,6 +205,7 @@ void Reporter::Init(v8::Local<v8::Object> exports) {
     kStatus.Reset(Nan::New<v8::String>("status").ToLocalChecked());
     kMethod.Reset(Nan::New<v8::String>("method").ToLocalChecked());
     kError.Reset(Nan::New<v8::String>("error").ToLocalChecked());
+    kService.Reset(Nan::New<v8::String>("service").ToLocalChecked());
 
     // Prototype
     Nan::SetPrototypeMethod(ctor, "isReadyToSample", Reporter::isReadyToSample);
