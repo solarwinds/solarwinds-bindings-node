@@ -102,6 +102,9 @@ static Nan::Persistent<v8::String> kMethod;
 static Nan::Persistent<v8::String> kError;
 
 NAN_METHOD(Reporter::sendHttpSpan) {
+    send_span(info, oboe_http_span);
+
+    /*
     if (info.Length() != 1 || !info[0]->IsObject()) {
         return Nan::ThrowTypeError("Reporter::sendHttpSpan() - requires Object parameter");
     }
@@ -152,6 +155,66 @@ NAN_METHOD(Reporter::sendHttpSpan) {
 
     // return the transaction name used so it can be used by the agent.
     info.GetReturnValue().Set(Nan::New(final_txname).ToLocalChecked());
+
+    // */
+}
+
+NAN_METHOD(Reporter::sendNonHttpSpan) {
+    send_span(info, oboe_span);
+}
+
+void Reporter::send_span(Nan::NAN_METHOD_ARGS_TYPE info, send_generic_span_t send_function) {
+    if (info.Length() != 1 || !info[0]->IsObject()) {
+        return Nan::ThrowTypeError("Reporter::sendXSpan() - requires Object parameter");
+    }
+    v8::Local<v8::Object> obj = info[0]->ToObject();
+
+    oboe_span_params_t args;
+
+    args.version = 1;
+    // Number.MAX_SAFE_INTEGER is big enough for any reasonable transaction time.
+    // max_safe_seconds = MAX_SAFE_INTEGER / 1000000 microseconds
+    // max_safe_days = MAX_SAFE_SECONDS / 86400 seconds
+    // max_safe_days > 100000. Seems long enough to me.
+    args.duration = Utility::get_integer(obj, Nan::New(kDuration));
+    args.has_error = Utility::get_boolean(obj, Nan::New(kError), false);
+    args.status = Utility::get_integer(obj, Nan::New(kStatus));
+
+    // this is not yet implemented
+    args.service = NULL;
+
+    // REMEMBER TO FREE ALL RETURNED STD::STRINGS AFTER PASSING
+    // THEM TO OBOE.
+    std::string* txname = Utility::get_string(obj, Nan::New(kTxname));
+    args.transaction = txname->c_str();
+
+    std::string* url = Utility::get_string(obj, Nan::New(kUrl));
+    args.url = url->c_str();
+
+    std::string* domain = Utility::get_string(obj, Nan::New(kDomain));
+    args.domain = domain->c_str();
+
+    std::string* method = Utility::get_string(obj, Nan::New(kMethod));
+    args.method = method->c_str();
+
+    char final_txname[OBOE_TRANSACTION_NAME_MAX_LENGTH + 1];
+
+    int length = send_function(final_txname, sizeof(final_txname), &args);
+
+    // don't forget to clean up created strings.
+    delete txname;
+    delete url;
+    delete domain;
+    delete method;
+
+    // if an error code return an empty string
+    if (length < 0) {
+        final_txname[0] = '\0';
+    }
+
+    // return the transaction name used so it can be used by the agent.
+    info.GetReturnValue().Set(Nan::New(final_txname).ToLocalChecked());
+
 }
 
 // Creates a new Javascript instance
@@ -191,8 +254,7 @@ void Reporter::Init(v8::Local<v8::Object> exports) {
     Nan::SetPrototypeMethod(ctor, "sendReport", Reporter::sendReport);
     Nan::SetPrototypeMethod(ctor, "sendStatus", Reporter::sendStatus);
     Nan::SetPrototypeMethod(ctor, "sendHttpSpan", Reporter::sendHttpSpan);
-    //Nan::SetPrototypeMethod(ctor, "sendHttpSpanName", Reporter::sendHttpSpanName);
-    //Nan::SetPrototypeMethod(ctor, "sendHttpSpanUrl", Reporter::sendHttpSpanUrl);
+    Nan::SetPrototypeMethod(ctor, "sendNonHttpSpan", Reporter::sendNonHttpSpan);
 
     Nan::Set(exports, Nan::New("Reporter").ToLocalChecked(), ctor->GetFunction());
 }

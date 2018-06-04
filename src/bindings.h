@@ -11,6 +11,8 @@
 
 #include <oboe/oboe.h>
 
+typedef int (*send_generic_span_t) (char*, uint16_t, oboe_span_params_t*);
+
 class Event;
 
 class Metadata : public Nan::ObjectWrap {
@@ -119,11 +121,13 @@ class Reporter : public Nan::ObjectWrap {
     static NAN_METHOD(sendReport);
     static NAN_METHOD(sendStatus);
     static NAN_METHOD(sendHttpSpan);
+    static NAN_METHOD(sendNonHttpSpan);
+    static void send_span(Nan::NAN_METHOD_ARGS_TYPE, send_generic_span_t);
 
     static v8::Local<v8::Object> NewInstance();
 
-    public:
-      static void Init(v8::Local<v8::Object>);
+public:
+    static void Init(v8::Local<v8::Object>);
 };
 
 
