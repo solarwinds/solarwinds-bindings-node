@@ -17,6 +17,8 @@ function spinner(fps, fn) {
   }
 }
 
+var soname = 'liboboe-1.0.so.0'
+
 
 function setupLiboboe(cb) {
   var soname
@@ -42,6 +44,20 @@ function setupLiboboe(cb) {
     process.exit(1)
   }
 
+  // if the SONAME is hardcoded just use it and avoid the readelf
+  // dependency.
+  if (soname) {
+    try {
+      fs.symlinkSync(liboboeName, dir + 'liboboe.so')
+      fs.symlinkSync(liboboeName, dir + soname)
+    } catch (e) {
+      console.error('setup-liboboe failed %e', e)
+      process.exit(1)
+    }
+    process.exit(0)
+  }
+
+  // if the SONAME can be dynamic it must be read from the .so file.
   var p = spawn('readelf', ['-d', './oboe/' + liboboeName])
 
   if (process.stdout.isTTY) {
