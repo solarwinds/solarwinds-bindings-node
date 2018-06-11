@@ -1,6 +1,6 @@
 {
   "name": "appoptics-bindings",
-  "version": "5.1.0-rc1",
+  "version": "5.1.0",
   "description": "Bindings to liboboe for the AppOptics APM agent",
   "author": "Bruce A. MacNaughton <bruce@solarwinds.cloud>",
   "contributors": [
