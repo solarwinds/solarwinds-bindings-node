@@ -1,4 +1,7 @@
+'use strict'
+
 var spawn = require('child_process').spawn
+var rinfo = require('linux-release-info')
 var fs = require('fs')
 
 var dir = './oboe/'
@@ -21,90 +24,97 @@ var soname = 'liboboe-1.0.so.0'
 
 
 function setupLiboboe(cb) {
-  var soname
   var childOutput = []
   var showOutput = process.env.APPOPTICS_SHOW_OBOE_SETUP
 
-  var liboboeName
-  fs.readdirSync(dir).forEach(function (f) {
-    if (f.indexOf('liboboe') === 0 && !f.endsWith('.sha256')) {
-      // if the file is a link delete it
-      if (fs.lstatSync(dir + f).isSymbolicLink()) {
-        fs.unlinkSync(dir + f)
-      } else if (liboboeName) {
-        console.warn('Multiple liboboes found:' + liboboeName + ", " + f)
-      } else {
-        liboboeName = f
-      }
+  rinfo().then(info => {
+    let basename = 'liboboe-1.0-'
+    if (info.id === 'alpine') {
+      basename += 'alpine-'
     }
-  })
-
-  if (!liboboeName) {
-    console.warn('liboboe not found')
-    process.exit(1)
-  }
-
-  // if the SONAME is hardcoded just use it and avoid the readelf
-  // dependency.
-  if (soname) {
-    try {
+    basename += 'x86_64.so.0.0.0'
+    return basename
+  }).then(liboboeName => {
+    if (!fs.existsSync(dir + liboboeName)) {
+      throw new Error('cannot find ' + dir + liboboeName)
+    }
+    // remove this link no matter what
+    if (fs.lstatSync(dir + 'liboboe.so').isSymbolicLink()) {
+      fs.unlinkSync(dir + 'liboboe.so')
+    }
+    // if the SONAME is hardcoded use it and avoid the readelf
+    // dependency.
+    if (soname) {
+      if (fs.lstatSync(dir + soname).isSymbolicLink()) {
+        fs.unlinkSync(dir + soname)
+      }
       fs.symlinkSync(liboboeName, dir + 'liboboe.so')
       fs.symlinkSync(liboboeName, dir + soname)
-    } catch (e) {
-      console.error('setup-liboboe failed %e', e)
-      process.exit(1)
+      process.exit(0)
     }
-    process.exit(0)
-  }
+    // the SONAME is not hardcoded so it must be read.
+    return liboboeName
+  }).then(liboboeName => {
+    // if the SONAME can be dynamic it must be read from the .so file.
+    var p = spawn('readelf', ['-d', dir + liboboeName])
 
-  // if the SONAME can be dynamic it must be read from the .so file.
-  var p = spawn('readelf', ['-d', './oboe/' + liboboeName])
-
-  if (process.stdout.isTTY) {
-    var spin = spinner(15, function (c) {
-      process.stdout.clearLine()
-      process.stdout.cursorTo(0)
-      process.stdout.write(c + ' setting up liboboe for AppOptics native bindings')
-    })
-  }
-
-  p.stderr.on('data', function (data) {
-    if (showOutput) {
-      childOutput.push(data)
-    }
-  })
-
-  p.stdout.on('data', function(data) {
-    var res = data.toString('utf8').match(/Library soname: \[(.+)]/)
-    if (!res) {
-      console.warn('liboboe missing SONAME')
-    }
-    // the first group captures the SONAME
-    soname = res[1]
-  })
-
-  p.on('close', function (err) {
     if (process.stdout.isTTY) {
-      spin.stop()
-      process.stdout.clearLine()
-      process.stdout.cursorTo(0)
+      var spin = spinner(15, function (c) {
+        process.stdout.clearLine()
+        process.stdout.cursorTo(0)
+        process.stdout.write(c + ' setting up liboboe for AppOptics native bindings')
+      })
     }
 
-    if (err || !soname) {
-      console.warn('AppOptics liboboe setup failed')
+    p.stderr.on('data', function (data) {
       if (showOutput) {
-        childOutput = childOutput.join('').toString('utf8')
-        console.warn(childOutput)
+        childOutput.push(data)
       }
-    } else {
-      fs.symlinkSync(liboboeName, dir + 'liboboe.so')
-      fs.symlinkSync(liboboeName, dir + soname)
+    })
 
-      console.log('AppOptics liboboe setup successful')
-    }
+    p.stdout.on('data', function (data) {
+      var res = data.toString('utf8').match(/Library soname: \[(.+)]/)
+      if (!res) {
+        console.warn('liboboe missing SONAME')
+      }
+      // the first group captures the SONAME
+      soname = res[1]
+    })
 
-    cb()
+    p.on('close', function (err) {
+      if (process.stdout.isTTY) {
+        spin.stop()
+        process.stdout.clearLine()
+        process.stdout.cursorTo(0)
+      }
+
+      if (err || !soname) {
+        console.warn('AppOptics liboboe setup failed')
+        if (showOutput) {
+          childOutput = childOutput.join('').toString('utf8')
+          console.warn(childOutput)
+        }
+      } else {
+        if (fs.lstatSync(dir + soname).isSymbolicLink()) {
+          fs.unlinkSync(dir + soname)
+        }
+        fs.symlinkSync(liboboeName, dir + 'liboboe.so')
+        fs.symlinkSync(liboboeName, dir + soname)
+
+        console.log('AppOptics liboboe setup successful')
+      }
+
+      cb()
+
+      return 0
+    })
+  }).then(r => {
+    process.exit(0)
+  }).catch(e => {
+    console.warn(e)
+    process.exit(1)
   })
+
 }
 
 if (!module.parent) {
