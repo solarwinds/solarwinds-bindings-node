@@ -1,6 +1,7 @@
 var bindings = require('../')
 
-var real = process.env.APPOPTICS_REPORTER === 'ssl'
+var realCollector = (!process.env.APPOPTICS_REPORTER
+  || process.env.APPOPTICS_REPORTER === 'ssl')
   && (process.env.APPOPTICS_COLLECTOR === 'collector.appoptics.com'
   || process.env.APPOPTICS_COLLECTOR === 'collector-stg.appoptics.com')
 
@@ -19,11 +20,11 @@ describe('addon.reporter', function () {
 
   it('should check if ready to sample', function () {
     // wait 5 seconds max. This will fail if not using
-    // a real SSL reporter (collector or collector-stg).
+    // a real collector (collector or collector-stg).appoptics.com
     var ready = r.isReadyToSample(5000)
     ready.should.be.an.instanceof(Number)
 
-    if (real) {
+    if (realCollector) {
       ready.should.equal(1)
     } else {
       ready.should.not.equal(1)
