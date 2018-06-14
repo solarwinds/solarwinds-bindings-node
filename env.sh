@@ -52,15 +52,63 @@ elif [ "$ARG" = "get-new-oboe" ]; then
         downloader="curl -o"
     else
         echo "Neither wget nor curl is available, aborting"
-        return 1
+        /bin/false
+        return
     fi
     # pretend to download for testing by adding an extra parameter
     PRETEND=$PARAM2
-    OBOE_X=liboboe-1.0-x86_64.so.0.0.0
-    OBOE_A=liboboe-1.0-alpine-x86_64.so.0.0.0
+    PAIRS="liboboe-1.0-x86_64.so.0.0.0  liboboe-1.0-alpine-x86_64.so.0.0.0"
+    # add the static files if using them.
+    #PAIRS="$PAIRS  liboboe-static-alpine-x86_64.gz  liboboe-static-x86_64.gz"
+    ERRORS=0
+    ERRORFILES=
+    URL="https://files.appoptics.com/c-lib/$PARAM/"
     URL="https://s3-us-west-2.amazonaws.com/rc-files-t2/c-lib/$PARAM/"
+
+    # create the primary directory for this version of oboe
     mkdir -p "./oboe-$PARAM"
-    for f in VERSION "$OBOE_X" "$OBOE_X.sha256" "$OBOE_A" "$OBOE_A.sha256" \
+
+    #
+    # get the libraries and their SHA256 hashes. they all go in
+    # the primary directory.
+    #
+    for f in $PAIRS
+    do
+        if [ -n "$PRETEND" ]; then
+            echo pretending to download $f to ./oboe-$PARAM/${f}
+        else
+            echo downloading $f to ./oboe-$PARAM/${f}}
+            $downloader "./oboe-$PARAM/${f}" "${URL}$f"
+            $downloader "./oboe-$PARAM/${f}.sha256" "${URL}$f.sha256"
+        fi
+
+        # check each sha256
+        correct=`cat "./oboe-$PARAM/$f.sha256" | awk '{print $1}'`
+        checked=`sha256sum "./oboe-$PARAM/$f" | awk '{print $1}'`
+        if [ "$checked" != "$correct" -o "$checked" = "" -o "$correct" = "" ]; then
+            ERRORS=`expr $ERRORS + 1`
+            ERRORFILES="$ERRORFILES $f"
+            echo "WARNING: SHA256 for $f DOES NOT MATCH!"
+            echo "found    ${checked:-nothing}"
+            echo "expected ${correct:-SHA}"
+        else
+            echo "SHA256 matches expected value for $f"
+        fi
+    done
+
+    if [ $ERRORS -gt 0 ]; then
+        echo "$ERRORS SHA mismatches:$ERRORFILES"
+        /bin/false
+        return
+    fi
+
+    #
+    # the libraries are OK, now get the supporting files. for some reason
+    # the directories they are in are not where the source code expects
+    # them to be, so fix the directories up by making the 'include'
+    # directory go away.
+    #
+    for f in VERSION \
         include/oboe.h include/oboe_debug.h \
         include/bson/bson.h include/bson/platform_hacks.h
     do
@@ -71,30 +119,17 @@ elif [ "$ARG" = "get-new-oboe" ]; then
             # wget has no --create-dirs, so brute force directory creation
             mkdir -p $(dirname "./oboe-$PARAM/${f#include/}")
             $downloader "./oboe-$PARAM/${f#include/}" "${URL}$f"
-            #curl --create-dirs -o "./oboe-$PARAM/${f#include/}" "${URL}$f"
         fi
     done
 
-    # check the sha256's
-    correct=`cat "./oboe-$PARAM/$OBOE_X.sha256" | awk '{print $1}'`
-    checked=`sha256sum "./oboe-$PARAM/$OBOE_X" | awk '{print $1}'`
-    if [ "$checked" != "$correct" -o "$checked" = "" -o "$correct" = "" ]; then
-        echo "WARNING: SHA256 for ${OBOE_X} DOES NOT MATCH!"
-        echo "found    $checked"
-        echo "expected $correct"
-    else
-        echo "SHA256 matches expected value for $OBOE_X"
-    fi
-
-    correct=`cat "./oboe-$PARAM/$OBOE_A.sha256" | awk '{print $1}'`
-    checked=`sha256sum "./oboe-$PARAM/$OBOE_A" | awk '{print $1}'`
-    if [ "$checked" != "$correct" -o "$checked" = "" -o "$correct" = "" ]; then
-        echo "WARNING: SHA256 for ${OBOE_A} DOES NOT MATCH!"
-        echo "found    $checked"
-        echo "expected $correct"
-    else
-        echo "SHA256 matches expected value for $OBOE_A"
-    fi
+    # expand the zip files if they were downloaded
+    for f in ./oboe-$PARAM/*.gz
+    do
+        # make this work with/without the static library .gz files
+        [ -e "$f" ] || break
+        # consider adding '.a' extension?
+        gunzip $f
+    done
 
 else
     echo "ERROR $ARG invalid"
