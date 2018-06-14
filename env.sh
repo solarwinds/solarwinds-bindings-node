@@ -62,8 +62,10 @@ elif [ "$ARG" = "get-new-oboe" ]; then
     #PAIRS="$PAIRS  liboboe-static-alpine-x86_64.gz  liboboe-static-x86_64.gz"
     ERRORS=0
     ERRORFILES=
-    URL="https://files.appoptics.com/c-lib/$PARAM/"
-    URL="https://s3-us-west-2.amazonaws.com/rc-files-t2/c-lib/$PARAM/"
+    #AO_DOWNLOAD_SOURCE="https://s3-us-west-2.amazonaws.com/rc-files-t2/c-lib"
+    URL="https://files.appoptics.com/c-lib"
+    URL=${AO_DOWNLOAD_SOURCE:-$URL}
+    URL="$URL/$PARAM/"
 
     # create the primary directory for this version of oboe
     mkdir -p "./oboe-$PARAM"
