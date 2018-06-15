@@ -1,6 +1,11 @@
+#!/bin/sh
+
 ARG=$1
 PARAM=$2
 PARAM2=$3
+
+a="/$0"; a=${a%/*}; a=${a#/}; a=${a:-.}; BASEDIR=$(cd "$a"; pwd)
+echo $BASEDIR
 
 if [ -z "$AO_TOKEN_STG" ]; then
     echo "AO_TOKEN_STG must be defined and contain a valid token"
@@ -12,32 +17,12 @@ fi
 # define this in all cases.
 export APPOPTICS_SERVICE_KEY=${AO_TOKEN_STG}:node-bindings-test
 
-if [ -z "$ARG" ]; then
-    echo "source this script with an argument of udp or ssl. it"
-    echo "will define environment variables to enable testing with"
-    echo "the specified reporter".
-    echo
-    echo "you may also use the argument debug to define additional"
-    echo "debugging variables"
-    echo
-elif [ "$ARG" = "udp" ]; then
-    export APPOPTICS_REPORTER=udp
-    export APPOPTICS_REPORTER_UDP=localhost:7832
-elif [ "$ARG" = "stg" ]; then
-    export APPOPTICS_REPORTER=ssl
-    export APPOPTICS_COLLECTOR=${AO_TEST_COLLECTOR:-collector-stg.appoptics.com}
-elif [ "$ARG" = "prod" ]; then
-    export APPOPTICS_REPORTER=ssl
-    export APPOPTICS_COLLECTOR=${AO_TEST_COLLECTOR:-collector.appoptics.com}
-elif [ "$ARG" = "debug" ]; then
-    export APPOPTICS_DEBUG_LEVEL=6
-    export APPOPTICS_SHOW_GYP=1
-elif [ "$ARG" = "get-new-oboe" ]; then
+#
+# this function references the implicit parameters $PARAM and $PARAM2
+#
+get_new_oboe() {
     # N.B. if installing a new version of oboe "npm run preinstall" must be
     # run before building in order to set up symlinks.
-    # can't use https://files.appoptics.com/c-lib (only .so and oboe.h)
-    # https://s3-us-west-2.amazonaws.com/rc-files-t2/c-lib/latest/
-    # c-lib/latest/liboboe-1.0-x86_64.so.0.0.0
     if [ -z "$PARAM" ]; then
         echo "Must supply a version (which will be used as the destination"
         echo "directory). N.B. this isn't bullet-proof. It presumes sha256sum"
@@ -52,8 +37,7 @@ elif [ "$ARG" = "get-new-oboe" ]; then
         downloader="curl -o"
     else
         echo "Neither wget nor curl is available, aborting"
-        /bin/false
-        return
+        return 1
     fi
     # pretend to download for testing by adding an extra parameter
     PRETEND=$PARAM2
@@ -100,8 +84,7 @@ elif [ "$ARG" = "get-new-oboe" ]; then
 
     if [ $ERRORS -gt 0 ]; then
         echo "$ERRORS SHA mismatches:$ERRORFILES"
-        /bin/false
-        return
+        return 1
     fi
 
     #
@@ -133,8 +116,54 @@ elif [ "$ARG" = "get-new-oboe" ]; then
         gunzip $f
     done
 
+    return 0
+}
+
+if [ -z "$ARG" ]; then
+    echo "source this script with an argument of udp or ssl. it"
+    echo "will define environment variables to enable testing with"
+    echo "the specified reporter".
+    echo
+    echo "you may also use the argument debug to define additional"
+    echo "debugging variables"
+    echo
+elif [ "$ARG" = "udp" ]; then
+    export APPOPTICS_REPORTER=udp
+    export APPOPTICS_REPORTER_UDP=localhost:7832
+elif [ "$ARG" = "stg" ]; then
+    export APPOPTICS_REPORTER=ssl
+    export APPOPTICS_COLLECTOR=${AO_TEST_COLLECTOR:-collector-stg.appoptics.com}
+elif [ "$ARG" = "prod" ]; then
+    export APPOPTICS_REPORTER=ssl
+    export APPOPTICS_COLLECTOR=${AO_TEST_COLLECTOR:-collector.appoptics.com}
+elif [ "$ARG" = "debug" ]; then
+    export APPOPTICS_DEBUG_LEVEL=6
+    export APPOPTICS_SHOW_GYP=1
+elif [ "$ARG" = "get-oboe-version" ]; then
+    # this version uses the function
+    get_new_oboe
+
+elif [ "$ARG" = "install-new-oboe" ]; then
+    # this downloads the new oboe AND moves it to
+    # the oboe directory, elevating it to production.
+    get_new_oboe
+
+    if [ $? -ne "0" ]; then
+        echo "failed to download files"
+        /bin/false
+        return
+    fi
+
+    # get rid of the existing directory
+    rm -rf oboe
+
+    # move the new one over
+    mv oboe-$PARAM oboe
+
 else
     echo "ERROR $ARG invalid"
 fi
+
+
 
 return
