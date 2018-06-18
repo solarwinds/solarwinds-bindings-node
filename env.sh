@@ -4,14 +4,29 @@ ARG=$1
 PARAM=$2
 PARAM2=$3
 
-a="/$0"; a=${a%/*}; a=${a#/}; a=${a:-.}; BASEDIR=$(cd "$a"; pwd)
-echo $BASEDIR
 
-if [ -z "$AO_TOKEN_STG" ]; then
+#a="/$0"; a=${a%/*}; a=${a#/}; a=${a:-.}; BASEDIR=$(cd "$a"; pwd)
+#echo $BASEDIR
+
+# issue informational message if not installing oboe. installing
+# oboe only occurs on `npm publish`, `npm pack`, and `npm install`
+# (with no arguments, i.e., not on `npm install appoptics-bindings`)
+# this section is used for primarily for development and testing.
+if [ -z "$AO_TOKEN_STG" -a "$ARG" != "install-new-oboe" ]; then
     echo "AO_TOKEN_STG must be defined and contain a valid token"
     echo "for accessing the appoptics collector specified by"
     echo "AO_TEST_COLLECTOR"
-    return
+fi
+
+Which=$(which "$0")
+if [ "$Which" != "/bin/sh" -a "$Which" != "/bin/bash" ]; then
+    if [ "$ARG" != "fetch-oboe-version" -a "$ARG" != "install-oboe-version" ]; then
+        echo "this script must be sourced so the environment variables can be set"
+        echo "only 'fetch-oboe-version' and 'install-oboe-version' work correctly"
+        echo "when the script is not sourced."
+        /bin/false
+        return
+    fi
 fi
 
 # define this in all cases.
@@ -25,8 +40,7 @@ get_new_oboe() {
     # run before building in order to set up symlinks.
     if [ -z "$PARAM" ]; then
         echo "Must supply a version (which will be used as the destination"
-        echo "directory). N.B. this isn't bullet-proof. It presumes sha256sum"
-        echo "exists and that you're running bash."
+        echo "directory). N.B. the script is not bulletproof."
         echo "example:"
         echo "$ . env.sh new-get-new-oboe latest"
         return
@@ -61,9 +75,9 @@ get_new_oboe() {
     for f in $PAIRS
     do
         if [ -n "$PRETEND" ]; then
-            echo pretending to download $f to ./oboe-$PARAM/${f}
+            echo pretending to download $URL$f to ./oboe-$PARAM/${f}
         else
-            echo downloading $f to ./oboe-$PARAM/${f}}
+            echo downloading $URL$f to ./oboe-$PARAM/${f}}
             $downloader "./oboe-$PARAM/${f}" "${URL}$f"
             $downloader "./oboe-$PARAM/${f}.sha256" "${URL}$f.sha256"
         fi
@@ -139,11 +153,11 @@ elif [ "$ARG" = "prod" ]; then
 elif [ "$ARG" = "debug" ]; then
     export APPOPTICS_DEBUG_LEVEL=6
     export APPOPTICS_SHOW_GYP=1
-elif [ "$ARG" = "get-oboe-version" ]; then
+elif [ "$ARG" = "fetch-oboe-version" ]; then
     # this version uses the function
     get_new_oboe
 
-elif [ "$ARG" = "install-new-oboe" ]; then
+elif [ "$ARG" = "install-oboe-version" ]; then
     # this downloads the new oboe AND moves it to
     # the oboe directory, elevating it to production.
     get_new_oboe
