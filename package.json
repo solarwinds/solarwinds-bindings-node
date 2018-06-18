@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "bindings": "~1.2.1",
+    "linux-release-info": "^1.0.1",
     "nan": "^2.3.2",
     "request": "^2.87.0"
   },
