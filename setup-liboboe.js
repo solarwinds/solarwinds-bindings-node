@@ -23,6 +23,9 @@ function spinner(fps, fn) {
 
 const dir = './oboe/'
 const soname = 'liboboe-1.0.so.0'
+// not downloading files now. it's been tested and doesn't
+// offer significant benefits against the minor cost of including
+// both libraries in the package.
 const downloadFile = false
 // don't delete unused yet. old versions of npm (3.10.10) don't
 // have prepare and prepublishOnly which are needed to sequence
@@ -31,15 +34,19 @@ const downloadFile = false
 const deleteUnused = false
 
 //
-// all files EXCEPT the .so file are packaged with each
-// appoptics-bindings release. when this starts it reads
-// the VERSION file and uses that to select which version
-// of liboboe to download. within the version directory
-// online it will choose either the alpine or standard
-// file based on the contents of /etc/os-release. the
-// .sha256 file is distributed as part of the release, not
-// downloaded, to provide a double check that the right
-// file is downloaded.
+// if downloading then all files EXCEPT the .so file are
+// packaged with each appoptics-bindings release. in that
+// case then when this starts it reads the VERSION file and
+// uses that to select which version of liboboe to download.
+//
+// it will choose either the alpine or standard file based
+// on /etc/os-release. the .sha256 file is distributed as
+// part of the release, not downloaded, to provide a double
+// check that the right file is downloaded.
+//
+// but right now (download === false) so the previous doesn't
+// apply - both versions of the .so library are included in
+// the package.
 //
 
 const oboeNames = {
@@ -70,6 +77,7 @@ function setupLiboboe(cb) {
       }
       return linux
     }
+
     //
     // read the expected hash value. let any error propagate and
     // terminate the promise chain.
