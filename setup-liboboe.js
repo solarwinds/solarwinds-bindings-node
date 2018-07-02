@@ -79,8 +79,9 @@ function setupLiboboe(cb) {
     }
 
     //
-    // read the expected hash value. let any error propagate and
-    // terminate the promise chain.
+    // here we download liboboe.
+    //
+    // first, read the expected hash value.
     //
     const hashFile = './oboe/' + liboboeName + '.sha256'
     const expectedHash = fs.readFileSync(hashFile, 'utf8').slice(0, -1)
@@ -88,10 +89,11 @@ function setupLiboboe(cb) {
     // set up a stream to calculate the hash.
     const hash = crypto.createHash('sha256').setEncoding('hex')
 
+    // download the correct version for the correct distribution (alpine, other linux).
     const target = 'https://files.appoptics.com/c-lib/' + version + '/' + liboboeName
     console.log('downloading', target)
     //
-    // download the correct file and check the .sha256
+    // download the file and calculate then check the .sha256
     //
     return new Promise(function (resolve, reject) {
       request.get(target)
@@ -100,7 +102,7 @@ function setupLiboboe(cb) {
         // calculate the sha256 hash
         .on('data', chunk => hash.write(chunk))
         // write the file
-        .pipe(fs.createWriteStream(dir + 'xyzzy'))
+        .pipe(fs.createWriteStream(dir + liboboeName))
         // notice when it's done, check the hash, and handle
         // appropriately.
         .on('finish', function () {
@@ -109,7 +111,7 @@ function setupLiboboe(cb) {
           if (hashFound !== expectedHash && !process.env.AO_IGNORE_SHA256) {
             reject(new Error('invalid hash: ' + hashFound))
           }
-          // pass the filename to the next step
+          // pass the linux distribution to the next step
           resolve(linux)
         })
     })
@@ -132,7 +134,7 @@ function setupLiboboe(cb) {
       }
       fs.symlinkSync(liboboeName, dir + 'liboboe.so')
       fs.symlinkSync(liboboeName, dir + soname)
-      // delete the unused file. ignore errors.
+      // delete the unused file if indicated. ignore errors.
       if (deleteUnused) {
         let unusedOboe = oboeNames[linux === 'alpine' ? 'linux' : 'alpine']
         // do async so errors can easily be ignored
@@ -144,7 +146,7 @@ function setupLiboboe(cb) {
       process.exit(0)
     }
     //
-    // if here then the SONAME is not hardcoded so it must be read
+    // if here then the SONAME is not hardcoded so it must be extracted
     // from liboboe.
     //
     return linux
@@ -169,11 +171,12 @@ function setupLiboboe(cb) {
 
     p.stdout.on('data', function (data) {
       var res = data.toString('utf8').match(/Library soname: \[(.+)]/)
-      if (!res) {
+      if (res) {
+        // the first group captures the SONAME
+        soname = res[1]
+      } else {
         console.warn('liboboe missing SONAME')
       }
-      // the first group captures the SONAME
-      soname = res[1]
     })
 
     p.on('close', function (err) {
@@ -184,11 +187,11 @@ function setupLiboboe(cb) {
       }
 
       if (err || !soname) {
-        console.warn('AppOptics liboboe setup failed')
         if (showOutput) {
           childOutput = childOutput.join('').toString('utf8')
           console.warn(childOutput)
         }
+        throw new Error('Appoptics setup-liboboe failed')
       } else {
         if (isSymbolicLink(dir + soname)) {
           fs.unlinkSync(dir + soname)
@@ -199,8 +202,6 @@ function setupLiboboe(cb) {
         console.log('AppOptics liboboe setup successful')
       }
 
-      cb()
-
       return linux
     })
   }).then(linux => {
@@ -210,10 +211,11 @@ function setupLiboboe(cb) {
       fs.unlink(dir + unusedOboe, function () {
         process.exit(0)
       })
+    } else {
+      process.exit(0)
     }
-    process.exit(0)
   }).catch(e => {
-    console.warn(e)
+    console.error(e)
     process.exit(1)
   })
 }
