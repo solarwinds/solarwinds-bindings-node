@@ -18,7 +18,7 @@ if [ -z "$AO_TOKEN_STG" -a "$ARG" != "install-new-oboe" ]; then
     echo "AO_TEST_COLLECTOR"
 fi
 
-Which=$(which "$0")
+Which=$(which ${0#-})
 if [ "$Which" != "/bin/sh" -a "$Which" != "/bin/bash" ]; then
     if [ "$ARG" != "fetch-oboe-version" -a "$ARG" != "install-oboe-version" ]; then
         echo "this script must be sourced so the environment variables can be set"
