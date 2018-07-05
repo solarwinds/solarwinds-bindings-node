@@ -463,6 +463,8 @@ typedef struct {
                                                 // that have through_always_flag == 1
     volatile uint32_t last_used_sample_rate;
     volatile uint32_t last_used_sample_source;
+
+    volatile uint8_t used;
 } entry_layer_t;
 
 // Current settings configuration:
@@ -474,7 +476,6 @@ typedef struct {
     uint16_t last_auto_flags;  // stores last known flags associated with above 
     uint32_t last_auto_timestamp; // timestamp from last *settings lookup
     uint32_t last_refresh;        // last refresh time
-    entry_layer_t *entry_layer;
     token_bucket_t bucket;
 } oboe_settings_cfg_t;
 
@@ -512,23 +513,23 @@ int oboe_sample_is_enabled(oboe_settings_cfg_t *cfg);
 /**
  * Check if this request should be sampled.
  *
- * Checks for sample rate flags and settings for the specified layer, considers
+ * Checks for sample rate flags and settings for the specified service, considers
  * the current tracing mode and any special features in the X-Trace
  * headers, and, if appropriate, rolls the virtual dice to
  * decide if this request should be sampled.
  *
  * This is designed to be called once per layer per request.
  *
- * @param layer Layer name as used in oboe_settings_t.layer (may be NULL to use default settings)
+ * @param service_name Service name used for this request (may be NULL to use default settings)
  * @param xtrace X-Trace ID string from an HTTP request or higher layer (NULL or empty string if not present).
  * @param sample_rate_out The sample rate used to check if this request should be sampled
  *          (output - may be zero if not used).
  * @param sample_source_out The OBOE_SAMPLE_RATE_SOURCE used to check if this request
  *          should be sampled (output - may be zero if not used).
- * @return Non-zero if the given layer should be sampled.
+ * @return Non-zero if the given request should be sampled.
  */
 int oboe_sample_layer(
-    const char *layer,
+    const char *service_name,
     const char *xtrace,
     int *sample_rate_out,
     int *sample_source_out
@@ -537,7 +538,7 @@ int oboe_sample_layer(
 /**
  * Same as oboe_sample_layer() but accepting custom sample rate and custom tracing mode
  *
- * @param layer Layer name as used in oboe_settings_t.layer (may be NULL to use default settings)
+ * @param service_name Service name used for this request (may be NULL to use default settings)
  * @param xtrace X-Trace ID string from an HTTP request or higher layer (NULL or empty string if not present).
  * @param custom_sample_rate a custom sample rate only used for this request (OBOE_SETTINGS_UNSET won't override)
  * @param custom_tracing_mode a custom tracing mode only used for this request (OBOE_SETTINGS_UNSET won't override)
@@ -547,7 +548,7 @@ int oboe_sample_layer(
  *          should be sampled (output - may be zero if not used).
  */
 int oboe_sample_layer_custom(
-    const char *layer,
+    const char *service_name,
     const char *in_xtrace,
     int custom_sample_rate,
     int custom_tracing_mode,
