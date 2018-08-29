@@ -47,14 +47,9 @@ extern "C" {
 #define OBOE_DEFAULT_TIMEOUT_CHECK_INTERVAL 10
 
 /**
- * Default heartbeat status update interval in seconds.
+ * Default metrics flush interval in seconds
  */
-#define OBOE_DEFAULT_HEARTBEAT_INTERVAL 60
-
-/**
- * Default throughput metrics update interval in seconds
- */
-#define OBOE_DEFAULT_COUNTER_INTERVAL_SEC 30
+#define OBOE_DEFAULT_METRICS_FLUSH_INTERVAL 60
 
 /**
  * Default maximum number of transaction names to track when aggregating metric and histogram data by individual service transaction
@@ -72,6 +67,20 @@ extern "C" {
  * A keepalive message will be sent after communications are idle for this interval.
  */
 #define OBOE_DEFAULT_KEEPALIVE_INTERVAL 20
+
+/**
+ * Time to wait for all remaining data to be sent off
+ */
+#define DEFAULT_FLUSH_MAX_WAIT_TIME 5000
+
+/**
+ * Default events flush timeout in seconds.
+ */
+#define OBOE_DEFAULT_EVENTS_FLUSH_INTERVAL 2
+/**
+ * Default events flush batch size in KB.
+ */
+#define OBOE_DEFAULT_EVENTS_FLUSH_BATCH_SIZE 2000
 
 #define OBOE_SAMPLE_RESOLUTION 1000000
 
@@ -144,6 +153,8 @@ typedef struct oboe_init_options {
     const char* log_file_path;      // file name including path for log file
     int max_transactions;           // maximum number of transaction names to track
     int max_flush_wait_time;        // maximum wait time for flushing data before terminating in milli seconds
+    int events_flush_interval;      // events flush timeout in seconds (threshold for batching messages before sending off)
+    int events_flush_batch_size;    // events flush batch size in KB (threshold for batching messages before sending off)
 } oboe_init_options_t;
 
 typedef struct oboe_span_params {
@@ -161,6 +172,13 @@ typedef struct oboe_span_params {
 
 #define OBOE_SPAN_PARAMS_VERSION 1              // version of oboe_span_params_t
 #define OBOE_TRANSACTION_NAME_MAX_LENGTH 255    // max allowed length for transaction name
+
+#ifndef MIN
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef MAX
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#endif
 
 // oboe_metadata
 
@@ -197,7 +215,6 @@ int oboe_event_add_info_binary (oboe_event_t *, const char *, const char *, size
 int oboe_event_add_info_int64 (oboe_event_t *, const char *, const int64_t);
 int oboe_event_add_info_double (oboe_event_t *, const char *, const double);
 int oboe_event_add_info_bool (oboe_event_t *, const char *, const int);
-int oboe_event_add_info_fmt (oboe_event_t *, const char *key, const char *fmt, ...);
 int oboe_event_add_info_bson (oboe_event_t *, const char *key, const bson *val);
 int oboe_event_add_edge (oboe_event_t *, const oboe_metadata_t *);
 int oboe_event_add_edge_fromstr(oboe_event_t *, const char *, size_t);
@@ -439,7 +456,7 @@ typedef struct {
     uint32_t value;
     uint32_t ttl;
     uint32_t _pad;
-    char layer[OBOE_SETTINGS_MAX_STRLEN];
+    char layer[OBOE_SETTINGS_MAX_STRLEN]; // Flawfinder: ignore
     double bucket_capacity;
     double bucket_rate_per_sec;
 } oboe_settings_t;
@@ -453,7 +470,7 @@ typedef struct {
 
 
 typedef struct {
-    char name[OBOE_SETTINGS_MAX_STRLEN];
+    char name[OBOE_SETTINGS_MAX_STRLEN]; // Flawfinder: ignore
     volatile uint32_t request_count;            // all the requests that came through this layer
     volatile uint32_t exhaustion_count;         // # of times the token bucket limiting caused a trace to not occur
     volatile uint32_t trace_count;              // # of traces that were sent (includes "always", "through", or "AVW" traces)

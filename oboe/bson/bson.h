@@ -70,7 +70,7 @@ typedef struct {
 
 #pragma pack(1)
 typedef union{
-    char bytes[12];
+    char bytes[12];  // Flawfinder: ignore
     int ints[3];
 } bson_oid_t;
 #pragma pack()
@@ -170,7 +170,6 @@ char * bson_buffer_finish( bson_buffer * b );
 void bson_buffer_destroy( bson_buffer * b );
 
 bson_buffer * bson_append_oid( bson_buffer * b , const char * name , const bson_oid_t* oid );
-bson_buffer * bson_append_new_oid( bson_buffer * b , const char * name );
 bson_buffer * bson_append_int( bson_buffer * b , const char * name , const int i );
 bson_buffer * bson_append_long( bson_buffer * b , const char * name , const int64_t i );
 bson_buffer * bson_append_double( bson_buffer * b , const char * name , const double d );
