@@ -174,6 +174,11 @@ elif [ "$ARG" = "install-oboe-version" ]; then
     # move the new one over
     mv oboe-$PARAM oboe
 
+    echo "a new version of oboe ($PARAM) has been placed in the oboe directory"
+    echo "'node setup-liboboe' must be run before building in order to set up"
+    echo "the necessary symlinks. 'npm run install' will run 'node setup-liboboe'"
+    echo "before building, so the separate step isn't necessary."
+
 else
     echo "ERROR $ARG invalid"
 fi
