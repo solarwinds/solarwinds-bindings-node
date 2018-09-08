@@ -1,7 +1,7 @@
 'use strict'
 
 var spawn = require('child_process').spawn
-var releaseInfo = require('linux-release-info')
+var releaseInfo = require('linux-os-info')
 var request = require('request')
 var fs = require('fs')
 var crypto = require('crypto')
