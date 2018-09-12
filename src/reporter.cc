@@ -91,7 +91,8 @@ NAN_METHOD(Reporter::sendStatus) {
 // These will be the string object keys for the object that
 // sendHttpSpan is called with. They will be initialized once
 // so each call to sendHttpSpan doesn't create the strings; it
-// only creates a local reference to them.
+// only creates a local reference to them. They are also used
+// for sendNonHttpSpan.
 static Nan::Persistent<v8::String> kName;
 static Nan::Persistent<v8::String> kTxname;
 static Nan::Persistent<v8::String> kUrl;
