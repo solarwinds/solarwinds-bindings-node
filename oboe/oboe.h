@@ -147,9 +147,10 @@ typedef struct oboe_metric_tag {
 } oboe_metric_tag_t;
 
 typedef struct oboe_init_options {
-    int version;                    // the version of this structure
+    int version;                    // the version of this structure (currently at 4)
     const char *hostname_alias;     // optional hostname alias
-    int log_level;                  // level at which log messages will be written to log file
+    int log_level;                  // level at which log messages will be written to log file (0-6)
+                                    // use LOGLEVEL_DEFAULT for default log level
     const char* log_file_path;      // file name including path for log file
     int max_transactions;           // maximum number of transaction names to track
     int max_flush_wait_time;        // maximum wait time for flushing data before terminating in milli seconds
@@ -941,6 +942,25 @@ int oboe_custom_metric_increment(const char *name, const int count, const int ho
 
 char* oboe_get_config_service_name_copy();
 char* oboe_get_env_service_name_copy();
+
+/*
+ * Perform validation and replacement of invalid characters on the given service name.
+ *
+ * The rules are as follows:
+ *    .toLowerCase() // automatically convert to lowercase
+ *    .replace(/ /g, "-") // automatically convert spaces to hyphens
+ *    .replace(/[^a-z0-9.:_-]/g, ""); // remove remaining invalid characters
+ *
+ * @param service_name pointer to the service name string to perform the validation on
+ *        (important: address must be editable)
+ * @param length pointer to the length of the service name
+ *
+ * @return 0 if service name is valid
+ *         1 if service name was invalid and has been transformed
+ *           (new valid service name is stored in service_name and length)
+ *        -1 NULL pointer passed in for service_name or length
+ */
+int oboe_validate_transform_service_name(char *service_name, int *length);
 
 #ifdef __cplusplus
 } // extern "C"

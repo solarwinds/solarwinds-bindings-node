@@ -60,9 +60,14 @@ get_new_oboe() {
     #PAIRS="$PAIRS  liboboe-static-alpine-x86_64.gz  liboboe-static-x86_64.gz"
     ERRORS=0
     ERRORFILES=
-    #AO_DOWNLOAD_SOURCE="https://s3-us-west-2.amazonaws.com/rc-files-t2/c-lib"
+
+    # presume production
     URL="https://files.appoptics.com/c-lib"
-    URL=${AO_DOWNLOAD_SOURCE:-$URL}
+    if [ "$SOURCE" = "STAGING" ]; then
+        URL="https://s3-us-west-2.amazonaws.com/rc-files-t2/c-lib"
+    elif [ "$SOURCE" != "PRODUCTION" -a "$SOURCE" != "" ]; then
+        echo "Invalid SOURCE value $SOURCE, aborting"
+    fi
     URL="$URL/$PARAM/"
 
     # create the primary directory for this version of oboe
@@ -156,6 +161,17 @@ elif [ "$ARG" = "debug" ]; then
 elif [ "$ARG" = "fetch-oboe-version" ]; then
     # this version uses the function
     get_new_oboe
+
+elif [ "$ARG" = "install-local-oboe-version" ]; then
+    # promote a downloaded version to the production
+    # directory 'oboe'
+    if [ ! -d oboe-$PARAM ]; then
+        echo "Can't find directory ./oboe-$PARAM"
+    else
+        # counts on oboe-$PARAM having the correct files
+        rm -rf oboe
+        cp -r oboe-$PARAM oboe
+    fi
 
 elif [ "$ARG" = "install-oboe-version" ]; then
     # this downloads the new oboe AND moves it to

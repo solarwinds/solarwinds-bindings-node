@@ -43,6 +43,12 @@ enum OBOE_DEBUG_MODULE {
 	OBOE_MODULE_DOTNET,                /*!< dotnet wrapper */
 };
 
+/**
+ * Initial debug log detail level.
+ *
+ */
+#define LOGLEVEL_DEFAULT OBOE_DEBUG_INFO
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
