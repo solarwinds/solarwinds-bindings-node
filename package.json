@@ -26,12 +26,12 @@
   },
   "dependencies": {
     "bindings": "~1.2.1",
-    "eslint": "^5.7.0",
     "linux-os-info": "^2.0.0",
     "nan": "^2.3.2",
     "request": "^2.87.0"
   },
   "devDependencies": {
+    "eslint": "^5.7.0",
     "gulp": "~3.8.11",
     "gulp-mocha": "~2.0.1",
     "should": "~6.0.1"
