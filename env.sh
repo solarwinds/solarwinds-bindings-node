@@ -8,30 +8,28 @@ PARAM2=$3
 #a="/$0"; a=${a%/*}; a=${a#/}; a=${a:-.}; BASEDIR=$(cd "$a"; pwd)
 #echo $BASEDIR
 
-# issue informational message if not installing oboe. installing
-# oboe only occurs on `npm publish`, `npm pack`, and `npm install`
-# (with no arguments, i.e., not on `npm install appoptics-bindings`)
-# this section is used for primarily for development and testing.
-if [ -z "$AO_TOKEN_STG" -a "$ARG" != "install-new-oboe" ]; then
-    echo "AO_TOKEN_STG must be defined and contain a valid token"
-    echo "for accessing the appoptics collector specified by"
-    echo "AO_TEST_COLLECTOR"
-fi
-
 Which=$(which ${0#-})
 if [ "$Which" != "/bin/sh" -a "$Which" != "/bin/bash" ]; then
-    if [ "$ARG" != "fetch-oboe-version" -a "$ARG" != "install-oboe-version" ]; then
-        echo "this script must be sourced so the environment variables can be set"
-        echo "only 'fetch-oboe-version' and 'install-oboe-version' work correctly"
-        echo "when the script is not sourced."
+    # it's kind of kludgy but all args that involve oboe contain the string
+    # "oboe-version". so if the command doesn't contain oboe-version it must
+    # be sourced
+    if test "${ARG#*oboe-version}" = "$ARG" ; then
+        echo "this script must be sourced so the environment variables can be set."
+        echo "only the '*-oboe-version' commands work correctly when the script is"
+        echo "executed and not sourced."
         /bin/false
         return
     fi
 fi
 
 # define this in all cases.
-export APPOPTICS_SERVICE_KEY=${AO_TOKEN_STG}:node-bindings-test
-
+if [ "$ARG" = "stg" ]; then
+    [ -z "$AO_TOKEN_STG" ] && echo "Missing AO_TOKEN_STG, aborting" && return 1
+    export APPOPTICS_SERVICE_KEY=${AO_TOKEN_STG}:node-bindings-test
+elif [ "$ARG" = "prod" ]; then
+    [ -z "$AO_TOKEN_PROD" ] && echo "Missing AO_TOKEN_PROD, aborting" && return 1
+    export APPOPTICS_SERVICE_KEY=${AO_TOKEN_PROD}:node-bindings-test
+fi
 #
 # this function references the implicit parameters $PARAM and $PARAM2
 #
@@ -139,7 +137,7 @@ get_new_oboe() {
 }
 
 if [ -z "$ARG" ]; then
-    echo "source this script with an argument of udp or ssl. it"
+    echo "source this script with an argument of udp or stg or prod. it"
     echo "will define environment variables to enable testing with"
     echo "the specified reporter".
     echo
