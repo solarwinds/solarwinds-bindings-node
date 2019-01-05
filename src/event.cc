@@ -7,37 +7,8 @@ static int event_count = 0;
 static int event_size_total = 0;
 static int event_size_total_count = 0;
 
-/*
-//
-// Create an event using oboe's context.
-//
-Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
-    Napi::Env env = info.Env();
 
-    event_count++;
-    // TODO BAM consider throwing if oboe_status != 0.
-    oboe_status = oboe_event_init(&event, oboe_context_get(), NULL);
-
-}
-
-//
-// Create an event using the specified metadata instead of
-// oboe's context. Optionally add an edge to the metadata's
-// op ID.
-//
-Event::Event(const oboe_metadata_t* md, bool addEdge) {
-    event_count++;
-    if (addEdge) {
-        // all this does is call oboe_event_init() followed by
-        // oboe_event_add_edge().
-        oboe_status = oboe_metadata_create_event(md, &event);
-    } else {
-        // this copies md to the event metadata except for the opId.
-        // It creates a new random opId for the event.
-        oboe_status = oboe_event_init(&event, md, NULL);
-    }
-}
-// */
+Napi::FunctionReference Event::constructor;
 
 Event::~Event() {
     event_count--;
@@ -46,37 +17,12 @@ Event::~Event() {
     oboe_event_destroy(&event);
 }
 
-Napi::FunctionReference Event::constructor;
-
-/**
- * Run at module initialization. Make the constructor and export JavaScript
- * properties and function.
- */
-Napi::Object Event::Init(Napi::Env env, Napi::Object exports) {
-    Napi::HandleScope scope(env);
-
-    Napi::Function ctor = DefineClass(env, "Event", {
-      InstanceMethod("addInfo", &Event::addInfo),
-      InstanceMethod("addEdge", &Event::addEdge),
-      InstanceMethod("getMetadata", &Event::getMetadata),
-      InstanceMethod("toString", &Event::toString),
-      InstanceMethod("getSampleFlag", &Event::getSampleFlag),
-      InstanceMethod("setSampleFlagTo", &Event::setSampleFlagTo)
-    });
-
-    constructor = Napi::Persistent(ctor);
-    constructor.SuppressDestruct();
-
-    exports.Set("Event", ctor);
-
-    return exports;
-}
 
 /**
  * JavaScript constructor
  *
  * new Event()
- * new Event(xtrace, addEdge)
+ * new Event(xtrace, addEdge = true)
  *
  * @param {Metadata|Event|string} xtrace - X-Trace ID to use for creating event
  * @param boolean [addEdge]
@@ -147,46 +93,6 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
         oboe_event_destroy(&this->event);
       }
     }
-
-
-    /*
-    // Now handle the Metadata, Event, or String signatures. All have an optional
-    // boolean (default true) to add an edge to the event (points to op ID in metadata).
-    if (Metadata::isMetadata(info[0])) {
-       Metadata* md = info[0].ToObject().Unwrap<Metadata>();
-       mdp = &md->metadata;
-    } else if (info[0].IsExternal()) {
-        // this is only used by other C++ methods, not JavaScript. They must pass
-        // a pointer to an oboe_metadata_t structure.
-        mdp = static_cast<oboe_metadata_t*>(info[0].As<Napi::External>()->Value());
-    } else if (Event::isEvent(info[0])) {
-        Event* e = info[0].ToObject().Unwrap<Event>();
-        mdp = &e->event.metadata;
-    } else if (info[0].IsString()) {
-        std::string xtrace = info[0].As<Napi::String>();
-        int status = oboe_metadata_fromstr(&converted_md, *xtrace, xtrace.Length());
-        if (status != 0) {
-            Napi::Error::New(env, Napi::String::New(env, "Event::New - invalid X-Trace ID string")).ThrowAsJavaScriptException();
-            return env.Null();
-        }
-        mdp = &converted_md;
-    } else {
-        Napi::TypeError::New(env, Napi::String::New(env, "Event::New - invalid argument")).ThrowAsJavaScriptException();
-        return env.Null();
-    }
-
-    // handle adding an edge default or specified explicitly?
-    bool add_edge = true;
-    if (info.Length() >= 2 && info[1].IsBoolean()) {
-        add_edge = info[1].As<Napi::Boolean>().Value();
-    }
-
-    // now make the event using the metadata specified. in no case is
-    // metadata allocated so there is no need to delete it.
-    event = new Event(mdp, add_edge);
-    event->Wrap(info.This());
-    return info.This();
-    // */
 }
 
 /**
@@ -205,7 +111,7 @@ Napi::Object Event::NewInstance(Napi::Env env) {
  *
  * This signature includes a boolean for whether an edge is set or not.
  */
-Napi::Object Event::NewInstance(Napi::Env env, oboe_metadata_t* omd, bool edge = true) {
+Napi::Object Event::NewInstance(Napi::Env env, oboe_metadata_t* omd, bool edge) {
     Napi::EscapableHandleScope scope(env);
 
     Napi::External<oboe_metadata_t> v0 = Napi::External<oboe_metadata_t>::New(env, omd);
@@ -461,4 +367,28 @@ Napi::Value Event::addInfo(const Napi::CallbackInfo& info) {
  */
 bool Event::isEvent(Napi::Object o) {
   return o.IsObject() && o.InstanceOf(constructor.Value());
+}
+
+/**
+ * Run at module initialization. Make the constructor and export JavaScript
+ * properties and function.
+ */
+Napi::Object Event::Init(Napi::Env env, Napi::Object exports) {
+  Napi::HandleScope scope(env);
+
+  Napi::Function ctor =
+      DefineClass(env, "Event",
+                  {InstanceMethod("addInfo", &Event::addInfo),
+                   InstanceMethod("addEdge", &Event::addEdge),
+                   InstanceMethod("getMetadata", &Event::getMetadata),
+                   InstanceMethod("toString", &Event::toString),
+                   InstanceMethod("getSampleFlag", &Event::getSampleFlag),
+                   InstanceMethod("setSampleFlagTo", &Event::setSampleFlagTo)});
+
+  constructor = Napi::Persistent(ctor);
+  constructor.SuppressDestruct();
+
+  exports.Set("Event", ctor);
+
+  return exports;
 }

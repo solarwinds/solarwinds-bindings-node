@@ -15,32 +15,6 @@ Reporter::Reporter(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Reporter>(
 Reporter::~Reporter() {
 }
 
-/*
-Napi::Reference<Napi::Object> kName;
-Napi::Reference<Napi::Object> kTxname;
-Napi::Reference<Napi::Object> kUrl;
-Napi::Reference<Napi::Object> kDomain;
-Napi::Reference<Napi::Object> kDuration;
-Napi::Reference<Napi::Object> kStatus;
-Napi::Reference<Napi::Object> kMethod;
-Napi::Reference<Napi::Object> kError;
-Napi::Reference<Napi::Object> kService;
-// */
-
-/* don't need to invoke from C++ afaik.
-Napi::Object Reporter::NewInstance() {
-    Napi::EscapableHandleScope scope(env);
-
-    const unsigned argc = 0;
-    Napi::Value argv[argc] = {};
-    Napi::Function cons = Napi::Function::New(env, constructor);
-    //Napi::Object instance = cons->NewInstance(argc, argv);
-    Napi::Object instance = Napi::NewInstance(cons, argc, argv);
-
-    return scope.Escape(instance);
-  }
-// */
-
 // Check to see if oboe is ready to issue sampling decisions.
 // Returns true if oboe is ready else numeric error code.
 Napi::Value Reporter::isReadyToSample(const Napi::CallbackInfo& info) {
@@ -89,14 +63,11 @@ Napi::Value Reporter::sendStatus(const Napi::CallbackInfo& info) {
 }
 
 int Reporter::send_event_x(const Napi::CallbackInfo& info, int channel) {
-  // info.This() is not a Reporter in this case - it's been passed from
-  // a C++ function using that function's info. As this is called only
-  // from C++ there is no type checking done.
-  // TODO verify that info is an event object or consider moving it
-  // out of Reporter altogether.
+  // info has been passed from a C++ function using that function's info. As
+  // this is called only from C++ there is no type checking done.
   Event* event = Napi::ObjectWrap<Event>::Unwrap(info[0].ToObject());
 
-  // either get the metadata passed in or grab it from oboe.
+  // if metadata was passed in use it otherwise grab it from oboe.
   oboe_metadata_t* md;
   if (info.Length() >= 2 && Metadata::isMetadata(info[1].As<Napi::Object>())) {
     md = &Napi::ObjectWrap<Metadata>::Unwrap(info[1].ToObject())->metadata;
@@ -108,23 +79,6 @@ int Reporter::send_event_x(const Napi::CallbackInfo& info, int channel) {
 
   return status;
 }
-
-// These will be the string object keys for the object that
-// sendHttpSpan is called with. They will be initialized once
-// so each call to sendHttpSpan doesn't create the strings; it
-// only creates a local reference to them. They are also used
-// for sendNonHttpSpan.
-/*
-static Napi::Persistent<Napi::Value> kName;
-static Napi::Persistent<Napi::Value> kTxname;
-static Napi::Persistent<Napi::Value> kUrl;
-static Napi::Persistent<Napi::Value> kDomain;
-static Napi::Persistent<Napi::Value> kDuration;
-static Napi::Persistent<Napi::Value> kStatus;
-static Napi::Persistent<Napi::Value> kMethod;
-static Napi::Persistent<Napi::Value> kError;
-static Napi::Persistent<Napi::Value> kService;
-// */
 
 //
 // send a metrics span using oboe_http_span
@@ -157,7 +111,7 @@ Napi::Value Reporter::send_span(const Napi::CallbackInfo& info, send_generic_spa
   args.version = 1;
   // Number.MAX_SAFE_INTEGER is big enough for any reasonable transaction time.
   // max_safe_seconds = MAX_SAFE_INTEGER / 1000000 microseconds
-  // max_safe_days = MAX_SAFE_SECONDS / 86400 seconds
+  // max_safe_days = max_safe_seconds / 86400 seconds
   // max_safe_days > 100000. Seems long enough to me.
   args.duration = get_integer(obj, "duration");
   args.has_error = get_boolean(obj, "error", false);
@@ -184,7 +138,7 @@ Napi::Value Reporter::send_span(const Napi::CallbackInfo& info, send_generic_spa
 
   int length = send_function(final_txname, sizeof(final_txname), &args);
 
-  // don't forget to clean up created strings.
+  // don't forget to FREE STRINGS CREATED by get_string().
   delete txname;
   delete url;
   delete domain;
@@ -201,21 +155,9 @@ Napi::Value Reporter::send_span(const Napi::CallbackInfo& info, send_generic_spa
 
 }
 
-// Creates a new Javascript instance
-/*
-Napi::Value Reporter::New(const Napi::CallbackInfo& info) {
-    if (!info.IsConstructCall()) {
-        Napi::Error::New(env, "Reporter() must be called as a constructor").ThrowAsJavaScriptException();
-        return env.Null();
-    }
-    Reporter* reporter = new Reporter();
-    reporter->Wrap(info.This());
-    return info.This();
-}
-// */
-
-
-// Wrap the C++ object so V8 can understand it
+//
+// This is called at initialization of this module.
+//
 Napi::Object Reporter::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 
@@ -226,34 +168,6 @@ Napi::Object Reporter::Init(Napi::Env env, Napi::Object exports) {
     InstanceMethod("sendHttpSpan", &Reporter::sendHttpSpan),
     InstanceMethod("sendNonHttpSpan", &Reporter::sendNonHttpSpan),
   });
-
-  /*
-  std::cout << "kName\n";
-  kName = Napi::Persistent(Napi::String::New(env, "Name").As<Napi::Object>());
-  std::cout << "kTxname\n";
-  kTxname = Napi::Persistent(Napi::String::New(env, "Txname").As<Napi::Object>());
-  kUrl = Napi::Persistent(Napi::String::New(env, "Url").As<Napi::Object>());
-  kDomain = Napi::Persistent(Napi::String::New(env, "Domain").As<Napi::Object>());
-  kDuration = Napi::Persistent(Napi::String::New(env, "Duration").As<Napi::Object>());
-  kStatus = Napi::Persistent(Napi::String::New(env, "Status").As<Napi::Object>());
-  kMethod = Napi::Persistent(Napi::String::New(env, "Method").As<Napi::Object>());
-  kError = Napi::Persistent(Napi::String::New(env, "Error").As<Napi::Object>());
-  kService = Napi::Persistent(Napi::String::New(env, "Service").As<Napi::Object>());
-  // */
-
-  // These are the keys for the object that sendHttpSpan is called with. They
-  // are also used by sendNonHttpSpan.
-  /*
-  Reporter::kName = Napi::String::New(env, "name");
-  Reporter::kTxname = Napi::String::New(env, "txname");
-  Reporter::kUrl = Napi::String::New(env, "url");
-  Reporter::kDomain = Napi::String::New(env, "domain");
-  Reporter::kDuration = Napi::String::New(env, "duration");
-  Reporter::kStatus = Napi::String::New(env, "status");
-  Reporter::kMethod = Napi::String::New(env, "method");
-  Reporter::kError = Napi::String::New(env, "error");
-  Reporter::kService = Napi::String::New(env, "service");
-  // */
 
   constructor = Napi::Persistent(ctor);
   constructor.SuppressDestruct();

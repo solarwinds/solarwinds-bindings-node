@@ -66,6 +66,15 @@ Napi::Value OboeContext::setDefaultSampleRate(const Napi::CallbackInfo& info) {
 /**
  * Check if the current request should be traced based on the current settings.
  *
+ * info[0] - layer name
+ * info[1] - optional xtrace
+ *
+ * returns:
+ *
+ * object - {sample: boolean, source: coded_integer, rate: sample_rate}
+ *
+ * sample is true if the request should be sampled.
+ *
  * If xtrace is empty, or if it is not valid then it will be considered a
  * new trace. Otherwise sampling will add to the existing trace.
  * Different layers may have special rules.
@@ -103,22 +112,18 @@ Napi::Value OboeContext::sampleTrace(const Napi::CallbackInfo& info) {
 
   int sample_rate = 0;
   int sample_source = 0;
-  int rc = oboe_sample_layer(
+  int sample = oboe_sample_layer(
     layer_name.c_str(),
     in_xtrace.c_str(),
     &sample_rate,
     &sample_source
   );
 
-  Napi::String sample = Napi::String::New(env, "sample");
-  Napi::String source = Napi::String::New(env, "source");
-  Napi::String rate = Napi::String::New(env, "rate");
-
   // create an object to return multiple values
   Napi::Object o = Napi::Object::New(env);
-  o.Set(sample, Napi::Boolean::New(env, rc));
-  o.Set(source, Napi::Number::New(env, sample_source));
-  o.Set(rate, Napi::Number::New(env, sample_rate));
+  o.Set("sample", Napi::Boolean::New(env, sample));
+  o.Set("source", Napi::Number::New(env, sample_source));
+  o.Set("rate", Napi::Number::New(env, sample_rate));
 
   return o;
 }
@@ -197,8 +202,7 @@ Napi::Value OboeContext::createEventX(const Napi::CallbackInfo& info) {
     bool add_edge = true;
 
     //
-    // One signature gets oboe's thread-specific context and uses that to
-    // create a new event. The other signature supplies the metadata.
+    // If not metadata is supplied use oboe's.
     //
     if (info.Length() == 0) {
       oboe_metadata_t* context = oboe_context_get();
@@ -248,7 +252,7 @@ Napi::Value OboeContext::startTrace(const Napi::CallbackInfo& info) {
         md->flags &= ~XTR_FLAGS_SAMPLED;
     }
 
-    Napi::Object event = Event::NewInstance(env);
+    Napi::Object event = Event::NewInstance(env, md);
 
     Event* e = Napi::ObjectWrap<Event>::Unwrap(event);
     if (e->oboe_status != 0) {
@@ -262,7 +266,7 @@ Napi::Value OboeContext::startTrace(const Napi::CallbackInfo& info) {
 //
 // this is not really a class. it's just a module with a bunch of functions
 // pretending to be a class with a bunch of static functions. History was
-// that it once actually did things.
+// that it once actually was instantiated with connection-specific information.
 //
 Napi::Object OboeContext::Init(Napi::Env env, Napi::Object module) {
   Napi::HandleScope scope(env);
@@ -276,20 +280,6 @@ Napi::Object OboeContext::Init(Napi::Env env, Napi::Object module) {
     StaticMethod("createEventX", &OboeContext::createEventX),
     StaticMethod("startTrace", &OboeContext::startTrace)
   });
-  /*
-  exports.Set("setTracingMode", &OboeContext::setTracingMode);
-  exports.Set("setDefaultSampleRate", &OboeContext::setDefaultSampleRate);
-  exports.Set("sampleTrace", &OboeContext::sampleTrace);
-  exports.Set("toString", &OboeContext::toString);
-  exports.Set("set", &OboeContext::set);
-  exports.Set("createEventX", &OboeContext::createEventX);
-  exports.Set("startTrace", &OboeContext::startTrace);
-  // */
-
-  //exports.Set(Napi::String::New(env, "copy"), &OboeContext::copy);
-  //Napi::SetMethod(exports, "clear", OboeContext::clear);
-  //Napi::SetMethod(exports, "isValid", OboeContext::isValid);
-  //Napi::SetMethod(exports, "createEvent", OboeContext::createEvent);
 
   module.Set("Context", ctor);
 

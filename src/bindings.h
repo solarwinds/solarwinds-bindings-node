@@ -111,7 +111,7 @@ public:
   static bool isEvent(Napi::Object);
 
   static Napi::Object NewInstance(Napi::Env);
-  static Napi::Object NewInstance(Napi::Env, oboe_metadata_t*, bool);
+  static Napi::Object NewInstance(Napi::Env, oboe_metadata_t*, bool = true);
 
 public:
   static Napi::Object Init(Napi::Env, Napi::Object);
@@ -153,69 +153,9 @@ public:
   static Napi::Object Init(Napi::Env, Napi::Object);
 };
 
-
-class Utility {
-
-  public:
-
-    static inline int64_t get_integer(
-        Napi::Object obj,
-        Napi::String prop,
-        int64_t default_value = 0) {
-
-        if (obj.Has(prop)) {
-            Napi::Value v = obj.Get(prop);
-            if (!v.IsEmpty() && v.IsNumber()) {
-                return v.As<Napi::Number>().Int64Value();
-            }
-        }
-        return default_value;
-    }
-
-    //
-    // returns a new std::string that must be deleted.
-    //
-    static inline std::string* get_string(
-        Napi::Object obj,
-        Napi::String prop,
-        const char* default_value = "") {
-
-        if (obj.Has(prop)) {
-            Napi::Value v = obj.Get(prop);
-            if (!v.IsEmpty() && v.IsString()) {
-                return new std::string(v.As<Napi::String>());
-            }
-        }
-        return new std::string(default_value);
-    }
-
-    static inline bool get_boolean(
-        Napi::Object obj,
-        Napi::String prop,
-        bool default_value = false) {
-
-        if (obj.Has(prop)) {
-            Napi::Value v = obj.Get(prop);
-            if (!v.IsEmpty()) {
-                return v.As<Napi::Boolean>().Value();
-            }
-        }
-        return default_value;
-    }
-};
-
-/*
-class Config {
-    static Napi::Value getRevision(const Napi::CallbackInfo& info);
-    static Napi::Value getVersion(const Napi::CallbackInfo& info);
-    static Napi::Value checkVersion(const Napi::CallbackInfo& info);
-    static Napi::Value getVersionString(const Napi::CallbackInfo& info);
-
-public:
-    static Napi::Object Init(Napi::Env, Napi::Object);
-};
-// */
-
+//
+//
+//
 class Sanitizer {
   static Napi::Value sanitize(const Napi::CallbackInfo& info);
 

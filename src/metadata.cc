@@ -8,39 +8,6 @@ static int metadata_count = 0;
 static int metadata_deleted_size = 0;
 static int metadata_deleted_count = 0;
 
-/*
-// lower level class for just the oboe metadata structure
-class OboeMetadata {
-    oboe_metadata_t metadata;
-    OboeMetadata ();
-    OboeMetadata (oboe_metadata_t* md);
-    ~OboeMetadata ();
-  public:
-    inline bool sampleFlagIsOn () {
-        return metadata.flags & XTR_FLAGS_SAMPLED;
-    }
-};
-
-
-OboeMetadata::OboeMetadata() {
-    metadata_count += 1;
-}
-
-// Allow construction of clones
-OboeMetadata::OboeMetadata(oboe_metadata_t* md) {
-    metadata_count += 1;
-    oboe_metadata_copy(&metadata, md);
-}
-
-// Remember to cleanup the metadata struct when garbage collected
-OboeMetadata::~OboeMetadata() {
-    metadata_count -= 1;
-    metadata_deleted_size += sizeof(metadata);
-    metadata_deleted_count += 1;
-    oboe_metadata_destroy(&metadata);
-}
-// */
-
 bool Metadata::sampleFlagIsOn() {
   return metadata.flags & XTR_FLAGS_SAMPLED;
 }
@@ -76,47 +43,11 @@ Metadata::Metadata(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Metadata>(
     return;
   }
 
-  // it was valid metadata in one form or another.
-  //metadata = omd.metadata;
-
-  /* keep this around for now for possible reference if the "external" data is required.
-  if (info.Length() == 1) {
-    if (info[0].IsExternal()) {
-      // this can only be used by C++ methods, not JavaScript. They must pass
-      // the right data - an oboe_metadata_t*.
-      oboe_metadata_t* omd = static_cast<oboe_metadata_t*>(info[0].As<Napi::External>()->Value());
-      new Metadata(omd);
-    } else {
-      // convert Metadata, Event, or String.
-      md = Metadata::getMetadata(info[0]);
-      if (md == NULL) {
-        Napi::Error::New(env, "Invalid argument for new Metadata()").ThrowAsJavaScriptException();
-        new Metadata(omd);
-      }
-    }
-  return;
-  }
-  // */
 }
 
 Metadata::~Metadata() {
 
 }
-
-/*
-Napi::Value Metadata::getMetadataData(const Napi::CallbackInfo& info) {
-    Napi::String active = Napi::String::New(env, "active");
-    Napi::String freedBytes = Napi::String::New(env, "freedBytes");
-    Napi::String freedCount = Napi::String::New(env, "freedCount");
-
-    Napi::Object o = Napi::Object::New(env);
-    o.Set(active, Napi::Number::New(env, metadata_count));
-    o.Set(freedBytes, Napi::Number::New(env, metadata_deleted_size));
-    o.Set(freedCount, Napi::Number::New(env, metadata_deleted_count));
-
-    return o;
-}
-// */
 
 //
 // c++ callable function to
@@ -184,14 +115,6 @@ Napi::Value Metadata::makeRandom(const Napi::CallbackInfo& info) {
     return Metadata::NewInstance(env, v);
 }
 
-// Copy the contents of the metadata instance to a new instance
-/*
-Napi::Value Metadata::copy(const Napi::CallbackInfo& info) {
-    Metadata* self = this;
-    return Metadata::NewInstance(self);
-}
-// */
-
 //
 // Verify that the state of the metadata instance is valid
 //
@@ -243,16 +166,6 @@ Napi::Value Metadata::toString(const Napi::CallbackInfo& info) {
 }
 
 //
-// Create an event from this metadata instance
-//
-/*
-Napi::Value Metadata::createEvent(const Napi::CallbackInfo& info) {
-  Metadata* self = this;
-  return Event::NewInstance(self);
-}
-// */
-
-//
 // C++ internal method to determine if an object is an instance of
 // JavaScript Metadata
 //
@@ -299,19 +212,6 @@ bool Metadata::getMetadata(Napi::Value v, oboe_metadata_t* omd) {
     return true;
 }
 
-// JavaScript callable method to determine if an object is an
-// instance of JavaScript Metadata.
-/* shouldn't need - should be able to use instanceof operator.
-Napi::Value Metadata::isInstance(const Napi::CallbackInfo& info) {
-    bool is = false;
-    if (info.Length() == 1) {
-        Napi::Value arg = info[0];
-        is = Metadata::isMetadata(arg);
-    }
-    return is;
-}
-// */
-
 //
 // JavaScript callable static method to determine if the argument
 // (event, metadata, or string) has the sample flag turned on.
@@ -355,19 +255,15 @@ Napi::Object Metadata::Init(Napi::Env env, Napi::Object exports) {
 
   Napi::Function ctor = DefineClass(env, "Metadata", {
     // Statics
-    //StaticMethod("getMetadataData", &Metadata::getMetadataData),
     StaticMethod("fromString", &Metadata::fromString),
     StaticMethod("fromContext", &Metadata::fromContext),
     StaticMethod("makeRandom", &Metadata::makeRandom),
-    //StaticMethod("isMetadata", &Metadata::isMetadata),
     StaticMethod("sampleFlagIsSet", &Metadata::sampleFlagIsSet),
     // Instance methods (prototype)
-    //InstanceMethod("copy", &Metadata::copy),
     InstanceMethod("isValid", &Metadata::isValid),
     InstanceMethod("getSampleFlag", &Metadata::getSampleFlag),
     InstanceMethod("setSampleFlagTo", &Metadata::setSampleFlagTo),
     InstanceMethod("toString", &Metadata::toString),
-    //InstanceMethod("createEvent", &Metadata::createEvent)
   });
 
   constructor = Napi::Persistent(ctor);
