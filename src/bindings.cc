@@ -8,12 +8,17 @@
 #include "event.cc"
 #include "reporter.cc"
 
-NAN_METHOD(oboeInit) {
+//
+// Initialize oboe
+//
+Napi::Value oboeInit(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
 
-    if (info.Length() < 1 || !info[0]->IsString() || (info.Length() > 1 && !info[1]->IsObject())) {
-        return Nan::ThrowError("oboeInit - invalid calling signature");
+    if (info.Length() < 1 || !info[0].IsString() || (info.Length() > 1 && !info[1].IsObject())) {
+        Napi::TypeError::New(env, "invalid arguments").ThrowAsJavaScriptException();
+        return env.Null();
     }
-    Nan::Utf8String service_key(info[0]);
+    std::string service_key = info[0].As<Napi::String>();
 
     // setup the options
     oboe_init_options_t options;
@@ -23,54 +28,73 @@ NAN_METHOD(oboeInit) {
     options.log_file_path = NULL;
     options.max_transactions = 0;
 
-    // if not options supplied then init with an empty struct.
+    // if not options supplied then init with default values.
     if (info.Length() == 1) {
-        oboe_init(*service_key, &options);
-        return;
+        oboe_init(service_key.c_str(), &options);
+        return env.Null();
     }
 
-    v8::Local<v8::Object> opts = info[1]->ToObject();
-    // this is the only field in oboe_init_options_t that node uses at this point
-    v8::Local<v8::String> hostnameAlias = Nan::New<v8::String>("hostnameAlias").ToLocalChecked();
-    std::string alias;
+    Napi::Object opts = info[1].ToObject();
+    std::string aliasString;
 
-    if (Nan::Has(opts, hostnameAlias).FromMaybe(false)) {
-        Nan::MaybeLocal<v8::Value> value = Nan::Get(opts, hostnameAlias);
-        if (!value.IsEmpty()) {
-            alias = *Nan::Utf8String(value.ToLocalChecked()->ToString());
-            options.hostname_alias = alias.c_str();
-        } else {
-            // there is no hostnameAlias available. just leave it empty.
+    // hostnameAlias is the only field in oboe_init_options_t that node uses at this point
+    if (opts.Has("hostnameAlias")) {
+        Napi::Value alias = opts.Get("hostnameAlias");
+        if (!alias.IsEmpty()) {
+            aliasString = alias.As<Napi::String>();
+            options.hostname_alias = aliasString.c_str();
         }
     }
 
-    oboe_init(*service_key, &options);
+    oboe_init(service_key.c_str(), &options);
+    return env.Null();
 }
 
-extern "C" {
+//
+// simple utility to output using C++. Sometimes node doesn't
+// manage to output console.log() calls before there is a problem.
+//
+Napi::Value o (const Napi::CallbackInfo& info) {
+  if (info.Length() < 1) {
+    return info.Env().Undefined();
+  }
+  for (uint i = 0; i < info.Length(); i++) {
+    std::string s = info[i].ToString();
+    std::cout << s;
+  }
+  // return the number of items output
+  return Napi::Number::New(info.Env(), info.Length());
+}
 
-// Register the exposed parts of the module
-void init(v8::Local<v8::Object> exports) {
-  Nan::HandleScope scope;
+//
+// Expose public parts of this module and invoke the other classes
+// and namespace objects own Init() functions.
+//
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
+  Napi::HandleScope scope(env);
 
-  Nan::Set(exports, Nan::New("MAX_SAMPLE_RATE").ToLocalChecked(), Nan::New(OBOE_SAMPLE_RESOLUTION));
-  Nan::Set(exports, Nan::New("MAX_METADATA_PACK_LEN").ToLocalChecked(), Nan::New(OBOE_MAX_METADATA_PACK_LEN));
-  Nan::Set(exports, Nan::New("MAX_TASK_ID_LEN").ToLocalChecked(), Nan::New(OBOE_MAX_TASK_ID_LEN));
-  Nan::Set(exports, Nan::New("MAX_OP_ID_LEN").ToLocalChecked(), Nan::New(OBOE_MAX_OP_ID_LEN));
-  Nan::Set(exports, Nan::New("TRACE_NEVER").ToLocalChecked(), Nan::New(OBOE_TRACE_NEVER));
-  Nan::Set(exports, Nan::New("TRACE_ALWAYS").ToLocalChecked(), Nan::New(OBOE_TRACE_ALWAYS));
+  // constants
+  exports.Set("MAX_SAMPLE_RATE", Napi::Number::New(env, OBOE_SAMPLE_RESOLUTION));
+  exports.Set("MAX_METADATA_PACK_LEN", Napi::Number::New(env, OBOE_MAX_METADATA_PACK_LEN));
+  exports.Set("MAX_TASK_ID_LEN", Napi::Number::New(env, OBOE_MAX_TASK_ID_LEN));
+  exports.Set("MAX_OP_ID_LEN", Napi::Number::New(env, OBOE_MAX_OP_ID_LEN));
+  exports.Set("TRACE_NEVER", Napi::Number::New(env, OBOE_TRACE_NEVER));
+  exports.Set("TRACE_ALWAYS", Napi::Number::New(env, OBOE_TRACE_ALWAYS));
 
-  Nan::SetMethod(exports, "oboeInit", oboeInit);
+  // functions directly on the bindings object
+  exports.Set("oboeInit", Napi::Function::New(env, oboeInit));
+  exports.Set("o", Napi::Function::New(env, o));
 
-  Reporter::Init(exports);
-  OboeContext::Init(exports);
-  Sanitizer::Init(exports);
-  Metadata::Init(exports);
-  Event::Init(exports);
-  Config::Init(exports);
+  // classes and objects supplying different namespaces
+  exports = Reporter::Init(env, exports);
+  exports = OboeContext::Init(env, exports);
+  exports = Sanitizer::Init(env, exports);
+  exports = Metadata::Init(env, exports);
+  exports = Event::Init(env, exports);
+  exports = Config::Init(env, exports);
+
+  return exports;
 
 }
 
-NODE_MODULE(appoptics_bindings, init)
-
-}
+NODE_API_MODULE(appoptics_bindings, Init)

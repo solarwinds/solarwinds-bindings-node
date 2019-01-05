@@ -1,6 +1,6 @@
 {
   "name": "appoptics-bindings",
-  "version": "5.7.1",
+  "version": "6.0.0-rc5",
   "description": "Bindings to liboboe for the AppOptics APM agent",
   "author": "Bruce A. MacNaughton <bruce@solarwinds.cloud>",
   "contributors": [
@@ -20,21 +20,18 @@
     "url": "https://github.com/appoptics/appoptics-bindings-node/issues"
   },
   "scripts": {
-    "test": "gulp test",
-    "install": "node setup-liboboe && node build",
-    "rebuild": "node-gyp rebuild"
+    "test": "mocha test/*.test.js",
+    "install": "node setup-liboboe && node-gyp rebuild",
+    "rebuild": "node setup-liboboe && node-gyp rebuild"
   },
   "dependencies": {
     "bindings": "~1.2.1",
     "linux-os-info": "^2.0.0",
-    "nan": "^2.3.2",
-    "request": "^2.87.0"
+    "node-addon-api": "1.6.2",
+    "node-gyp": "^3.8.0"
   },
   "devDependencies": {
-    "eslint": "^5.7.0",
-    "gulp": "^3.9.1",
-    "gulp-mocha": "^3.0.1",
-    "mocha": "^3.5.3",
-    "should": "~6.0.1"
+    "chai": "^4.2.0",
+    "mocha": "^3.5.3"
   }
 }

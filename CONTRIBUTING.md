@@ -35,9 +35,9 @@ are required.
 The sourceable script file `env.sh` has options to configure the development environment
 for different purposes. There is also an option to download a new version of oboe.
 
-Generally the command `$ . env.sh ssl` is the most useful - it sets up the environment
-variables to work against a real appoptics collector. This is used during the test suite
-to verify that basic connectivity exists. It does require `AO_TOKEN_STG` be defined
+Generally the command `$ . env.sh prod` is the most useful - it sets up the environment
+variables to work against the real appoptics collector. This is used during the test suite
+to verify that basic connectivity exists. It does require `APPOPTICS_SERVICE_KEY` be defined
 with a valid service key.
 
 
@@ -51,6 +51,47 @@ The following environment variables must be set for the "should get verification
 - `APPOPTICS_COLLECTOR=collector.appoptics.com:443` or `:4444`
 - `APPOPTICS\_SERVICE_KEY=<a valid service key for the appoptics>:name`
 
+## Debugging
+
+Debugging node addons is not intuitive but this might help (from [stackoverflow](https://stackoverflow.com/questions/23228868/how-to-debug-binary-module-of-nodejs))
+
+
+First, compile your add-on using node-gyp with the --debug flag.
+
+`$ node-gyp --debug configure rebuild`
+
+(The next point about changing the require path doesn't apply to appoptics-bindings because it uses the `bindings` module and that will find the module in `Debug`, `Release`, and other locations.)
+
+Second, if you're still in "playground" mode like I am, you're probably loading your module with something like
+
+`var ObjModule = require('./ObjModule/build/Release/objModule');`
+
+However, when you rebuild using node-gyp in debug mode, node-gyp throws away the Release version and creates a Debug version instead. So update the module path:
+
+`var ObjModule = require('./ObjModule/build/Debug/objModule');`
+
+Alright, now we're ready to debug our C++ add-on. Run gdb against the node binary, which is a C++ application. Now, node itself doesn't know about your add-on, so when you try to set a breakpoint on your add-on function (in this case, StringReverse) it complains that the specific function is not defined. Fear not, your add-on is part of the "future shared library load" it refers to, and will be loaded once you require() your add-on in JavaScript.
+
+```
+$ gdb node
+...
+Reading symbols from node...done.
+(gdb) break StringReverse
+Function "StringReverse" not defined.
+Make breakpoint pending on future shared library load? (y or [n]) y
+```
+
+OK, now we just have to run the application:
+
+```
+(gdb) run ../modTest.js
+...
+Breakpoint 1, StringReverse (args=...) at ../objModule.cpp:49
+```
+
+If a signal is thrown gdb will stop on the line generating it.
+
+Finally, here's a link to using output formats (and the whole set of gdb docs) [gdb](http://www.delorie.com/gnu/docs/gdb/gdb_55.html).
 
 ## Project layout
 
@@ -69,6 +110,9 @@ compiler output; you may want to skip that if dealing with build issues. There
 are multiple ways to do so. `npm run rebuild` bypasses the `build.js` script
 altogether. You can also set `APPOPTICS\_SHOW_GYP` to any non-empty value.
 
+(This section will not be useful for installing once the N-API version has been
+released.)
+
 
 ### Developing
 
@@ -79,3 +123,16 @@ get merged to master via a pull request.
 
 Again, like `appoptics-apm` the `npm version major.minor.patch` tool is used
 to commit a version bump and tag to push to github. You must use `git push origin 'tagname'` in order to push the tag in addition to the changes. If you do not the tag will not be sent to the repo. The versioning should follow [semver](www.semver.org) conventions, most importantly that breaking changes get a major version update. A pull request should be generated on github. Once the PR has been merged to master on github then, after updating local master with `git pull`, you can run `npm publish` to publish the release. This should be done using a `@solarwinds.cloud` email account. The branch can be deleted once it has been merged.
+
+### Miscellaneous
+
+(Use tail if you only want to see the highest version required, leave it off to see all.)
+
+Find the highest version of GLIBCXX is supported in /usr/lib/libstdc++.so.?
+
+`readelf -sV /usr/lib/libstdc++.so.6 | sed -n 's/.*@@GLIBCXX_//p' | sort -u -V | tail -1`
+
+Find the versions of GLIBCXX required by a file
+
+`readelf -sV build/Release/appoptics-bindings.node | sed -n 's/^.*\(@GLIBCXX_[^ ]*\).*$/\1/p' | sort -u -V`
+`objdump -T /lib/x86_64-linux-gnu/libc.so.6 | sed -n 's/^.*\(GLIBCXX_[^ ]*\).*$/\1/p' | sort -u -V`

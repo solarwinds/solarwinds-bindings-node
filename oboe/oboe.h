@@ -171,6 +171,31 @@ typedef struct oboe_span_params {
     int has_error;                  // boolean flag whether this transaction contains an error (1) or not (0)
 } oboe_span_params_t;
 
+typedef struct oboe_tracing_decisions_in {
+    int version;
+    const char *service_name;
+    const char *in_xtrace;
+    int custom_sample_rate;
+    int custom_tracing_mode;
+} oboe_tracing_decisions_in_t;
+
+typedef struct oboe_tracing_decisions_out {
+    int version;
+    int sample_rate;
+    int sample_source;
+    int do_sample;
+    int do_metrics;
+} oboe_tracing_decisions_out_t;
+
+typedef struct oboe_internal_stats {
+    int version;
+    int reporters_initialized;
+    int event_queue_free;
+    int collector_response_ok;
+    int collector_response_try_later;
+    int collector_response_limit_exceeded;
+} oboe_internal_stats_t;
+
 #define OBOE_SPAN_PARAMS_VERSION 1              // version of oboe_span_params_t
 #define OBOE_TRANSACTION_NAME_MAX_LENGTH 255    // max allowed length for transaction name
 
@@ -256,9 +281,11 @@ typedef int (*reporter_send_http_span)(void *, const char *, const char *, const
 typedef int (*reporter_add_custom_metric)(void *, const char *, const double, const int, const int, const char *, const int, const oboe_metric_tag_t*, const size_t);
 typedef int (*reporter_destroy)(void *);
 typedef int (*reporter_server_response)(void *);
+typedef int (*reporter_profiling_interval)(void *);
 typedef struct oboe_reporter {
     void *              descriptor;     /*!< Reporter's context. */
     reporter_ready      eventReady;     /*!< Check if the reporter is ready for another trace. */
+    reporter_ready      profilingReady; /*!< Check if the reporter is ready for another profiling snapshot. */
     reporter_ready      statusReady;    /*!< Check if the reporter is ready for another status. */
     reporter_ready      spanReady;      /*!< Check if the reporter is ready for another span. */
     reporter_is_within_limit isWithinLimit;
@@ -269,6 +296,7 @@ typedef struct oboe_reporter {
     reporter_add_custom_metric addCustomMetric;
     reporter_destroy    destroy;        /*!< Destroy the reporter - release all resources. */
     reporter_server_response getServerResponse;
+    reporter_profiling_interval profilingInterval;
 } oboe_reporter_t;
 
 int oboe_reporter_udp_init  (oboe_reporter_t *, const char *, const char *);    /* DEPRECATE - Use oboe_init_reporter() */
@@ -403,7 +431,6 @@ void oboe_shutdown();
 #define OBOE_SETTINGS_FLAG_SAMPLE_START   0x4
 #define OBOE_SETTINGS_FLAG_SAMPLE_THROUGH 0x8
 #define OBOE_SETTINGS_FLAG_SAMPLE_THROUGH_ALWAYS 0x10
-#define OBOE_SETTINGS_FLAG_SAMPLE_AVW_ALWAYS     0x20
 #define OBOE_SETTINGS_MAX_STRLEN 256
 
 #define OBOE_SETTINGS_UNSET -1
@@ -421,8 +448,10 @@ void oboe_shutdown();
 #define OBOE_SAMPLE_RESOLUTION 1000000
 
 // Used to convert to settings flags:
-#define OBOE_TRACE_NEVER   0
-#define OBOE_TRACE_ALWAYS  1
+#define OBOE_TRACE_NEVER   0    // deprecated: do not use, only here for backward compatibility
+#define OBOE_TRACE_ALWAYS  1    // deprecated: do not use, only here for backward compatibility
+#define OBOE_TRACE_DISABLED   0
+#define OBOE_TRACE_ENABLED  1
 
 #if defined _WIN32
     #pragma pack(push, 1)
@@ -433,6 +462,7 @@ void oboe_shutdown();
 
 #define OBOE_SEND_EVENT 0
 #define OBOE_SEND_STATUS 1
+#define OBOE_SEND_PROFILING 2
 
 // these codes are used by oboe_is_ready()
 #define OBOE_SERVER_RESPONSE_UNKNOWN 0
@@ -448,6 +478,16 @@ void oboe_shutdown();
 #define OBOE_SPAN_INVALID_VERSION -3
 #define OBOE_SPAN_NO_REPORTER -4
 #define OBOE_SPAN_NOT_READY -5
+
+// these codes are used by oboe_sample_layer_custom(), oboe_tracing_decisions(), oboe_reporter_is_ready()
+#define OBOE_TRACING_DECISIONS_TRACING_DISABLED -2
+#define OBOE_TRACING_DECISIONS_XTRACE_NOT_SAMPLED -1
+#define OBOE_TRACING_DECISIONS_OK 0
+#define OBOE_TRACING_DECISIONS_NULL_OUT 1
+#define OBOE_TRACING_DECISIONS_NO_CONFIG 2
+#define OBOE_TRACING_DECISIONS_REPORTER_NOT_READY 3
+#define OBOE_TRACING_DECISIONS_NO_VALID_SETTINGS 4
+#define OBOE_TRACING_DECISIONS_QUEUE_FULL 5
 
 typedef struct {
     uint32_t magic;
@@ -474,7 +514,7 @@ typedef struct {
     char name[OBOE_SETTINGS_MAX_STRLEN]; // Flawfinder: ignore
     volatile uint32_t request_count;            // all the requests that came through this layer
     volatile uint32_t exhaustion_count;         // # of times the token bucket limiting caused a trace to not occur
-    volatile uint32_t trace_count;              // # of traces that were sent (includes "always", "through", or "AVW" traces)
+    volatile uint32_t trace_count;              // # of traces that were sent (includes "enabled" or "through" traces)
     volatile uint32_t sample_count;             // # of traces that caused a random coin-flip (not "through" traces)
     volatile uint32_t through_count;            // # of through traces
     volatile uint32_t through_ignored_count;    // # of new requests, that are rejected due to start_always_flag == 0
@@ -564,15 +604,26 @@ int oboe_sample_layer(
  *          (output - may be zero if not used).
  * @param sample_source_out The OBOE_SAMPLE_RATE_SOURCE used to check if this request
  *          should be sampled (output - may be zero if not used).
+ * @param flags_out The flags used to check if this request should be sampled
  */
 int oboe_sample_layer_custom(
     const char *service_name,
     const char *in_xtrace,
     int custom_sample_rate,
     int custom_tracing_mode,
+    int *sampling_decision_out,
     int *sample_rate_out,
-    int *sample_source_out
+    int *sample_source_out,
+    uint16_t *flags_out
 );
+
+/**
+ * wrapper for calling oboe_sample_layer_custom() with input/output structs instead of individual params
+ *
+ * @param in Struct containing all params to help making a tracing decision
+ * @param out Struct containing all params that get set during decision making
+ */
+int oboe_tracing_decisions(oboe_tracing_decisions_in_t *in, oboe_tracing_decisions_out_t *out);
 
 /* Oboe configuration interface. */
 
@@ -714,7 +765,7 @@ extern int oboe_debug_log_remove(OboeDebugLoggerFcn oldLogger, void *context);
  *          the application - will prefix the log entry.  Useful when multiple 
  *          apps log to the same destination. 
  * @param trace_mode A string identifying the configured tracing mode, one of:
- *          "never", "always", "never", "unset", or "undef" (for invalid values)
+ *          "enabled", "disabled", "unset", or "undef" (for invalid values)
  *          Use the oboe_tracing_mode_to_string() function to convert from
  *          numeric values.
  * @param sample_rate The configured sampling rate: -1 for unset or a
@@ -961,6 +1012,20 @@ char* oboe_get_env_service_name_copy();
  *        -1 NULL pointer passed in for service_name or length
  */
 int oboe_validate_transform_service_name(char *service_name, int *length);
+
+// Timer tools
+void oboe_timer_tool_wait(int usec);
+
+// Get profiling interval as configured remotely
+int oboe_get_profiling_interval();
+
+// Regex tools
+void* oboe_regex_new_expression(const char* exprString);
+void oboe_regex_delete_expression(void* expression);
+int oboe_regex_match(const char* string, void* expression);
+
+/* oboe internal stats for agents to consume */
+oboe_internal_stats_t* oboe_get_internal_stats();
 
 #ifdef __cplusplus
 } // extern "C"

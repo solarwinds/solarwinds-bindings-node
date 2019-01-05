@@ -3,46 +3,68 @@
 
 #include "bindings.h"
 
-NAN_METHOD(Config::getRevision) {
-  info.GetReturnValue().Set(Nan::New(oboe_config_get_revision()));
+Napi::Value getVersionString(const Napi::CallbackInfo& info) {
+  const char* version = oboe_config_get_version_string();
+  return Napi::String::New(info.Env(), version);
 }
 
-NAN_METHOD(Config::getVersion) {
-  info.GetReturnValue().Set(Nan::New(oboe_config_get_version()));
-}
+Napi::Value getConfigSettings(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
 
-NAN_METHOD(Config::checkVersion) {
-  if (info.Length() != 2) {
-    return Nan::ThrowError("Wrong number of arguments");
+  oboe_settings_cfg_t* cfg = oboe_settings_cfg_get();
+
+  // create the return object
+  Napi::Object config = Napi::Object::New(env);
+
+  if (cfg != NULL) {
+    #define aoSAMPLE_START OBOE_SETTINGS_FLAG_SAMPLE_START
+    #define aoTHROUGH_ALWAYS OBOE_SETTINGS_FLAG_SAMPLE_THROUGH_ALWAYS
+
+    config.Set("tracing_mode", Napi::Number::New(env, cfg->tracing_mode));
+    config.Set("sample_rate", Napi::Number::New(env, cfg->sample_rate));
+    config.Set("flag_sample_start", Napi::Boolean::New(env, cfg->settings && cfg->settings->flags & aoSAMPLE_START));
+    config.Set("flag_through_always", Napi::Boolean::New(env, cfg->settings && cfg->settings->flags & aoTHROUGH_ALWAYS));
   }
 
-  if (!info[0]->IsNumber() || !info[1]->IsNumber()) {
-    return Nan::ThrowTypeError("Values must be numbers");
+  return config;
+}
+
+Napi::Value getStats(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  oboe_internal_stats_t* stats = oboe_get_internal_stats();
+
+  Napi::Object o = Napi::Object::New(env);
+
+  if (stats != NULL) {
+    o.Set("reporterInitCount", Napi::Number::New(env, stats->reporters_initialized));
+    o.Set("eventQueueFree", Napi::Number::New(env, stats->event_queue_free));
+    o.Set("collectorOk", Napi::Number::New(env, stats->collector_response_ok));
+    o.Set("collectorTryLater", Napi::Number::New(env, stats->collector_response_try_later));
+    o.Set("collectorLimitExceeded", Napi::Number::New(env, stats->collector_response_limit_exceeded));
   }
 
-  int version = info[0]->IntegerValue();
-  int revision = info[1]->IntegerValue();
-
-  bool status = oboe_config_check_version(version, revision) != 0;
-
-  info.GetReturnValue().Set(Nan::New(status));
+  return o;
 }
 
-NAN_METHOD(Config::getVersionString) {
-    const char* version = oboe_config_get_version_string();
-    info.GetReturnValue().Set(Nan::New(version).ToLocalChecked());
+//
+// put Config in a separate JavaScript namespace.
+//
+namespace Config {
+
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
+  Napi::HandleScope scope(env);
+
+  Napi::Object module = Napi::Object::New(env);
+  module.Set("getVersionString", Napi::Function::New(env, getVersionString));
+  module.Set("getSettings", Napi::Function::New(env, getConfigSettings));
+  module.Set("getStats", Napi::Function::New(env, getStats));
+
+  exports.Set("Config", module);
+
+  return exports;
 }
 
-void Config::Init(v8::Local<v8::Object> module) {
-  Nan::HandleScope scope;
-
-  v8::Local<v8::Object> exports = Nan::New<v8::Object>();
-  Nan::SetMethod(exports, "getVersion", Config::getVersion);
-  Nan::SetMethod(exports, "getRevision", Config::getRevision);
-  Nan::SetMethod(exports, "checkVersion", Config::checkVersion);
-  Nan::SetMethod(exports, "getVersionString", Config::getVersionString);
-
-  Nan::Set(module, Nan::New("Config").ToLocalChecked(), exports);
-}
+} // end namespace Config
 
 #endif
