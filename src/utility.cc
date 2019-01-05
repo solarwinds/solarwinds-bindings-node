@@ -1,17 +1,17 @@
 #include "bindings.h"
 
 /*
-NAN_METHOD(Utility::isReady) {
+Napi::Value Utility::isReady(const Napi::CallbackInfo& info) {
   int status = oboe_is_ready(0);
-  info.GetReturnValue().Set(Nan::New(status != 0));
+  return Napi::New(env, status != 0);
 }
 
-void Utility::Init(v8::Local<v8::Object> module) {
-  Nan::HandleScope scope;
+void Utility::Init(Napi::Object module) {
+  Napi::HandleScope scope(env);
 
-  v8::Local<v8::Object> exports = Nan::New<v8::Object>();
-  //Nan::SetMethod(exports, "isReady", Utility::isReady);
+  Napi::Object exports = Napi::Object::New(env);
+  //Napi::SetMethod(exports, "isReady", Utility::isReady);
 
-  Nan::Set(module, Nan::New("Utility").ToLocalChecked(), exports);
+  (module).Set(Napi::String::New(env, "Utility"), exports);
 }
 // */

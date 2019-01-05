@@ -3,46 +3,96 @@
 
 #include "bindings.h"
 
-NAN_METHOD(Config::getRevision) {
-  info.GetReturnValue().Set(Nan::New(oboe_config_get_revision()));
+namespace Config {
+
+Napi::Value getRevision(const Napi::CallbackInfo& info) {
+  return Napi::Number::New(info.Env(), oboe_config_get_revision());
 }
 
-NAN_METHOD(Config::getVersion) {
-  info.GetReturnValue().Set(Nan::New(oboe_config_get_version()));
+Napi::Value getVersion(const Napi::CallbackInfo& info) {
+  return Napi::Number::New(info.Env(), oboe_config_get_version());
 }
 
-NAN_METHOD(Config::checkVersion) {
-  if (info.Length() != 2) {
-    return Nan::ThrowError("Wrong number of arguments");
+Napi::Value checkVersion(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 2 || !info[0].IsNumber() || !info[1].IsNumber()) {
+    Napi::TypeError::New(env, "invalid arguments").ThrowAsJavaScriptException();
+    return env.Null();
   }
 
-  if (!info[0]->IsNumber() || !info[1]->IsNumber()) {
-    return Nan::ThrowTypeError("Values must be numbers");
-  }
-
-  int version = info[0]->IntegerValue();
-  int revision = info[1]->IntegerValue();
+  int version = info[0].As<Napi::Number>().Int64Value();
+  int revision = info[1].As<Napi::Number>().Int64Value();
 
   bool status = oboe_config_check_version(version, revision) != 0;
 
-  info.GetReturnValue().Set(Nan::New(status));
+  return Napi::Boolean::New(env, status);
 }
 
-NAN_METHOD(Config::getVersionString) {
+Napi::Value getVersionString(const Napi::CallbackInfo& info) {
+  const char* version = oboe_config_get_version_string();
+  return Napi::String::New(info.Env(), version);
+}
+
+Napi::Object Init(Napi::Env env, Napi::Object module) {
+  Napi::HandleScope scope(env);
+
+  Napi::Object exports = Napi::Object::New(env);
+  exports.Set("getVersion", Napi::Function::New(env, getVersion));
+  exports.Set("getRevision", Napi::Function::New(env, getRevision));
+  exports.Set("checkVersion", Napi::Function::New(env, checkVersion));
+  exports.Set("getVersionString", Napi::Function::New(env, getVersionString));
+
+  module.Set("Config", exports);
+
+  return module;
+}
+
+}
+
+/*
+Napi::Value Config::getRevision(const Napi::CallbackInfo& info) {
+  return Napi::Number::New(info.Env(), oboe_config_get_revision());
+}
+
+Napi::Value Config::getVersion(const Napi::CallbackInfo& info) {
+  return Napi::Number::New(info.Env(), oboe_config_get_version());
+}
+
+Napi::Value Config::checkVersion(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 2 || !info[0].IsNumber() || !info[1].IsNumber()) {
+    Napi::TypeError::New(env, "invalid arguments").ThrowAsJavaScriptException();
+    return env.Null();
+  }
+
+  int version = info[0].As<Napi::Number>().Int64Value();
+  int revision = info[1].As<Napi::Number>().Int64Value();
+
+  bool status = oboe_config_check_version(version, revision) != 0;
+
+  return Napi::Boolean::New(env, status);
+}
+
+Napi::Value Config::getVersionString(const Napi::CallbackInfo& info) {
     const char* version = oboe_config_get_version_string();
-    info.GetReturnValue().Set(Nan::New(version).ToLocalChecked());
+    return Napi::String::New(info.Env(), version);
 }
 
-void Config::Init(v8::Local<v8::Object> module) {
-  Nan::HandleScope scope;
+Napi::Object Config::Init(Napi::Env env, Napi::Object module) {
+  Napi::HandleScope scope(env);
 
-  v8::Local<v8::Object> exports = Nan::New<v8::Object>();
-  Nan::SetMethod(exports, "getVersion", Config::getVersion);
-  Nan::SetMethod(exports, "getRevision", Config::getRevision);
-  Nan::SetMethod(exports, "checkVersion", Config::checkVersion);
-  Nan::SetMethod(exports, "getVersionString", Config::getVersionString);
+  Napi::Object exports = Napi::Object::New(env);
+  exports.Set(Napi::String::New(env, "getVersion"), &Config::getVersion);
+  exports.Set(Napi::String::New(env, "getRevision"), &Config::getRevision);
+  exports.Set(Napi::String::New(env, "checkVersion"), &Config::checkVersion);
+  exports.Set(Napi::String::New(env, "getVersionString"), &Config::getVersionString);
 
-  Nan::Set(module, Nan::New("Config").ToLocalChecked(), exports);
+  module.Set(Napi::String::New(env, "Config"), exports);
+
+  return module;
 }
+// */
 
 #endif

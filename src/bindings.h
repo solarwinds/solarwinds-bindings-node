@@ -4,130 +4,153 @@
 #include <iostream>
 #include <string>
 
-#include <node.h>
-#include <nan.h>
-#include <uv.h>
-#include <v8.h>
-
+#include <napi.h>
 #include <oboe/oboe.h>
 
 typedef int (*send_generic_span_t) (char*, uint16_t, oboe_span_params_t*);
 
 class Event;
 
-class Metadata : public Nan::ObjectWrap {
+class Metadata : public Napi::ObjectWrap<Metadata> {
   friend class Reporter;
   friend class OboeContext;
   friend class Event;
 
-  ~Metadata();
+public:
   Metadata();
-  Metadata(oboe_metadata_t*);
+  Metadata(const Napi::CallbackInfo& info);
+  ~Metadata();
+
   bool sampleFlagIsOn();
+  Napi::Value isValid(const Napi::CallbackInfo& info);
+  Napi::Value getSampleFlag(const Napi::CallbackInfo& info);
+  Napi::Value setSampleFlagTo(const Napi::CallbackInfo& info);
+  Napi::Value toString(const Napi::CallbackInfo& info);
 
   oboe_metadata_t metadata;
-  static Nan::Persistent<v8::FunctionTemplate> constructor;
-  static NAN_METHOD(New);
-  static NAN_METHOD(getMetadataData);
-  static NAN_METHOD(fromString);
-  static NAN_METHOD(makeRandom);
-  static NAN_METHOD(copy);
-  static NAN_METHOD(isValid);
-  static NAN_METHOD(getSampleFlag);
-  static NAN_METHOD(setSampleFlagTo);
-  static NAN_METHOD(toString);
-  static NAN_METHOD(createEvent);
-  static NAN_METHOD(fromContext);
+  //static Napi::FunctionReference constructor;
+  //static Napi::Value New(const Napi::CallbackInfo& info);
+  //static bool getMetadataData(const Napi::Value, oboe_metadata_t*);
+  //static Napi::Value copy(const Napi::CallbackInfo& info);
+  //static Napi::Value createEvent(const Napi::CallbackInfo& info);
 
-  static v8::Local<v8::Object> NewInstance(Metadata*);
-  static v8::Local<v8::Object> NewInstance();
+  // return a Metadata object
+  static Napi::Value fromContext(const Napi::CallbackInfo& info);
+  static Napi::Value fromString(const Napi::CallbackInfo& info);
+  static Napi::Value makeRandom(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(isInstance);
-  static NAN_METHOD(sampleFlagIsSet);
-  static bool isMetadata(v8::Local<v8::Value>);
-  static Metadata* getMetadata(v8::Local<v8::Value>);
+  // instanceof equivalent for C++ functions
+  static bool isMetadata(const Napi::Object);
+
+  static bool getMetadata(Napi::Value, oboe_metadata_t*);
+
+  static Napi::Object NewInstance(Metadata*);
+  static Napi::Object NewInstance();
+  static Napi::Object NewInstance(Napi::Env, Napi::Value);
+
+  static Napi::Value sampleFlagIsSet(const Napi::CallbackInfo& info);
   static bool format(oboe_metadata_t*, size_t, char*);
 
-  private:
-    static char* PutHex(uint8_t, char*, char = 'a');
+private:
+  static Napi::FunctionReference constructor;
+  static char* PutHex(uint8_t, char*, char = 'a');
 
-  public:
-    static void Init(v8::Local<v8::Object>);
+public:
+  static Napi::Object Init(Napi::Env, Napi::Object);
 };
 
-class OboeContext {
+class OboeContext : public Napi::ObjectWrap<OboeContext> {
   friend class Reporter;
   friend class Metadata;
   friend class Event;
 
-  // V8 conversion
-  static NAN_METHOD(setTracingMode);
-  static NAN_METHOD(setDefaultSampleRate);
-  static NAN_METHOD(sampleTrace);
-  static NAN_METHOD(toString);
-  static NAN_METHOD(set);
-  static NAN_METHOD(copy);
-  static NAN_METHOD(clear);
-  static NAN_METHOD(isValid);
-  static NAN_METHOD(init);
-  static NAN_METHOD(createEvent);
-  static NAN_METHOD(createEventX);
-  static NAN_METHOD(startTrace);
+public:
+  OboeContext();
+  OboeContext(const Napi::CallbackInfo& info);
+  ~OboeContext();
+
+  static Napi::Value setTracingMode(const Napi::CallbackInfo& info);
+  static Napi::Value setDefaultSampleRate(const Napi::CallbackInfo& info);
+  static Napi::Value sampleTrace(const Napi::CallbackInfo& info);
+  static Napi::Value toString(const Napi::CallbackInfo& info);
+  static Napi::Value set(const Napi::CallbackInfo& info);
+  //static Napi::Value copy(const Napi::CallbackInfo& info);
+  //static Napi::Value clear(const Napi::CallbackInfo& info);
+  //static Napi::Value isValid(const Napi::CallbackInfo& info);
+  static Napi::Value init(const Napi::CallbackInfo& info);
+  static Napi::Value createEvent(const Napi::CallbackInfo& info);
+  static Napi::Value createEventX(const Napi::CallbackInfo& info);
+  static Napi::Value startTrace(const Napi::CallbackInfo& info);
 
   public:
-    static void Init(v8::Local<v8::Object>);
+    static Napi::Object Init(Napi::Env, Napi::Object);
 };
 
-class Event : public Nan::ObjectWrap {
+class Event : public Napi::ObjectWrap<Event> {
   friend class Reporter;
   friend class OboeContext;
   friend class Metadata;
   friend class Log;
 
-  explicit Event();
-  explicit Event(const oboe_metadata_t*, bool);
+public:
+  Event();
+  Event(const Napi::CallbackInfo& info);
   ~Event();
+  //explicit Event(const oboe_metadata_t*, bool);
 
   oboe_event_t event;
   int oboe_status;
-  static Nan::Persistent<v8::FunctionTemplate> constructor;
-  static NAN_METHOD(New);
-  static NAN_METHOD(getEventData);
-  static NAN_METHOD(addInfo);
-  static NAN_METHOD(addEdge);
-  static NAN_METHOD(getMetadata);
-  static NAN_METHOD(toString);
-  static NAN_METHOD(setSampleFlagTo);
-  static NAN_METHOD(getSampleFlag);
+  static Napi::FunctionReference constructor;
+  Napi::Value addInfo(const Napi::CallbackInfo& info);
+  Napi::Value addEdge(const Napi::CallbackInfo& info);
+  Napi::Value getMetadata(const Napi::CallbackInfo& info);
+  Napi::Value toString(const Napi::CallbackInfo& info);
+  Napi::Value setSampleFlagTo(const Napi::CallbackInfo& info);
+  Napi::Value getSampleFlag(const Napi::CallbackInfo& info);
 
-  static bool isEvent(v8::Local<v8::Value>);
+  static bool isEvent(Napi::Object);
 
-  static v8::Local<v8::Object> NewInstance(Metadata*, bool);
-  static v8::Local<v8::Object> NewInstance(Metadata*);
-  static v8::Local<v8::Object> NewInstance();
-
-  public:
-    static void Init(v8::Local<v8::Object>);
-};
-
-class Reporter : public Nan::ObjectWrap {
-    Reporter();
-    ~Reporter();
-    int send_event_x(Nan::NAN_METHOD_ARGS_TYPE, int);
-
-    static Nan::Persistent<v8::FunctionTemplate> constructor;
-    static NAN_METHOD(New);
-    static NAN_METHOD(isReadyToSample);
-    static NAN_METHOD(sendReport);
-    static NAN_METHOD(sendStatus);
-    static NAN_METHOD(sendHttpSpan);
-    static NAN_METHOD(sendNonHttpSpan);
-    static void send_span(Nan::NAN_METHOD_ARGS_TYPE, send_generic_span_t);
-
-    static v8::Local<v8::Object> NewInstance();
+  static Napi::Object NewInstance(Napi::Env);
+  static Napi::Object NewInstance(Napi::Env, oboe_metadata_t*, bool);
 
 public:
-    static void Init(v8::Local<v8::Object>);
+  static Napi::Object Init(Napi::Env, Napi::Object);
+};
+
+class Reporter : public Napi::ObjectWrap<Reporter> {
+
+public:
+  Reporter();
+  Reporter(const Napi::CallbackInfo&);
+  ~Reporter();
+  int send_event_x(const Napi::CallbackInfo&, int);
+
+  static Napi::FunctionReference constructor;
+
+  //static Napi::Value New(const Napi::CallbackInfo& info);
+  Napi::Value isReadyToSample(const Napi::CallbackInfo& info);
+  Napi::Value sendReport(const Napi::CallbackInfo& info);
+  Napi::Value sendStatus(const Napi::CallbackInfo& info);
+  Napi::Value sendHttpSpan(const Napi::CallbackInfo& info);
+  Napi::Value sendNonHttpSpan(const Napi::CallbackInfo& info);
+  static Napi::Value send_span(const Napi::CallbackInfo&, send_generic_span_t);
+
+  /*
+  static Napi::String kName;
+  static Napi::String kTxname;
+  static Napi::String kUrl;
+  static Napi::String kDomain;
+  static Napi::String kDuration;
+  static Napi::String kStatus;
+  static Napi::String kMethod;
+  static Napi::String kError;
+  static Napi::String kService;
+  // */
+
+  static Napi::Object NewInstance();
+
+public:
+  static Napi::Object Init(Napi::Env, Napi::Object);
 };
 
 
@@ -136,17 +159,14 @@ class Utility {
   public:
 
     static inline int64_t get_integer(
-        v8::Local<v8::Object> obj,
-        v8::Local<v8::String> prop,
+        Napi::Object obj,
+        Napi::String prop,
         int64_t default_value = 0) {
 
-        if (Nan::Has(obj, prop).FromMaybe(false)) {
-            Nan::MaybeLocal<v8::Value> v = Nan::Get(obj, prop);
-            if (!v.IsEmpty()) {
-                v8::Local<v8::Value> val = v.ToLocalChecked();
-                if (val->IsInt32() || val->IsNumber()) {
-                    return val->IntegerValue();
-                }
+        if (obj.Has(prop)) {
+            Napi::Value v = obj.Get(prop);
+            if (!v.IsEmpty() && v.IsNumber()) {
+                return v.As<Napi::Number>().Int64Value();
             }
         }
         return default_value;
@@ -156,55 +176,51 @@ class Utility {
     // returns a new std::string that must be deleted.
     //
     static inline std::string* get_string(
-        v8::Local<v8::Object> obj,
-        v8::Local<v8::String> prop,
+        Napi::Object obj,
+        Napi::String prop,
         const char* default_value = "") {
 
-        if (Nan::Has(obj, prop).FromMaybe(false)) {
-            Nan::MaybeLocal<v8::Value> v = Nan::Get(obj, prop);
-            if (!v.IsEmpty()) {
-                v8::Local<v8::Value> val = v.ToLocalChecked();
-                if (val->IsString()) {
-                    //std::string* method = Nan::Utf8String(val); ?
-                    std::string* string = new std::string(*v8::String::Utf8Value(val->ToString()));
-                    return string;
-                }
+        if (obj.Has(prop)) {
+            Napi::Value v = obj.Get(prop);
+            if (!v.IsEmpty() && v.IsString()) {
+                return new std::string(v.As<Napi::String>());
             }
         }
         return new std::string(default_value);
     }
 
     static inline bool get_boolean(
-        v8::Local<v8::Object> obj,
-        v8::Local<v8::String> prop,
+        Napi::Object obj,
+        Napi::String prop,
         bool default_value = false) {
 
-        if (Nan::Has(obj, prop).FromMaybe(false)) {
-            Nan::MaybeLocal<v8::Value> v = Nan::Get(obj, prop);
+        if (obj.Has(prop)) {
+            Napi::Value v = obj.Get(prop);
             if (!v.IsEmpty()) {
-                return Nan::Get(obj, prop).ToLocalChecked()->BooleanValue();
+                return v.As<Napi::Boolean>().Value();
             }
         }
         return default_value;
     }
 };
 
-
+/*
 class Config {
-    static NAN_METHOD(getRevision);
-    static NAN_METHOD(getVersion);
-    static NAN_METHOD(checkVersion);
-    static NAN_METHOD(getVersionString);
+    static Napi::Value getRevision(const Napi::CallbackInfo& info);
+    static Napi::Value getVersion(const Napi::CallbackInfo& info);
+    static Napi::Value checkVersion(const Napi::CallbackInfo& info);
+    static Napi::Value getVersionString(const Napi::CallbackInfo& info);
 
 public:
-    static void Init(v8::Local<v8::Object>);
+    static Napi::Object Init(Napi::Env, Napi::Object);
 };
+// */
 
 class Sanitizer {
-  static NAN_METHOD(sanitize);
+  static Napi::Value sanitize(const Napi::CallbackInfo& info);
 
   public:
-    static void Init(v8::Local<v8::Object>);
+    static Napi::Object Init(Napi::Env, Napi::Object);
 };
 
 #endif  // NODE_OBOE_H_

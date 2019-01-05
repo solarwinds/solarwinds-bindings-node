@@ -8,22 +8,24 @@
  * - OBOE_TRACE_NEVER(0) to disable tracing,
  * - OBOE_TRACE_ALWAYS(1) to start a new trace if needed
  */
-NAN_METHOD(OboeContext::setTracingMode) {
+Napi::Value OboeContext::setTracingMode(const Napi::CallbackInfo& info) {
+  const Napi::Env env = info.Env();
+
   // Validate arguments
-  if (info.Length() != 1) {
-    return Nan::ThrowError("Wrong number of arguments");
-  }
-  if (!info[0]->IsNumber()) {
-    return Nan::ThrowTypeError("Tracing mode must be a number");
+  if (info.Length() != 1 || !info[0].IsNumber()) {
+    Napi::TypeError::New(env, "Invalid arguments").ThrowAsJavaScriptException();
+    return env.Null();
   }
 
-  int mode = info[0]->NumberValue();
-  //if (mode < 0 || mode > 2) {
+  int mode = info[0].As<Napi::Number>().Uint32Value();
   if (mode != OBOE_TRACE_NEVER && mode != OBOE_TRACE_ALWAYS) {
-    return Nan::ThrowRangeError("Invalid tracing mode");
+    Napi::RangeError::New(env, "Invalid tracing mode").ThrowAsJavaScriptException();
+    return env.Null();
   }
 
   oboe_settings_mode_set(mode);
+
+  return env.Null();
 }
 
 /**
@@ -36,13 +38,14 @@ NAN_METHOD(OboeContext::setTracingMode) {
  *
  * @param newRate A number between 0 (none) and OBOE_SAMPLE_RESOLUTION (a million)
  */
-NAN_METHOD(OboeContext::setDefaultSampleRate) {
+Napi::Value OboeContext::setDefaultSampleRate(const Napi::CallbackInfo& info) {
     // presume failure
     int rateUsed = -1;
 
-    // Validate arguments, if bad return -1 (impossible rate)
-    if (info.Length() == 1 && info[0]->IsNumber()) {
-        double check = info[0]->NumberValue();
+    // Validate arguments, if not valid or if the argument is nan,
+    // return -1 (impossible rate).
+    if (info.Length() == 1 && info[0].IsNumber()) {
+        double check = info[0].As<Napi::Number>().DoubleValue();
         // don't convert check to an int because NaN becomes 0
         int rate = check;
         if (!std::isnan(check)) {
@@ -57,7 +60,7 @@ NAN_METHOD(OboeContext::setDefaultSampleRate) {
         }
     }
 
-    info.GetReturnValue().Set(Nan::New(rateUsed));
+    return Napi::Number::New(info.Env(), rateUsed);
 }
 
 /**
@@ -73,28 +76,29 @@ NAN_METHOD(OboeContext::setDefaultSampleRate) {
  * @param in_xtrace Incoming X-Trace ID (NULL or empty string if not present)
  * @return {Object} {sample, source, rate}
  */
-NAN_METHOD(OboeContext::sampleTrace) {
+Napi::Value OboeContext::sampleTrace(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
   // Validate arguments
-  if (info.Length() < 1) {
-    return Nan::ThrowError("Wrong number of arguments");
-  }
-  if (!info[0]->IsString()) {
-    return Nan::ThrowTypeError("Layer name must be a string");
+  if (info.Length() < 1 || !info[0].IsString()) {
+    Napi::TypeError::New(env, "invalid arguments").ThrowAsJavaScriptException();
+    return env.Null();
   }
 
   std::string layer_name;
   std::string in_xtrace;
 
-  layer_name = *Nan::Utf8String(info[0]);
+  layer_name = info[0].As<Napi::String>().Utf8Value();
 
   // If the second argument is present, it must be a string
   // TODO even though oboe requires a string this could accept
   // any form of metadata (i.e., string, metadata, or event).
   if (info.Length() >= 2) {
-    if (!info[1]->IsString()) {
-      return Nan::ThrowTypeError("X-Trace ID must be a string");
+    if (!info[1].IsString()) {
+      Napi::TypeError::New(env, "X-Trace ID must be a string").ThrowAsJavaScriptException();
+      return env.Null();
     }
-    in_xtrace = *Nan::Utf8String(info[1]);
+    in_xtrace = info[1].As<Napi::String>().Utf8Value();
   }
 
   int sample_rate = 0;
@@ -106,20 +110,21 @@ NAN_METHOD(OboeContext::sampleTrace) {
     &sample_source
   );
 
-  v8::Local<v8::String> sample = Nan::New<v8::String>("sample").ToLocalChecked();
-  v8::Local<v8::String> source = Nan::New<v8::String>("source").ToLocalChecked();
-  v8::Local<v8::String> rate = Nan::New<v8::String>("rate").ToLocalChecked();
+  Napi::String sample = Napi::String::New(env, "sample");
+  Napi::String source = Napi::String::New(env, "source");
+  Napi::String rate = Napi::String::New(env, "rate");
 
-  v8::Local<v8::Object> o = Nan::New<v8::Object>();
-  Nan::Set(o, sample, Nan::New<v8::Boolean>(rc));
-  Nan::Set(o, source, Nan::New<v8::Number>(sample_source));
-  Nan::Set(o, rate, Nan::New<v8::Number>(sample_rate));
+  // create an object to return multiple values
+  Napi::Object o = Napi::Object::New(env);
+  o.Set(sample, Napi::Boolean::New(env, rc));
+  o.Set(source, Napi::Number::New(env, sample_source));
+  o.Set(rate, Napi::Number::New(env, sample_rate));
 
-  info.GetReturnValue().Set(o);
+  return o;
 }
 
 // Serialize a metadata object to a string
-NAN_METHOD(OboeContext::toString) {
+Napi::Value OboeContext::toString(const Napi::CallbackInfo& info) {
   char buf[OBOE_MAX_METADATA_PACK_LEN];
   oboe_metadata_t* md = oboe_context_get();
 
@@ -131,57 +136,64 @@ NAN_METHOD(OboeContext::toString) {
     rc = oboe_metadata_tostr(md, buf, sizeof(buf) - 1);
   }
 
-  info.GetReturnValue().Set(Nan::New(rc == 0 ? buf : "").ToLocalChecked());
+  return Napi::String::New(info.Env(), rc == 0 ? buf : "");
 }
 
 
-NAN_METHOD(OboeContext::set) {
+Napi::Value OboeContext::set(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
   // Validate arguments
   if (info.Length() != 1) {
-    return Nan::ThrowError("Wrong number of arguments");
+    Napi::Error::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
+    return env.Null();
   }
 
-  Metadata* metadata;
+  //bool Metadata::getMetadata(Napi::Value v, oboe_metadata_t * omd)
+  oboe_metadata_t omd;
 
-  metadata = Metadata::getMetadata(info[0]);
+  int status = Metadata::getMetadata(info[0], &omd);
 
-  if (metadata == NULL) {
-      return Nan::ThrowTypeError("Invalid argument to Context::set()");
+  if (!status) {
+      Napi::TypeError::New(env, "invalid metadata").ThrowAsJavaScriptException();
+      return env.Null();
   }
 
   // Set the context
-  oboe_context_set(&metadata->metadata);
+  oboe_context_set(&omd);
 
-  delete metadata;
+  return env.Null();
 }
 
-NAN_METHOD(OboeContext::copy) {
-  Metadata* md = new Metadata(oboe_context_get());
-  info.GetReturnValue().Set(Metadata::NewInstance(md));
-  delete md;
+/*
+Napi::Value OboeContext::copy(const Napi::CallbackInfo& info) {
+  return Metadata::fromContext(info);
 }
 
-NAN_METHOD(OboeContext::clear) {
+Napi::Value OboeContext::clear(const Napi::CallbackInfo& info) {
   oboe_context_clear();
 }
 
-NAN_METHOD(OboeContext::isValid) {
-  info.GetReturnValue().Set(Nan::New<v8::Boolean>(oboe_context_is_valid()));
+Napi::Value OboeContext::isValid(const Napi::CallbackInfo& info) {
+  return Napi::Boolean::New(env, oboe_context_is_valid());
 }
 
-NAN_METHOD(OboeContext::createEvent) {
+Napi::Value OboeContext::createEvent(const Napi::CallbackInfo& info) {
   Metadata* md = new Metadata(oboe_context_get());
-  info.GetReturnValue().Set(Event::NewInstance(md));
+  return Event::NewInstance(md);
   delete md;
 }
+// */
 
 //
 // Extended method to create events. Replaces createEvent but allows
 // an argument of the metadata to use to create the event. With no
 // argument it uses oboe's context as the metadata.
 //
-NAN_METHOD(OboeContext::createEventX) {
-    Metadata* md;
+Napi::Value OboeContext::createEventX(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+
+    oboe_metadata_t omd;
     bool add_edge = true;
 
     //
@@ -189,38 +201,42 @@ NAN_METHOD(OboeContext::createEventX) {
     // create a new event. The other signature supplies the metadata.
     //
     if (info.Length() == 0) {
-        md = new Metadata(oboe_context_get());
-    } else {
-        md = Metadata::getMetadata(info[0]);
-    }
-
-    if (md == NULL) {
-        return Nan::ThrowError("Invalid argument for createEventX()");
+      oboe_metadata_t* context = oboe_context_get();
+      omd = *context;
+      delete context;
+    } else if (!Metadata::getMetadata(info[0], &omd)) {
+      Napi::TypeError::New(env, "Invalid argument").ThrowAsJavaScriptException();
+      return env.Null();
     }
 
     if (info.Length() >= 2) {
-        add_edge = info[1]->BooleanValue();
+        add_edge = info[1].As<Napi::Boolean>().Value();
     }
 
-    v8::Local<v8::Object> event = Event::NewInstance(md, add_edge);
-    delete md;
+    // create the event
+    Napi::Object event = Event::NewInstance(env, &omd, add_edge);
 
-    Event* e = Nan::ObjectWrap::Unwrap<Event>(event);
+    // check for error.
+    // TODO BAM should lower level just throw?
+    Event* e = Napi::ObjectWrap<Event>::Unwrap(event);
     if (e->oboe_status != 0) {
-        return Nan::ThrowError("Oboe failed to create event");
+      Napi::Error::New(env, "Oboe failed to create event").ThrowAsJavaScriptException();
+      return env.Null();
     }
 
-    info.GetReturnValue().Set(event);
+    return event;
 }
 
 /**
- * JavaScript callable method to create an event with the sample bit
+ * JavaScript callable event factory to create an event with the sample bit
  * set as specified by the optional argument.
  */
-NAN_METHOD(OboeContext::startTrace) {
+Napi::Value OboeContext::startTrace(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
     bool sample = false;
     if (info.Length() == 1) {
-        sample = info[0]->BooleanValue();
+        sample = info[0].ToBoolean().Value();
     }
 
     oboe_metadata_t *md = oboe_context_get();
@@ -232,31 +248,50 @@ NAN_METHOD(OboeContext::startTrace) {
         md->flags &= ~XTR_FLAGS_SAMPLED;
     }
 
-    v8::Local<v8::Object> event = Event::NewInstance();
+    Napi::Object event = Event::NewInstance(env);
 
-    Event *e = Nan::ObjectWrap::Unwrap<Event>(event);
+    Event* e = Napi::ObjectWrap<Event>::Unwrap(event);
     if (e->oboe_status != 0) {
-        return Nan::ThrowError("Oboe failed to create event");
+        Napi::Error::New(env, "Oboe failed to create event").ThrowAsJavaScriptException();
+        return env.Null();
     }
 
-    info.GetReturnValue().Set(event);
+    return event;
 }
 
-void OboeContext::Init(v8::Local<v8::Object> module) {
-  Nan::HandleScope scope;
+//
+// this is not really a class. it's just a module with a bunch of functions
+// pretending to be a class with a bunch of static functions. History was
+// that it once actually did things.
+//
+Napi::Object OboeContext::Init(Napi::Env env, Napi::Object module) {
+  Napi::HandleScope scope(env);
 
-  v8::Local<v8::Object> exports = Nan::New<v8::Object>();
-  Nan::SetMethod(exports, "setTracingMode", OboeContext::setTracingMode);
-  Nan::SetMethod(exports, "setDefaultSampleRate", OboeContext::setDefaultSampleRate);
-  Nan::SetMethod(exports, "sampleTrace", OboeContext::sampleTrace);
-  Nan::SetMethod(exports, "toString", OboeContext::toString);
-  Nan::SetMethod(exports, "set", OboeContext::set);
-  Nan::SetMethod(exports, "copy", OboeContext::copy);
-  Nan::SetMethod(exports, "clear", OboeContext::clear);
-  Nan::SetMethod(exports, "isValid", OboeContext::isValid);
-  Nan::SetMethod(exports, "createEvent", OboeContext::createEvent);
-  Nan::SetMethod(exports, "createEventX", OboeContext::createEventX);
-  Nan::SetMethod(exports, "startTrace", OboeContext::startTrace);
+  Napi::Function ctor = DefineClass(env, "Context", {
+    StaticMethod("setTracingMode", &OboeContext::setTracingMode),
+    StaticMethod("setDefaultSampleRate", &OboeContext::setDefaultSampleRate),
+    StaticMethod("sampleTrace", &OboeContext::sampleTrace),
+    StaticMethod("toString", &OboeContext::toString),
+    StaticMethod("set", &OboeContext::set),
+    StaticMethod("createEventX", &OboeContext::createEventX),
+    StaticMethod("startTrace", &OboeContext::startTrace)
+  });
+  /*
+  exports.Set("setTracingMode", &OboeContext::setTracingMode);
+  exports.Set("setDefaultSampleRate", &OboeContext::setDefaultSampleRate);
+  exports.Set("sampleTrace", &OboeContext::sampleTrace);
+  exports.Set("toString", &OboeContext::toString);
+  exports.Set("set", &OboeContext::set);
+  exports.Set("createEventX", &OboeContext::createEventX);
+  exports.Set("startTrace", &OboeContext::startTrace);
+  // */
 
-  Nan::Set(module, Nan::New("Context").ToLocalChecked(), exports);
+  //exports.Set(Napi::String::New(env, "copy"), &OboeContext::copy);
+  //Napi::SetMethod(exports, "clear", OboeContext::clear);
+  //Napi::SetMethod(exports, "isValid", OboeContext::isValid);
+  //Napi::SetMethod(exports, "createEvent", OboeContext::createEvent);
+
+  module.Set("Context", ctor);
+
+  return module;
 }
