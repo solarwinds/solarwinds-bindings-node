@@ -51,6 +51,43 @@ The following environment variables must be set for the "should get verification
 - `APPOPTICS_COLLECTOR=collector.appoptics.com:443` or `:4444`
 - `APPOPTICS\_SERVICE_KEY=<a valid service key for the appoptics>:name`
 
+## Debugging
+
+Debugging node addons is not intuitive but this might help (from [stackoverflow](https://stackoverflow.com/questions/23228868/how-to-debug-binary-module-of-nodejs))
+
+
+First, compile your add-on using node-gyp with the --debug flag.
+
+`$ node-gyp --debug configure rebuild`
+
+Second (this doesn't really apply to appoptics-bindings because it uses the `bindings` module and that will load from `Debug` then `Release`), if you're still in "playground" mode like I am, you're probably loading your module with something like
+
+`var ObjModule = require('./ObjModule/build/Release/objModule');`
+
+However, when you rebuild using node-gyp in debug mode, node-gyp throws away the Release version and creates a Debug version instead. So update the module path:
+
+`var ObjModule = require('./ObjModule/build/Debug/objModule');`
+
+Alright, now we're ready to debug our C++ add-on. Run gdb against the node binary, which is a C++ application. Now, node itself doesn't know about your add-on, so when you try to set a breakpoint on your add-on function (in this case, StringReverse) it complains that the specific function is not defined. Fear not, your add-on is part of the "future shared library load" it refers to, and will be loaded once you require() your add-on in JavaScript.
+
+```
+$ gdb node
+...
+Reading symbols from node...done.
+(gdb) break StringReverse
+Function "StringReverse" not defined.
+Make breakpoint pending on future shared library load? (y or [n]) y
+```
+
+OK, now we just have to run the application:
+
+```
+(gdb) run ../modTest.js
+...
+Breakpoint 1, StringReverse (args=...) at ../objModule.cpp:49
+```
+
+If a signal is thrown gdb will stop on the line generating it.
 
 ## Project layout
 
