@@ -13,7 +13,6 @@ class Event;
 
 class Metadata : public Napi::ObjectWrap<Metadata> {
   friend class Reporter;
-  friend class OboeContext;
   friend class Event;
 
 public:
@@ -59,35 +58,8 @@ public:
   static Napi::Object Init(Napi::Env, Napi::Object);
 };
 
-class OboeContext : public Napi::ObjectWrap<OboeContext> {
-  friend class Reporter;
-  friend class Metadata;
-  friend class Event;
-
-public:
-  OboeContext();
-  OboeContext(const Napi::CallbackInfo& info);
-  ~OboeContext();
-
-  static Napi::Value setTracingMode(const Napi::CallbackInfo& info);
-  static Napi::Value setDefaultSampleRate(const Napi::CallbackInfo& info);
-  static Napi::Value sampleTrace(const Napi::CallbackInfo& info);
-  static Napi::Value toString(const Napi::CallbackInfo& info);
-  static Napi::Value set(const Napi::CallbackInfo& info);
-  static Napi::Value clear(const Napi::CallbackInfo& info);
-  static Napi::Value isValid(const Napi::CallbackInfo& info);
-  static Napi::Value init(const Napi::CallbackInfo& info);
-  static Napi::Value createEvent(const Napi::CallbackInfo& info);
-  static Napi::Value createEventX(const Napi::CallbackInfo& info);
-  static Napi::Value startTrace(const Napi::CallbackInfo& info);
-
-  public:
-    static Napi::Object Init(Napi::Env, Napi::Object);
-};
-
 class Event : public Napi::ObjectWrap<Event> {
   friend class Reporter;
-  friend class OboeContext;
   friend class Metadata;
   friend class Log;
 
@@ -118,6 +90,17 @@ public:
   static Napi::Object Init(Napi::Env, Napi::Object);
 };
 
+//
+// OboeContext is a collection of functions providing access to the oboe
+// context functions.
+//
+namespace OboeContext {
+  Napi::Object Init(Napi::Env, Napi::Object);
+}
+
+//
+// Reporter is not really a class but used to be.
+//
 class Reporter : public Napi::ObjectWrap<Reporter> {
 
 public:
@@ -153,7 +136,7 @@ namespace Sanitizer {
 // Config is a collection of functions
 //
 namespace Config {
-  Napi::Object Init(Napi::Env, Napi::Object)
+  Napi::Object Init(Napi::Env, Napi::Object);
 }
 
 #endif  // NODE_OBOE_H_

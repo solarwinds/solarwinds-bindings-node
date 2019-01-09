@@ -8,7 +8,7 @@
  * - OBOE_TRACE_NEVER(0) to disable tracing,
  * - OBOE_TRACE_ALWAYS(1) to start a new trace if needed
  */
-Napi::Value OboeContext::setTracingMode(const Napi::CallbackInfo& info) {
+Napi::Value setTracingMode(const Napi::CallbackInfo& info) {
   const Napi::Env env = info.Env();
 
   // Validate arguments
@@ -38,7 +38,7 @@ Napi::Value OboeContext::setTracingMode(const Napi::CallbackInfo& info) {
  *
  * @param newRate A number between 0 (none) and OBOE_SAMPLE_RESOLUTION (a million)
  */
-Napi::Value OboeContext::setDefaultSampleRate(const Napi::CallbackInfo& info) {
+Napi::Value setDefaultSampleRate(const Napi::CallbackInfo& info) {
     // presume failure
     int rateUsed = -1;
 
@@ -85,7 +85,7 @@ Napi::Value OboeContext::setDefaultSampleRate(const Napi::CallbackInfo& info) {
  * @param in_xtrace Incoming X-Trace ID (NULL or empty string if not present)
  * @return {Object} {sample, source, rate}
  */
-Napi::Value OboeContext::sampleTrace(const Napi::CallbackInfo& info) {
+Napi::Value sampleTrace(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   // Validate arguments
@@ -129,7 +129,7 @@ Napi::Value OboeContext::sampleTrace(const Napi::CallbackInfo& info) {
 }
 
 // Serialize a metadata object to a string
-Napi::Value OboeContext::toString(const Napi::CallbackInfo& info) {
+Napi::Value toString(const Napi::CallbackInfo& info) {
   char buf[OBOE_MAX_METADATA_PACK_LEN];
   oboe_metadata_t* md = oboe_context_get();
 
@@ -146,7 +146,7 @@ Napi::Value OboeContext::toString(const Napi::CallbackInfo& info) {
 }
 
 
-Napi::Value OboeContext::set(const Napi::CallbackInfo& info) {
+Napi::Value set(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   // Validate arguments
@@ -170,12 +170,15 @@ Napi::Value OboeContext::set(const Napi::CallbackInfo& info) {
   return env.Null();
 }
 
-Napi::Value OboeContext::clear(const Napi::CallbackInfo& info) {
+//
+// clear is used for testing.
+//
+Napi::Value clear(const Napi::CallbackInfo& info) {
   oboe_context_clear();
   return info.Env().Null();
 }
 
-Napi::Value OboeContext::isValid(const Napi::CallbackInfo& info) {
+Napi::Value isValid(const Napi::CallbackInfo& info) {
   return Napi::Boolean::New(info.Env(), oboe_context_is_valid());
 }
 
@@ -184,7 +187,7 @@ Napi::Value OboeContext::isValid(const Napi::CallbackInfo& info) {
 // an argument of the metadata to use to create the event. With no
 // argument it uses oboe's context as the metadata.
 //
-Napi::Value OboeContext::createEventX(const Napi::CallbackInfo& info) {
+Napi::Value createEventX(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 
     oboe_metadata_t omd;
@@ -223,7 +226,7 @@ Napi::Value OboeContext::createEventX(const Napi::CallbackInfo& info) {
  * JavaScript callable event factory to create an event with the sample bit
  * set as specified by the optional argument.
  */
-Napi::Value OboeContext::startTrace(const Napi::CallbackInfo& info) {
+Napi::Value startTrace(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
     bool sample = false;
@@ -251,26 +254,26 @@ Napi::Value OboeContext::startTrace(const Napi::CallbackInfo& info) {
     return event;
 }
 
-//
-// this is not really a class. it's just a module with a bunch of functions
-// pretending to be a class with a bunch of static functions.
-//
-Napi::Object OboeContext::Init(Napi::Env env, Napi::Object module) {
+namespace OboeContext {
+
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 
-  Napi::Function ctor = DefineClass(env, "Context", {
-    StaticMethod("setTracingMode", &OboeContext::setTracingMode),
-    StaticMethod("setDefaultSampleRate", &OboeContext::setDefaultSampleRate),
-    StaticMethod("sampleTrace", &OboeContext::sampleTrace),
-    StaticMethod("toString", &OboeContext::toString),
-    StaticMethod("set", &OboeContext::set),
-    StaticMethod("clear", &OboeContext::clear),
-    StaticMethod("isValid", &OboeContext::isValid),
-    StaticMethod("createEventX", &OboeContext::createEventX),
-    StaticMethod("startTrace", &OboeContext::startTrace)
-  });
+  Napi::Object module = Napi::Object::New(env);
 
-  module.Set("Context", ctor);
+  module.Set("setTracingMode", Napi::Function::New(env, setTracingMode));
+  module.Set("setDefaultSampleRate", Napi::Function::New(env, setDefaultSampleRate));
+  module.Set("sampleTrace", Napi::Function::New(env, sampleTrace));
+  module.Set("toString", Napi::Function::New(env, toString));
+  module.Set("set", Napi::Function::New(env, set));
+  module.Set("clear", Napi::Function::New(env, clear));
+  module.Set("isValid", Napi::Function::New(env, isValid));
+  module.Set("createEventX", Napi::Function::New(env, createEventX));
+  module.Set("startTrace", Napi::Function::New(env, startTrace));
 
-  return module;
+  exports.Set("Context", module);
+
+  return exports;
 }
+
+} // end namespace OboeContext
