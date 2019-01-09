@@ -8,8 +8,6 @@
 
 using namespace Napi;
 
-namespace Sanitizer {
-
 #define OBOE_SQLSANITIZE_AUTO       1   /*!< Enable SQL sanitizer - automatic configuration */
 #define OBOE_SQLSANITIZE_DROPDOUBLE 2   /*!< Enable SQL sanitizer - drop double-quoted text (overrides KEEP) */
 #define OBOE_SQLSANITIZE_KEEPDOUBLE 4   /*!< Enable SQL sanitizer - keep double-quoted text (overrides AUTO) */
@@ -273,6 +271,9 @@ size_t oboe_sanitize_sql(char *sql, size_t in_len, int saniflags) {
     return pout - sql;
 }
 
+//
+// sanitize is the only function that is exported to JavaScript
+//
 Napi::Value sanitize(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
@@ -297,6 +298,11 @@ Napi::Value sanitize(const Napi::CallbackInfo& info) {
   //free(output);
   return s;
 }
+
+//
+// only Sanitizer::Init needs to be visible to the bindings.cc initialization code.
+//
+namespace Sanitizer {
 
 // Wrap the C++ object so V8 can understand it
 Napi::Object Init(Napi::Env env, Napi::Object exports) {

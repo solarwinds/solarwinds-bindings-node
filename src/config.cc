@@ -3,8 +3,6 @@
 
 #include "bindings.h"
 
-namespace Config {
-
 Napi::Value getRevision(const Napi::CallbackInfo& info) {
   return Napi::Number::New(info.Env(), oboe_config_get_revision());
 }
@@ -34,21 +32,26 @@ Napi::Value getVersionString(const Napi::CallbackInfo& info) {
   return Napi::String::New(info.Env(), version);
 }
 
-Napi::Object Init(Napi::Env env, Napi::Object module) {
+//
+// put Config in a separate namespace and module.
+//
+namespace Config {
+
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 
-  Napi::Object exports = Napi::Object::New(env);
-  exports.Set("getVersion", Napi::Function::New(env, getVersion));
-  exports.Set("getRevision", Napi::Function::New(env, getRevision));
-  exports.Set("checkVersion", Napi::Function::New(env, checkVersion));
-  exports.Set("getVersionString", Napi::Function::New(env, getVersionString));
+  Napi::Object module = Napi::Object::New(env);
+  module.Set("getVersion", Napi::Function::New(env, getVersion));
+  module.Set("getRevision", Napi::Function::New(env, getRevision));
+  module.Set("checkVersion", Napi::Function::New(env, checkVersion));
+  module.Set("getVersionString", Napi::Function::New(env, getVersionString));
 
-  module.Set("Config", exports);
+  exports.Set("Config", module);
 
-  return module;
+  return exports;
 }
 
-}
+} // end namespace Config
 
 /*
 Napi::Value Config::getRevision(const Napi::CallbackInfo& info) {

@@ -164,14 +164,6 @@ Napi::Value OboeContext::set(const Napi::CallbackInfo& info) {
     return env.Null();
   }
 
-  /*
-  char buf[OBOE_MAX_METADATA_PACK_LEN];
-  Metadata::format(&omd, sizeof(buf), buf);
-
-  std::cout << "after Context::Set Metadata::getMetadata() " << buf << std::endl;
-  // */
-
-
   // Set the context
   oboe_context_set(&omd);
 
@@ -187,18 +179,6 @@ Napi::Value OboeContext::isValid(const Napi::CallbackInfo& info) {
   return Napi::Boolean::New(info.Env(), oboe_context_is_valid());
 }
 
-/*
-Napi::Value OboeContext::copy(const Napi::CallbackInfo& info) {
-  return Metadata::fromContext(info);
-}
-
-Napi::Value OboeContext::createEvent(const Napi::CallbackInfo& info) {
-  Metadata* md = new Metadata(oboe_context_get());
-  return Event::NewInstance(md);
-  delete md;
-}
-// */
-
 //
 // Extended method to create events. Replaces createEvent but allows
 // an argument of the metadata to use to create the event. With no
@@ -211,12 +191,11 @@ Napi::Value OboeContext::createEventX(const Napi::CallbackInfo& info) {
     bool add_edge = true;
 
     //
-    // If not metadata is supplied use oboe's.
+    // If no metadata is supplied use oboe's.
     //
     if (info.Length() == 0) {
       oboe_metadata_t* context = oboe_context_get();
       omd = *context;
-      //delete context;
     } else if (!Metadata::getMetadata(info[0], &omd)) {
       Napi::TypeError::New(env, "Invalid argument").ThrowAsJavaScriptException();
       return env.Null();
@@ -274,8 +253,7 @@ Napi::Value OboeContext::startTrace(const Napi::CallbackInfo& info) {
 
 //
 // this is not really a class. it's just a module with a bunch of functions
-// pretending to be a class with a bunch of static functions. History was
-// that it once actually was instantiated with connection-specific information.
+// pretending to be a class with a bunch of static functions.
 //
 Napi::Object OboeContext::Init(Napi::Env env, Napi::Object module) {
   Napi::HandleScope scope(env);
