@@ -135,18 +135,6 @@ public:
   Napi::Value sendNonHttpSpan(const Napi::CallbackInfo& info);
   static Napi::Value send_span(const Napi::CallbackInfo&, send_generic_span_t);
 
-  /*
-  static Napi::String kName;
-  static Napi::String kTxname;
-  static Napi::String kUrl;
-  static Napi::String kDomain;
-  static Napi::String kDuration;
-  static Napi::String kStatus;
-  static Napi::String kMethod;
-  static Napi::String kError;
-  static Napi::String kService;
-  // */
-
   static Napi::Object NewInstance();
 
 public:
@@ -154,13 +142,10 @@ public:
 };
 
 //
+// Sanitizer
 //
-//
-class Sanitizer {
-  static Napi::Value sanitize(const Napi::CallbackInfo& info);
-
-  public:
-    static Napi::Object Init(Napi::Env, Napi::Object);
-};
+namespace Sanitizer {
+  Napi::Object Init(Napi::Env, Napi::Object);
+}
 
 #endif  // NODE_OBOE_H_

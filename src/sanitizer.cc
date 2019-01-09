@@ -8,6 +8,8 @@
 
 using namespace Napi;
 
+namespace Sanitizer {
+
 #define OBOE_SQLSANITIZE_AUTO       1   /*!< Enable SQL sanitizer - automatic configuration */
 #define OBOE_SQLSANITIZE_DROPDOUBLE 2   /*!< Enable SQL sanitizer - drop double-quoted text (overrides KEEP) */
 #define OBOE_SQLSANITIZE_KEEPDOUBLE 4   /*!< Enable SQL sanitizer - keep double-quoted text (overrides AUTO) */
@@ -271,7 +273,7 @@ size_t oboe_sanitize_sql(char *sql, size_t in_len, int saniflags) {
     return pout - sql;
 }
 
-Napi::Value Sanitizer::sanitize(const Napi::CallbackInfo& info) {
+Napi::Value sanitize(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (info.Length() < 1) {
@@ -297,22 +299,23 @@ Napi::Value Sanitizer::sanitize(const Napi::CallbackInfo& info) {
 }
 
 // Wrap the C++ object so V8 can understand it
-Napi::Object Sanitizer::Init(Napi::Env env, Napi::Object exports) {
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 
   // have a separate namespace for the sanitizer module
   Napi::Object module = Napi::Object::New(env);
 
   // constants
-  module.Set(Napi::String::New(env, "OBOE_SQLSANITIZE_AUTO"), Napi::Number::New(env, OBOE_SQLSANITIZE_AUTO));
-  module.Set(Napi::String::New(env, "OBOE_SQLSANITIZE_DROPDOUBLE"), Napi::Number::New(env, OBOE_SQLSANITIZE_DROPDOUBLE));
-  module.Set(Napi::String::New(env, "OBOE_SQLSANITIZE_KEEPDOUBLE"), Napi::Number::New(env, OBOE_SQLSANITIZE_KEEPDOUBLE));
+  module.Set("OBOE_SQLSANITIZE_AUTO", Napi::Number::New(env, OBOE_SQLSANITIZE_AUTO));
+  module.Set("OBOE_SQLSANITIZE_DROPDOUBLE", Napi::Number::New(env, OBOE_SQLSANITIZE_DROPDOUBLE));
+  module.Set("OBOE_SQLSANITIZE_KEEPDOUBLE", Napi::Number::New(env, OBOE_SQLSANITIZE_KEEPDOUBLE));
 
   // the function
-  module.Set(Napi::String::New(env, "sanitize"), Napi::Function::New(env, sanitize));
+  module.Set("sanitize", Napi::Function::New(env, sanitize));
 
   // attach the sanitizer namespace to the exports object.
-  exports.Set(Napi::String::New(env, "Sanitizer"), module);
+  exports.Set("Sanitizer", module);
 
   return exports;
 }
+} // end namespace Sanitizer
