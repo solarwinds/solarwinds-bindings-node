@@ -1,4 +1,5 @@
 var bindings = require('../')
+const expect = require('chai').expect
 
 describe('addon.event', function () {
   var event
@@ -16,16 +17,16 @@ describe('addon.event', function () {
   it('should construct an event using metadata', function () {
     var beginning = random.toString().slice(0, 42)
     event = new bindings.Event(random)
-    // They should share the same task ID
-    event.toString().slice(0, 42).should.equal(beginning)
+    // They should share the same task ID'
+    expect(event.toString().slice(0, 42)).equal(beginning)
     // they should have different op IDs.
-    event.toString().slice(42, 58).should.not.equal(random.toString().slice(42, 58))
-    event.getSampleFlag().should.equal(false)
+    expect(event.toString().slice(42, 58)).not.equal(random.toString().slice(42, 58))
+    expect(event.getSampleFlag()).equal(false)
   })
 
   it('should construct an event with the sample flag set', function () {
     var event = new bindings.Event(randomSample)
-    event.getSampleFlag().should.equal(true)
+    expect(event.getSampleFlag()).equal(true)
   })
 
   it('should add info', function () {
@@ -64,18 +65,18 @@ describe('addon.event', function () {
     } catch (e) {
       threw = true
     }
-    threw.should.equal(true)
+    expect(threw).equal(true)
   })
 
   it('should get metadata', function () {
     var meta = event.getMetadata()
-    meta.should.be.an.instanceof(bindings.Metadata)
+    expect(meta).instanceOf(bindings.Metadata)
   })
 
   it('should serialize metadata to id string', function () {
     var meta = event.toString()
-    meta.should.be.an.instanceof(String).with.lengthOf(60)
-    meta.should.match(/2B[A-F0-9]{58}/)
+    expect(meta).be.a('string').with.lengthOf(60)
+    expect(meta).match(/2B[A-F0-9]{58}/)
   })
 
   it('should set, clear, and return previous sample flag', function () {
@@ -84,17 +85,17 @@ describe('addon.event', function () {
     var previous
 
     previous = event.setSampleFlagTo(0)
-    event.toString().slice(0, -2).should.equal(e.slice(0, -2))
-    event.toString().slice(-2).should.equal('00')
-    previous.should.equal(onEntry)
+    expect(event.toString().slice(0, -2)).equal(e.slice(0, -2))
+    expect(event.toString().slice(-2)).equal('00')
+    expect(previous).equal(onEntry)
 
     previous = event.setSampleFlagTo(1)
-    event.toString().slice(0, -2).should.equal(e.slice(0, -2))
-    event.toString().slice(-2).should.equal('01')
-    previous.should.equal(false)
+    expect(event.toString().slice(0, -2)).equal(e.slice(0, -2))
+    expect(event.toString().slice(-2)).equal('01')
+    expect(previous).equal(false)
 
     previous = event.setSampleFlagTo(onEntry)
-    previous.should.equal(true)
+    expect(previous).equal(true)
   })
 
   it('should create an event without adding an edge', function () {
