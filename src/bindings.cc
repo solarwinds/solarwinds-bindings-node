@@ -47,6 +47,17 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
     return env.Null();
 }
 
+Napi::Value o (const Napi::CallbackInfo& info) {
+  if (info.Length() < 1) {
+    return info.Env().Undefined();
+  }
+  for (int i = 0; i < info.Length(); i++) {
+    std::string s = info[i].ToString();
+    std::cout << s;
+  }
+  return info[0];
+}
+
 
 // Register the exposed parts of the module
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
@@ -61,10 +72,9 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   exports.Set("TRACE_ALWAYS", Napi::Number::New(env, OBOE_TRACE_ALWAYS));
 
   exports.Set("oboeInit", Napi::Function::New(env, oboeInit));
+  exports.Set("o", Napi::Function::New(env, o));
 
-  std::cout << "before Init()s\n";
   exports = Reporter::Init(env, exports);
-  std::cout << "after reporter Init()\n";
   exports = OboeContext::Init(env, exports);
   exports = Sanitizer::Init(env, exports);
   exports = Metadata::Init(env, exports);

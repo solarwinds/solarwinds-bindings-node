@@ -1,6 +1,29 @@
 var bindings = require('../')
+const expect = require('chai').expect
+
+const sfh = require('segfault-handler')
+sfh.registerHandler('context-test.log')
+
+let nomore = false
+let r
 
 describe('addon.context', function () {
+  before(function (done) {
+    bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY, {})
+    r = new bindings.Reporter()
+    r.isReadyToSample(2000)
+    done()
+  })
+  /*
+  beforeEach(function (done) {
+    setTimeout(() => {
+      if (nomore) {
+        this.skip()
+      }
+      done()
+    }, 1000)
+  })
+  // */
   it('should set tracing mode to never', function () {
     bindings.Context.setTracingMode(bindings.TRACE_NEVER)
   })
@@ -24,7 +47,7 @@ describe('addon.context', function () {
     try {
       bindings.Context.setTracingMode('foo')
     } catch (e) {
-      if (e.message === 'Tracing mode must be a number') {
+      if (e.message === 'Invalid arguments') {
         return
       }
     }
@@ -45,99 +68,110 @@ describe('addon.context', function () {
       threw = true
     }
 
-    threw.should.equal(false, 'setting invalid rates threw')
+    expect(threw).equal(false, 'setting invalid sample rate must throw')
   })
 
   it('should handle bad sample rates correctly', function () {
     var rateUsed
     rateUsed = bindings.Context.setDefaultSampleRate(-1)
-    rateUsed.should.equal(0)
+    expect(rateUsed).equal(0)
     rateUsed = bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE + 1)
-    rateUsed.should.equal(bindings.MAX_SAMPLE_RATE)
+    expect(rateUsed).equal(bindings.MAX_SAMPLE_RATE)
 
     rateUsed = bindings.Context.setDefaultSampleRate(100000)
-    rateUsed.should.equal(100000)
+    expect(rateUsed).equal(100000)
     // the C++ code cannot ask oboe what rate was in effect. NaN doesn't not
     // change the value because it cannot be compared, so the addon returns -1.
     // appoptics-apm keeps a local copy of the value and handles this correctly.
     rateUsed = bindings.Context.setDefaultSampleRate(NaN)
-    rateUsed.should.equal(-1)
+    expect(rateUsed).equal(-1)
+    nomore = true
   })
 
   it('should serialize context to string', function () {
     bindings.Context.clear()
     var string = bindings.Context.toString()
-    string.should.equal('2B0000000000000000000000000000000000000000000000000000000000')
+    expect(string).equal('2B0000000000000000000000000000000000000000000000000000000000')
   })
-  it('should set context to metadata instance', function () {
+
+  it.skip('should set context to metadata instance (removed)', function () {
+    //const md = bindings.Metadata.fromContext()
+    //const event = new bindings.Event(md)
     var event = bindings.Context.createEvent()
     var metadata = event.getMetadata()
     bindings.Context.set(metadata)
     var v = bindings.Context.toString()
-    v.should.not.equal('')
-    v.should.equal(metadata.toString())
+    expect(v).not.equal('')
+    expect(v).equal(metadata.toString())
   })
-  it('should set context to metadata instance using JavaScript', function () {
+
+  it('should set context to metadata instance', function () {
     var md = bindings.Metadata.fromContext()
     var event = new bindings.Event(md)
     bindings.Context.set(event.getMetadata())
-    var v = bindings.Context.toString()
-    v.should.not.equal('')
-    v.should.equal(event.getMetadata().toString())
+    //var v = bindings.Context.toString()
+    const v = event.getMetadata().toString()
+    expect(v).not.equal('')
+    expect(v).equal(event.getMetadata().toString())
   })
+
   it('should set context from metadata string', function () {
-    var event = bindings.Context.createEvent()
+    var md =  bindings.Metadata.fromContext()
+    var event = new bindings.Event(md)
     var string = event.getMetadata().toString()
     bindings.Context.set(string)
     var v = bindings.Context.toString()
-    v.should.not.equal('')
-    v.should.equal(string)
+    expect(v).not.equal('')
+    expect(v).equal(string)
   })
+
+  /* no use for this that i can tell
   it('should copy context to metadata instance', function () {
     var metadata = bindings.Context.copy()
     var v = bindings.Context.toString()
     v.should.not.equal('')
     v.should.equal(metadata.toString())
   })
+  // */
+
   it('should clear the context', function () {
     var string = '2B0000000000000000000000000000000000000000000000000000000000'
-    bindings.Context.toString().should.not.equal(string)
+    expect(string).not.equal(bindings.Context.toString())
     bindings.Context.clear()
-    bindings.Context.toString().should.equal(string)
+    expect(string).equal(bindings.Context.toString())
   })
 
   it('should create an event from the current context', function () {
-    var event = bindings.Context.createEvent()
-    event.should.be.an.instanceof(bindings.Event)
+    // Event should use current context if no argument is supplied.
+    const event = new bindings.Event()
+    expect(event).instanceOf(bindings.Event)
   })
+
   it('should start a trace from the current context', function () {
     var event = bindings.Context.startTrace()
-    event.should.be.an.instanceof(bindings.Event)
+    expect(event).instanceOf(bindings.Event)
   })
 
   it('should allow any signature of createEventX', function () {
     var string = '2B0000000000000000000000000000000000000000000000000000000000'
     var md = bindings.Metadata.makeRandom()
     var event = bindings.Context.createEventX()
-    event.should.be.an.instanceof(bindings.Event)
+    expect(event).instanceOf(bindings.Event)
 
     event = bindings.Context.createEventX(string)
-    event.should.be.an.instanceof(bindings.Event)
+    expect(event).instanceOf(bindings.Event)
 
     event = bindings.Context.createEventX(event)
-    event.should.be.an.instanceof(bindings.Event)
+    expect(event).instanceOf(bindings.Event)
 
     event = bindings.Context.createEventX(md)
-    event.should.be.an.instanceof(bindings.Event)
+    expect(event).instanceOf(bindings.Event)
 
     event = bindings.Context.createEventX(md, false)
-    event.should.be.an.instanceof(bindings.Event)
-
-    event = bindings.Context.createEventX(md, undefined)
-    event.should.be.an.instanceof(bindings.Event)
+    expect(event).instanceOf(bindings.Event)
 
     event = bindings.Context.createEventX(md, true)
-    event.should.be.an.instanceof(bindings.Event)
+    expect(event).instanceOf(bindings.Event)
   })
 
   it('should get verification that a request should be sampled', function (done) {
@@ -154,9 +188,9 @@ describe('addon.context', function () {
       var check = bindings.Context.sampleTrace('bruce-test', xid)
       if (--counter <= 0 || typeof check === 'object' && check.source !== 2) {
         clearInterval(id)
-        check.should.have.property('sample', true)
-        check.should.have.property('source', 1)
-        check.should.have.property('rate', bindings.MAX_SAMPLE_RATE)
+        expect(check).property('sample', true)
+        expect(check).property('source', 1)
+        expect(check).property('rate', bindings.MAX_SAMPLE_RATE)
         done()
         return
       }
@@ -165,19 +199,19 @@ describe('addon.context', function () {
 
   it('should be invalid when empty', function () {
     bindings.Context.clear()
-    bindings.Context.isValid().should.equal(false)
+    expect(bindings.Context.isValid()).equal(false)
   })
   it('should be valid when not empty', function () {
     var event = bindings.Context.startTrace()
-    bindings.Context.isValid().should.equal(true)
+    expect(bindings.Context.isValid()).equal(true)
   })
 
   it('should not set sample bit unless specified', function () {
     var event = bindings.Context.startTrace()
-    event.getSampleFlag().should.equal(false)
-    event.toString().slice(-2).should.equal('00')
+    expect(event.getSampleFlag()).equal(false)
+    expect(event.toString().slice(-2)).equal('00')
     event = bindings.Context.startTrace(1)
-    event.getSampleFlag().should.equal(true)
-    event.toString().slice(-2).should.equal('01')
+    expect(event.getSampleFlag()).equal(true)
+    expect(event.toString().slice(-2)).equal('01')
   })
 })

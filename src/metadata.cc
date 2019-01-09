@@ -30,6 +30,7 @@ Metadata::Metadata(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Metadata>(
 
   // no argument gets empty metadata
   if (info.Length() == 0) {
+    oboe_metadata_init(&metadata);
     return;
   }
 
@@ -67,9 +68,8 @@ Napi::Value Metadata::fromContext(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
     oboe_metadata_t* omd = oboe_context_get();
 
-    Napi::External<oboe_metadata_t> v = Napi::External<oboe_metadata_t>::New(env, omd);
+    Napi::Value v = Napi::External<oboe_metadata_t>::New(env, omd);
     Napi::Object md = Metadata::NewInstance(env, v);
-    delete omd;
     return md;
 }
 
@@ -87,7 +87,7 @@ Napi::Value Metadata::fromString(const Napi::CallbackInfo& info) {
     return env.Undefined();
   }
 
-  Napi::External<oboe_metadata_t> v = Napi::External<oboe_metadata_t>::New(env, &omd);
+  Napi::Value v = Napi::External<oboe_metadata_t>::New(env, &omd);
   return Metadata::NewInstance(env, v);
 }
 
@@ -110,7 +110,7 @@ Napi::Value Metadata::makeRandom(const Napi::CallbackInfo& info) {
         }
     }
 
-    Napi::External<oboe_metadata_t> v = Napi::External<oboe_metadata_t>::New(env, &omd);
+    Napi::Value v = Napi::External<oboe_metadata_t>::New(env, &omd);
 
     return Metadata::NewInstance(env, v);
 }
@@ -178,38 +178,35 @@ bool Metadata::isMetadata(Napi::Object o) {
 // represents metadata.
 //
 bool Metadata::getMetadata(Napi::Value v, oboe_metadata_t* omd) {
+  Napi::Object o = v.ToObject();
 
-    Napi::Object o = v.ToObject();
+  if (Metadata::isMetadata(o)) {
+    // it's a metadata instance
+    Metadata* md = Napi::ObjectWrap<Metadata>::Unwrap(o);
+    *omd = md->metadata;
+  } else if (Event::isEvent(o)) {
+    // it's an event instance
+    Event* e = Napi::ObjectWrap<Event>::Unwrap(o);
+    *omd = e->event.metadata;
+  } else if (v.IsString()) {
+    // it's a string, this can fail and return false.
+    std::string str = v.As<Napi::String>();
 
-    if (Metadata::isMetadata(o)) {
-        // it's a metadata instanc
-        Metadata* md = Napi::ObjectWrap<Metadata>::Unwrap(o);
-        *omd = md->metadata;
-        //metadata = new OboeMetadata(&md->metadata);
-    } else if (Event::isEvent(o)) {
-        // it's an event instance
-        //Event* e = o->ToObject().Unwrap<Event>();
-        Event* e = Napi::ObjectWrap<Event>::Unwrap(o);
-        *omd = e->event.metadata;
-        //metadata = new OboeMetadata(&e->event.metadata);
-    } else if (v.IsString()) {
-        // it's a string, this can fail and return false.
-        std::string str = v.As<Napi::String>();
-
-        oboe_metadata_t md;
-        int status = oboe_metadata_fromstr(&md, str.c_str(), str.length());
-        if (status < 0) {
-            return false;
-        }
-        *omd = md;
-    } else if (v.IsExternal()) {
-      *omd = *v.As<Napi::External<oboe_metadata_t>>().Data();
-    } else {
-        // it's not something we know how to convert
-        return false;
+    oboe_metadata_t md;
+    int status = oboe_metadata_fromstr(&md, str.c_str(), str.length());
+    if (status < 0) {
+      return false;
     }
+    *omd = md;
+  } else if (v.IsExternal()) {
+    oboe_metadata_t* md = v.As<Napi::External<oboe_metadata_t>>().Data();
+    *omd = *md;
+  } else {
+    // it's not something we know how to convert
+    return false;
+  }
 
-    return true;
+  return true;
 }
 
 //

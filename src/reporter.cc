@@ -16,7 +16,6 @@ Reporter::~Reporter() {
 }
 
 // Check to see if oboe is ready to issue sampling decisions.
-// Returns true if oboe is ready else numeric error code.
 Napi::Value Reporter::isReadyToSample(const Napi::CallbackInfo& info) {
   int ms = 0;          // milliseconds to wait
   if (info[0].IsNumber()) {

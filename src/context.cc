@@ -134,7 +134,8 @@ Napi::Value OboeContext::toString(const Napi::CallbackInfo& info) {
   oboe_metadata_t* md = oboe_context_get();
 
   int rc;
-  // for now any argument counts. maybe accept 'A' or 'a'?
+
+  // for now any argument means use our format. maybe accept options/flags?
   if (info.Length() == 1) {
     rc = Metadata::format(md, sizeof(buf), buf) ? 0 : -1;
   } else {
@@ -158,11 +159,18 @@ Napi::Value OboeContext::set(const Napi::CallbackInfo& info) {
   oboe_metadata_t omd;
 
   int status = Metadata::getMetadata(info[0], &omd);
-
   if (!status) {
-      Napi::TypeError::New(env, "invalid metadata").ThrowAsJavaScriptException();
-      return env.Null();
+    Napi::TypeError::New(env, "invalid metadata").ThrowAsJavaScriptException();
+    return env.Null();
   }
+
+  /*
+  char buf[OBOE_MAX_METADATA_PACK_LEN];
+  Metadata::format(&omd, sizeof(buf), buf);
+
+  std::cout << "after Context::Set Metadata::getMetadata() " << buf << std::endl;
+  // */
+
 
   // Set the context
   oboe_context_set(&omd);
@@ -170,17 +178,18 @@ Napi::Value OboeContext::set(const Napi::CallbackInfo& info) {
   return env.Null();
 }
 
-/*
-Napi::Value OboeContext::copy(const Napi::CallbackInfo& info) {
-  return Metadata::fromContext(info);
-}
-
 Napi::Value OboeContext::clear(const Napi::CallbackInfo& info) {
   oboe_context_clear();
+  return info.Env().Null();
 }
 
 Napi::Value OboeContext::isValid(const Napi::CallbackInfo& info) {
-  return Napi::Boolean::New(env, oboe_context_is_valid());
+  return Napi::Boolean::New(info.Env(), oboe_context_is_valid());
+}
+
+/*
+Napi::Value OboeContext::copy(const Napi::CallbackInfo& info) {
+  return Metadata::fromContext(info);
 }
 
 Napi::Value OboeContext::createEvent(const Napi::CallbackInfo& info) {
@@ -207,7 +216,7 @@ Napi::Value OboeContext::createEventX(const Napi::CallbackInfo& info) {
     if (info.Length() == 0) {
       oboe_metadata_t* context = oboe_context_get();
       omd = *context;
-      delete context;
+      //delete context;
     } else if (!Metadata::getMetadata(info[0], &omd)) {
       Napi::TypeError::New(env, "Invalid argument").ThrowAsJavaScriptException();
       return env.Null();
@@ -277,6 +286,8 @@ Napi::Object OboeContext::Init(Napi::Env env, Napi::Object module) {
     StaticMethod("sampleTrace", &OboeContext::sampleTrace),
     StaticMethod("toString", &OboeContext::toString),
     StaticMethod("set", &OboeContext::set),
+    StaticMethod("clear", &OboeContext::clear),
+    StaticMethod("isValid", &OboeContext::isValid),
     StaticMethod("createEventX", &OboeContext::createEventX),
     StaticMethod("startTrace", &OboeContext::startTrace)
   });

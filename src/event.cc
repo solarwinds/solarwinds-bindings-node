@@ -41,11 +41,8 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
 
     // Handle the no argument signature.
     if (info.Length() == 0) {
-      // oboe_context_get() allocates memory so copy and free up front to minimize
-      // memory management headaches later on.
       oboe_metadata_t* context = oboe_context_get();
       omd = *context;
-      delete context;
     } else {
       Napi::Object o = info[0].As<Napi::Object>();
 
@@ -83,15 +80,15 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
     // copy the metadata to the event except for the op ID. oboe_event_init()
     // will create a new random op ID for the event. (The op ID can be specified
     // using the 3rd argument but there is no benefit to doing so.)
-    int oboe_status = oboe_event_init(&this->event, &omd, NULL);
+    oboe_status = oboe_event_init(&this->event, &omd, NULL);
 
     // if the event init succeeded and an edge must be added do so.
     if (oboe_status == 0 && add_edge) {
       oboe_status = oboe_event_add_edge(&this->event, &omd);
-      // if it failed cleanup.
-      if (oboe_status != 0) {
-        oboe_event_destroy(&this->event);
-      }
+    }
+    // if it failed cleanup.
+    if (oboe_status != 0) {
+      oboe_event_destroy(&this->event);
     }
 }
 
@@ -112,30 +109,15 @@ Napi::Object Event::NewInstance(Napi::Env env) {
  * This signature includes a boolean for whether an edge is set or not.
  */
 Napi::Object Event::NewInstance(Napi::Env env, oboe_metadata_t* omd, bool edge) {
-    Napi::EscapableHandleScope scope(env);
+  Napi::EscapableHandleScope scope(env);
 
-    Napi::External<oboe_metadata_t> v0 = Napi::External<oboe_metadata_t>::New(env, omd);
-    Napi::Value v1 = Napi::Boolean::New(env, edge);
+  Napi::Value v0 = Napi::External<oboe_metadata_t>::New(env, omd);
+  Napi::Value v1 = Napi::Boolean::New(env, edge);
 
-    Napi::Object o = constructor.New({v0, v1});
+  Napi::Object o = constructor.New({v0, v1});
 
-    return scope.Escape(napi_value(o)).ToObject();
-
-    /*
-    const unsigned argc = 2;
-    Napi::Value argv[argc] = {
-        Napi::External::New(env, &md->metadata),
-        Napi::New(env, edge)
-    };
-    Napi::Function cons = Napi::Function::New(env, constructor);
-    // Now invoke the JavaScript callable constructor (Event::New).
-    //Napi::Object instance = cons->NewInstance(argc, argv);
-    Napi::Object instance = Napi::NewInstance(cons, argc, argv);
-
-    return scope.Escape(instance);
-    // */
+  return scope.Escape(napi_value(o)).ToObject();
 }
-
 
 /**
  * C++ callable function to create a JavaScript Event object.
@@ -251,7 +233,7 @@ Napi::Value Event::getMetadata(const Napi::CallbackInfo& info) {
 
     oboe_metadata_t* omd = &this->event.metadata;
 
-    Napi::External<oboe_metadata_t> v = Napi::External<oboe_metadata_t>::New(env, omd);
+    Napi::Value v = Napi::External<oboe_metadata_t>::New(env, omd);
     return Metadata::NewInstance(env, v);
 }
 

@@ -74,9 +74,9 @@ public:
   static Napi::Value sampleTrace(const Napi::CallbackInfo& info);
   static Napi::Value toString(const Napi::CallbackInfo& info);
   static Napi::Value set(const Napi::CallbackInfo& info);
+  static Napi::Value clear(const Napi::CallbackInfo& info);
+  static Napi::Value isValid(const Napi::CallbackInfo& info);
   //static Napi::Value copy(const Napi::CallbackInfo& info);
-  //static Napi::Value clear(const Napi::CallbackInfo& info);
-  //static Napi::Value isValid(const Napi::CallbackInfo& info);
   static Napi::Value init(const Napi::CallbackInfo& info);
   static Napi::Value createEvent(const Napi::CallbackInfo& info);
   static Napi::Value createEventX(const Napi::CallbackInfo& info);
