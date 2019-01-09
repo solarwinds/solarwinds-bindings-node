@@ -1,4 +1,5 @@
 var bindings = require('../')
+const expect = require('chai').expect
 
 var realCollector = (!process.env.APPOPTICS_REPORTER
   || process.env.APPOPTICS_REPORTER === 'ssl')
@@ -22,12 +23,12 @@ describe('addon.reporter', function () {
     // wait 5 seconds max. This will fail if not using
     // a real collector (collector or collector-stg).appoptics.com
     var ready = r.isReadyToSample(5000)
-    ready.should.be.an.instanceof(Number)
+    expect(ready).be.a('number')
 
     if (realCollector) {
-      ready.should.equal(1)
+      expect(ready).equal(1)
     } else {
-      ready.should.not.equal(1)
+      expect(ready).not.equal(1)
     }
   })
 
@@ -38,25 +39,25 @@ describe('addon.reporter', function () {
     var finalTxName = r.sendNonHttpSpan({
       duration: 1001
     })
-    finalTxName.should.equal('unknown')
+    expect(finalTxName).equal('unknown')
 
     finalTxName = r.sendNonHttpSpan({
       domain: domain
     })
-    finalTxName.should.equal(domain + '/')
+    expect(finalTxName).equal(domain + '/')
 
     finalTxName = r.sendNonHttpSpan({
       txname: customName,
       duration: 1111
     })
-    finalTxName.should.equal(customName)
+    expect(finalTxName).equal(customName)
 
     finalTxName = r.sendNonHttpSpan({
       txname: customName,
       domain: domain,
       duration: 1234
     })
-    finalTxName.should.equal(domain + '/' + customName)
+    expect(finalTxName).equal(domain + '/' + customName)
   })
 
   it('should send an HTTP span', function () {
@@ -72,20 +73,20 @@ describe('addon.reporter', function () {
       method: method,
       duration: 1111
     })
-    finalTxName.should.equal(url)
+    expect(finalTxName).equal(url)
 
     finalTxName = r.sendHttpSpan({
       url: url,
       domain: domain
     })
-    finalTxName.should.equal(domain + url)
+    expect(finalTxName).equal(domain + url)
 
     finalTxName = r.sendHttpSpan({
       txname: customName,
       url: url,
       duration: 1234
     })
-    finalTxName.should.equal(customName)
+    expect(finalTxName).equal(customName)
 
     finalTxName = r.sendHttpSpan({
       txname: customName,
@@ -93,7 +94,7 @@ describe('addon.reporter', function () {
       domain: domain,
       duration: 1236
     })
-    finalTxName.should.equal(domain + '/' + customName)
+    expect(finalTxName).equal(domain + '/' + customName)
   })
 
   it('should not crash node getting the prototype of a reporter instance', function () {
