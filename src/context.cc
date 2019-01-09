@@ -1,13 +1,13 @@
 #include "bindings.h"
 #include <cmath>
 
-/**
- * Set the tracing mode.
- *
- * @param newMode One of
- * - OBOE_TRACE_NEVER(0) to disable tracing,
- * - OBOE_TRACE_ALWAYS(1) to start a new trace if needed
- */
+//
+// Set the tracing mode.
+//
+// @param newMode One of
+// - OBOE_TRACE_NEVER(0) to disable tracing,
+// - OBOE_TRACE_ALWAYS(1) to start a new trace if needed
+//
 Napi::Value setTracingMode(const Napi::CallbackInfo& info) {
   const Napi::Env env = info.Env();
 
@@ -28,16 +28,16 @@ Napi::Value setTracingMode(const Napi::CallbackInfo& info) {
   return env.Null();
 }
 
-/**
- * Set the default sample rate.
- *
- * This rate is used until overridden by the AppOptics servers.  If not set then
- * oboe supplies a default value (300,000, i.e., 30%) at time of this writing.
- *
- * The rate is interpreted as a ratio out of OBOE_SAMPLE_RESOLUTION (1,000,000).
- *
- * @param newRate A number between 0 (none) and OBOE_SAMPLE_RESOLUTION (a million)
- */
+//
+// Set the default sample rate.
+//
+// This rate is used until overridden by the AppOptics servers.  If not set then
+// oboe supplies a default value (300,000, i.e., 30%) at time of this writing.
+//
+// The rate is interpreted as a ratio out of OBOE_SAMPLE_RESOLUTION (1,000,000).
+//
+// @param newRate A number between 0 (none) and OBOE_SAMPLE_RESOLUTION (a million)
+//
 Napi::Value setDefaultSampleRate(const Napi::CallbackInfo& info) {
     // presume failure
     int rateUsed = -1;
@@ -63,28 +63,31 @@ Napi::Value setDefaultSampleRate(const Napi::CallbackInfo& info) {
     return Napi::Number::New(info.Env(), rateUsed);
 }
 
-/**
- * Check if the current request should be traced based on the current settings.
- *
- * info[0] - layer name
- * info[1] - optional xtrace
- *
- * returns:
- *
- * object - {sample: boolean, source: coded_integer, rate: sample_rate}
- *
- * sample is true if the request should be sampled.
- *
- * If xtrace is empty, or if it is not valid then it will be considered a
- * new trace. Otherwise sampling will add to the existing trace.
- * Different layers may have special rules.
- *
- * This is designed to be called once per request at the entry layer.
- *
- * @param layer Name of the layer being considered for tracing
- * @param in_xtrace Incoming X-Trace ID (NULL or empty string if not present)
- * @return {Object} {sample, source, rate}
- */
+//
+// Check if the current request should be sampled based on the current settings.
+//
+// info[0] - layer name
+// info[1] - optional xtrace
+//
+// returns:
+//
+// object - {sample: boolean, source: coded_integer, rate: sample_rate}
+//
+// sample is true if the request should be sampled.
+//
+// If xtrace is empty, or if it is not valid then it will be considered a
+// new trace. Otherwise sampling will add to the existing trace.
+// Different layers may have special rules.
+//
+// This is designed to be called once per request at the entry layer.
+//
+// @param layer Name of the layer being considered for sampling
+// @param in_xtrace Incoming X-Trace ID (NULL or empty string if not present)
+// @return {Object} {sample, source, rate}
+//   sample - boolean true if should sample
+//   source - source used for sampling decision
+//   rate - rate used for sampling decision
+//
 Napi::Value sampleTrace(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
@@ -128,7 +131,9 @@ Napi::Value sampleTrace(const Napi::CallbackInfo& info) {
   return o;
 }
 
-// Serialize a metadata object to a string
+//
+// Stringify the current context's metadata structure.
+//
 Napi::Value toString(const Napi::CallbackInfo& info) {
   char buf[OBOE_MAX_METADATA_PACK_LEN];
   oboe_metadata_t* md = oboe_context_get();
@@ -145,7 +150,10 @@ Napi::Value toString(const Napi::CallbackInfo& info) {
   return Napi::String::New(info.Env(), rc == 0 ? buf : "");
 }
 
-
+//
+// Set oboe's context to the argument supplied. The argument can
+// be in any form that Metadata::getMetadata() can decode.
+//
 Napi::Value set(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
@@ -178,14 +186,18 @@ Napi::Value clear(const Napi::CallbackInfo& info) {
   return info.Env().Null();
 }
 
+//
+// return a boolean indicating whether oboe's current context is
+// valid.
+//
 Napi::Value isValid(const Napi::CallbackInfo& info) {
   return Napi::Boolean::New(info.Env(), oboe_context_is_valid());
 }
 
 //
-// Extended method to create events. Replaces createEvent but allows
+// Extended method to create events. Replaced createEvent but allows
 // an argument of the metadata to use to create the event. With no
-// argument it uses oboe's context as the metadata.
+// argument it uses oboe's current context as the metadata.
 //
 Napi::Value createEventX(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
@@ -222,10 +234,10 @@ Napi::Value createEventX(const Napi::CallbackInfo& info) {
     return event;
 }
 
-/**
- * JavaScript callable event factory to create an event with the sample bit
- * set as specified by the optional argument.
- */
+//
+// JavaScript callable event factory to create an event with the sample bit
+// set as specified by the optional argument.
+//
 Napi::Value startTrace(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
@@ -254,6 +266,9 @@ Napi::Value startTrace(const Napi::CallbackInfo& info) {
     return event;
 }
 
+//
+// This is not a class, just a group of functions in a JavaScript namespace.
+//
 namespace OboeContext {
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {

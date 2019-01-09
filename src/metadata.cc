@@ -2,23 +2,13 @@
 
 Napi::FunctionReference Metadata::constructor;
 
-// currently active
-static int metadata_count = 0;
-// at destruction - size and average size
-static int metadata_deleted_size = 0;
-static int metadata_deleted_count = 0;
-
-bool Metadata::sampleFlagIsOn() {
-  return metadata.flags & XTR_FLAGS_SAMPLED;
-}
-
-/**
- * JavaScript & C++ callable method to create a new Javascript instance
- */
+//
+// JavaScript callable method to create a new Javascript instance
+//
 Metadata::Metadata(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Metadata>(info) {
   Napi::Env env = info.Env();
 
-//Napi::Value Metadata::New(const Napi::CallbackInfo& info) {
+  //Napi::Value Metadata::New(const Napi::CallbackInfo& info) {
   if (!info.IsConstructCall()) {
     Napi::Error::New(env, "Metadata() must be called as a constructor").ThrowAsJavaScriptException();
     return;
@@ -46,12 +36,10 @@ Metadata::Metadata(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Metadata>(
 
 }
 
-Metadata::~Metadata() {
-
-}
+Metadata::~Metadata() {}
 
 //
-// c++ callable function to
+// c++ callable constructor
 //
 Napi::Object Metadata::NewInstance(Napi::Env env, Napi::Value arg) {
     Napi::EscapableHandleScope scope(env);
@@ -60,10 +48,10 @@ Napi::Object Metadata::NewInstance(Napi::Env env, Napi::Value arg) {
     return scope.Escape(napi_value(o)).ToObject();
 }
 
-/**
- * JavaScript callable static method to return metadata constructed from the current
- * oboe context.
- */
+//
+// JavaScript callable static method to return metadata constructed from the current
+// oboe context.
+//
 Napi::Value Metadata::fromContext(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
     oboe_metadata_t* omd = oboe_context_get();
@@ -147,6 +135,43 @@ Napi::Value Metadata::setSampleFlagTo(const Napi::CallbackInfo& info) {
 }
 
 //
+// JavaScript callable static method to determine if the argument
+// (event, metadata, or string) has the sample flag turned on.
+//
+// returns a boolean indicating the state of the sample flag
+//
+// if a string argument cannot be converted to metadata it
+// returns undefined
+//
+Napi::Value Metadata::sampleFlagIsSet(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  bool sampleFlag = false;
+
+  // handle each argument type appropriately
+  if (info.Length() >= 1) {
+    Napi::Object o = info[0].As<Napi::Object>();
+    if (Metadata::isMetadata(o)) {
+      Metadata* md = Napi::ObjectWrap<Metadata>::Unwrap(o);
+      sampleFlag = md->metadata.flags & XTR_FLAGS_SAMPLED;
+    } else if (Event::isEvent(o)) {
+      Event* e = Napi::ObjectWrap<Event>::Unwrap(o);
+      sampleFlag = e->event.metadata.flags & XTR_FLAGS_SAMPLED;
+    } else if (info[0].IsString()) {
+      std::string str = info[0].As<Napi::String>();
+
+      oboe_metadata_t md;
+      int status = oboe_metadata_fromstr(&md, str.c_str(), str.length());
+      if (status < 0) {
+        return env.Undefined();
+      }
+      sampleFlag = md.flags & XTR_FLAGS_SAMPLED;
+    }
+  }
+
+  return Napi::Boolean::New(env, sampleFlag);
+}
+
+//
 // Serialize a metadata object to a string
 //
 Napi::Value Metadata::toString(const Napi::CallbackInfo& info) {
@@ -166,8 +191,7 @@ Napi::Value Metadata::toString(const Napi::CallbackInfo& info) {
 }
 
 //
-// C++ internal method to determine if an object is an instance of
-// JavaScript Metadata
+// C++ method to determine if an object is an instance of Metadata
 //
 bool Metadata::isMetadata(Napi::Object o) {
   return o.IsObject() && o.InstanceOf(constructor.Value());
@@ -175,7 +199,7 @@ bool Metadata::isMetadata(Napi::Object o) {
 
 //
 // C++ internal method to copy metadata from Object o. Returns
-// represents metadata.
+// boolean true if it copied valid oboe_metadata_t, false otherwise.
 //
 bool Metadata::getMetadata(Napi::Value v, oboe_metadata_t* omd) {
   Napi::Object o = v.ToObject();
@@ -189,9 +213,9 @@ bool Metadata::getMetadata(Napi::Value v, oboe_metadata_t* omd) {
     Event* e = Napi::ObjectWrap<Event>::Unwrap(o);
     *omd = e->event.metadata;
   } else if (v.IsString()) {
-    // it's a string, this can fail and return false.
     std::string str = v.As<Napi::String>();
 
+    // it's a string, oboe_metadata_fromstr() can fail and return non-zero.
     oboe_metadata_t md;
     int status = oboe_metadata_fromstr(&md, str.c_str(), str.length());
     if (status < 0) {
@@ -210,43 +234,15 @@ bool Metadata::getMetadata(Napi::Value v, oboe_metadata_t* omd) {
 }
 
 //
-// JavaScript callable static method to determine if the argument
-// (event, metadata, or string) has the sample flag turned on.
+// C++ callable method to get sample flag boolean.
 //
-// returns a boolean indicating the state of the sample flag
-//
-// if a string argument cannot be converted to metadata it
-// returns undefined
-//
-Napi::Value Metadata::sampleFlagIsSet(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    bool sampleFlag = false;
-
-    // handle each argument type appropriately
-    if (info.Length() >= 1) {
-        Napi::Object o = info[0].As<Napi::Object>();
-        if (Metadata::isMetadata(o)) {
-          Metadata* md = Napi::ObjectWrap<Metadata>::Unwrap(o);
-          sampleFlag = md->metadata.flags & XTR_FLAGS_SAMPLED;
-        } else if (Event::isEvent(o)) {
-          Event* e = Napi::ObjectWrap<Event>::Unwrap(o);
-          sampleFlag = e->event.metadata.flags & XTR_FLAGS_SAMPLED;
-        } else if (info[0].IsString()) {
-            std::string str = info[0].As<Napi::String>();
-
-            oboe_metadata_t md;
-            int status = oboe_metadata_fromstr(&md, str.c_str(), str.length());
-            if (status < 0) {
-                return env.Undefined();
-            }
-            sampleFlag = md.flags & XTR_FLAGS_SAMPLED;
-        }
-    }
-
-    return Napi::Boolean::New(env, sampleFlag);
+bool Metadata::sampleFlagIsOn() {
+  return metadata.flags & XTR_FLAGS_SAMPLED;
 }
 
-// initialize the module
+//
+// initialize the module and expose the Metadata class.
+//
 Napi::Object Metadata::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 

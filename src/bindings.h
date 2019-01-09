@@ -9,29 +9,25 @@
 
 typedef int (*send_generic_span_t) (char*, uint16_t, oboe_span_params_t*);
 
-class Event;
-
+//
+// Metadata - work with oboe's oboe_metadata_t structure.
+//
 class Metadata : public Napi::ObjectWrap<Metadata> {
-  friend class Reporter;
-  friend class Event;
 
 public:
   Metadata();
   Metadata(const Napi::CallbackInfo& info);
   ~Metadata();
 
+  // keep a copy of the metadata.
+  oboe_metadata_t metadata;
+
+  // these functions operate on the metadata
   bool sampleFlagIsOn();
   Napi::Value isValid(const Napi::CallbackInfo& info);
   Napi::Value getSampleFlag(const Napi::CallbackInfo& info);
   Napi::Value setSampleFlagTo(const Napi::CallbackInfo& info);
   Napi::Value toString(const Napi::CallbackInfo& info);
-
-  oboe_metadata_t metadata;
-  //static Napi::FunctionReference constructor;
-  //static Napi::Value New(const Napi::CallbackInfo& info);
-  //static bool getMetadataData(const Napi::Value, oboe_metadata_t*);
-  //static Napi::Value copy(const Napi::CallbackInfo& info);
-  //static Napi::Value createEvent(const Napi::CallbackInfo& info);
 
   // return a Metadata object
   static Napi::Value fromContext(const Napi::CallbackInfo& info);
@@ -41,14 +37,17 @@ public:
   // instanceof equivalent for C++ functions
   static bool isMetadata(const Napi::Object);
 
+  // extract metadata from Napi::Value which may be an instance
+  // of Metadata, an Event, a string, or Napi::External referring
+  // to oboe_metadata_t.
   static bool getMetadata(Napi::Value, oboe_metadata_t*);
 
-  static Napi::Object NewInstance(Metadata*);
-  static Napi::Object NewInstance();
-  static Napi::Object NewInstance(Napi::Env, Napi::Value);
-
+  // work with existing metadata
   static Napi::Value sampleFlagIsSet(const Napi::CallbackInfo& info);
   static bool format(oboe_metadata_t*, size_t, char*);
+
+  // C++ callable for creating an instance of Metadata
+  static Napi::Object NewInstance(Napi::Env, Napi::Value);
 
 private:
   static Napi::FunctionReference constructor;
@@ -58,19 +57,22 @@ public:
   static Napi::Object Init(Napi::Env, Napi::Object);
 };
 
+//
+// Event - work with oboe's oboe_event_t structure.
+//
 class Event : public Napi::ObjectWrap<Event> {
-  friend class Reporter;
-  friend class Metadata;
-  friend class Log;
 
 public:
-  Event();
   Event(const Napi::CallbackInfo& info);
   ~Event();
-  //explicit Event(const oboe_metadata_t*, bool);
 
+  // the oboe event this instance manages
   oboe_event_t event;
+  // oboe status returned by constructor rather than throwing a JavaScript
+  // error. allows C++ code to do cleanup if necessary.
   int oboe_status;
+
+  // methods that manipulate the instance's oboe_event_t
   Napi::Value addInfo(const Napi::CallbackInfo& info);
   Napi::Value addEdge(const Napi::CallbackInfo& info);
   Napi::Value getMetadata(const Napi::CallbackInfo& info);
@@ -78,8 +80,10 @@ public:
   Napi::Value setSampleFlagTo(const Napi::CallbackInfo& info);
   Napi::Value getSampleFlag(const Napi::CallbackInfo& info);
 
+  // C++ instanceof equivalent
   static bool isEvent(Napi::Object);
 
+  // C++ callable constructors.
   static Napi::Object NewInstance(Napi::Env);
   static Napi::Object NewInstance(Napi::Env, oboe_metadata_t*, bool = true);
 
@@ -99,18 +103,17 @@ namespace OboeContext {
 }
 
 //
-// Reporter is not really a class but used to be.
+// Reporter does not need to be a class now. It is for historical reasons.
+// The most notable now is that if it becomes a namespace and not a class
+// then there must be a coordinated release with appoptics-apm.
 //
 class Reporter : public Napi::ObjectWrap<Reporter> {
 
 public:
-  Reporter();
   Reporter(const Napi::CallbackInfo&);
   ~Reporter();
   int send_event_x(const Napi::CallbackInfo&, int);
 
-
-  //static Napi::Value New(const Napi::CallbackInfo& info);
   Napi::Value isReadyToSample(const Napi::CallbackInfo& info);
   Napi::Value sendReport(const Napi::CallbackInfo& info);
   Napi::Value sendStatus(const Napi::CallbackInfo& info);

@@ -15,7 +15,11 @@ Reporter::Reporter(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Reporter>(
 Reporter::~Reporter() {
 }
 
+//
 // Check to see if oboe is ready to issue sampling decisions.
+//
+// returns coded status as below
+//
 Napi::Value Reporter::isReadyToSample(const Napi::CallbackInfo& info) {
   int ms = 0;          // milliseconds to wait
   if (info[0].IsNumber()) {
@@ -34,7 +38,9 @@ Napi::Value Reporter::isReadyToSample(const Napi::CallbackInfo& info) {
   return Napi::Number::New(info.Env(), status);
 }
 
+//
 // Send an event to the reporter
+//
 Napi::Value Reporter::sendReport(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
@@ -47,7 +53,9 @@ Napi::Value Reporter::sendReport(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, status);
 }
 
+//
 // send status. only used for init message.
+//
 Napi::Value Reporter::sendStatus(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
@@ -61,6 +69,9 @@ Napi::Value Reporter::sendStatus(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, status);
 }
 
+//
+// Common code for sendReport and sendStatus.
+//
 int Reporter::send_event_x(const Napi::CallbackInfo& info, int channel) {
   // info has been passed from a C++ function using that function's info. As
   // this is called only from C++ there is no type checking done.
@@ -155,7 +166,7 @@ Napi::Value Reporter::send_span(const Napi::CallbackInfo& info, send_generic_spa
 }
 
 //
-// This is called at initialization of this module.
+// Initialize the module.
 //
 Napi::Object Reporter::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
@@ -176,6 +187,17 @@ Napi::Object Reporter::Init(Napi::Env env, Napi::Object exports) {
   return exports;
 }
 
+//
+// Helpers
+//
+// given an object and a key, if object.key matches the expected type, return the
+// appropriate value. if object.key doesn't match the expected type return a default
+// value.
+//
+
+//
+// return an integer
+//
 int64_t get_integer(Napi::Object obj, const char* key, int64_t default_value) {
   Napi::Value v = obj.Get(key);
   if (v.IsNumber()) {
@@ -185,7 +207,7 @@ int64_t get_integer(Napi::Object obj, const char* key, int64_t default_value) {
 }
 
 //
-// returns a new std::string that must be deleted.
+// returns a new std::string that MUST BE DELETED.
 //
 std::string* get_string(Napi::Object obj, const char* key, const char* default_value) {
   Napi::Value v = obj.Get(key);
@@ -195,6 +217,9 @@ std::string* get_string(Napi::Object obj, const char* key, const char* default_v
   return new std::string(default_value);
 }
 
+//
+//  return a boolean
+//
 bool get_boolean(Napi::Object obj, const char* key, bool default_value) {
   Napi::Value v = obj.Get(key);
   if (v.IsBoolean()) {
