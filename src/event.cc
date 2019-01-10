@@ -59,7 +59,7 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
 
     // here there is metadata in omd and that's all the information needed in order
     // to create an event. add an edge unless the callers specifies not to.
-    bool add_edge = true;
+    bool add_edge = false;
     if (info.Length() >= 2) {
       add_edge = info[1].ToBoolean().Value();
     }
