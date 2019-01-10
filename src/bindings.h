@@ -103,40 +103,22 @@ namespace OboeContext {
 }
 
 //
-// Reporter does not need to be a class now. It is for historical reasons.
-// The most notable now is that if it becomes a namespace and not a class
-// then there must be a coordinated release with appoptics-apm.
+// Reporter is a collection of functions providing access to oboe's
+// send functions.
 //
-class Reporter : public Napi::ObjectWrap<Reporter> {
-
-public:
-  Reporter(const Napi::CallbackInfo&);
-  ~Reporter();
-  int send_event_x(const Napi::CallbackInfo&, int);
-
-  Napi::Value isReadyToSample(const Napi::CallbackInfo& info);
-  Napi::Value sendReport(const Napi::CallbackInfo& info);
-  Napi::Value sendStatus(const Napi::CallbackInfo& info);
-  Napi::Value sendHttpSpan(const Napi::CallbackInfo& info);
-  Napi::Value sendNonHttpSpan(const Napi::CallbackInfo& info);
-  static Napi::Value send_span(const Napi::CallbackInfo&, send_generic_span_t);
-
-private:
-  static Napi::FunctionReference constructor;
-
-public:
-  static Napi::Object Init(Napi::Env, Napi::Object);
-};
+namespace Reporter {
+  Napi::Object Init(Napi::Env, Napi::Object);
+}
 
 //
-// Sanitizer is a collection of functions
+// Sanitizer provides the sanitize function.
 //
 namespace Sanitizer {
   Napi::Object Init(Napi::Env, Napi::Object);
 }
 
 //
-// Config is a collection of functions
+// Config provides the getVersionString function.
 //
 namespace Config {
   Napi::Object Init(Napi::Env, Napi::Object);

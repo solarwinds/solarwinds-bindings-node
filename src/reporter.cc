@@ -4,23 +4,15 @@ int64_t get_integer(Napi::Object, const char*, int64_t = 0);
 std::string* get_string(Napi::Object, const char*, const char* = "");
 bool get_boolean(Napi::Object obj, const char*, bool = false);
 
-Napi::FunctionReference Reporter::constructor;
-
-// Construct with an address and port to report to
-Reporter::Reporter(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Reporter>(info) {
-  // this is a shell for now that oboe implements the reporter
-  // TODO BAM make this a set of static functions. No need for reporter class.
-}
-
-Reporter::~Reporter() {
-}
+int send_event_x(const Napi::CallbackInfo&, int);
+Napi::Value send_span(const Napi::CallbackInfo&, send_generic_span_t send_function);
 
 //
 // Check to see if oboe is ready to issue sampling decisions.
 //
 // returns coded status as below
 //
-Napi::Value Reporter::isReadyToSample(const Napi::CallbackInfo& info) {
+Napi::Value isReadyToSample(const Napi::CallbackInfo& info) {
   int ms = 0;          // milliseconds to wait
   if (info[0].IsNumber()) {
     ms = info[0].As<Napi::Number>().Int64Value();
@@ -41,14 +33,14 @@ Napi::Value Reporter::isReadyToSample(const Napi::CallbackInfo& info) {
 //
 // Send an event to the reporter
 //
-Napi::Value Reporter::sendReport(const Napi::CallbackInfo& info) {
+Napi::Value sendReport(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (info.Length() < 1 || !Event::isEvent(info[0].As<Napi::Object>())) {
     Napi::TypeError::New(env, "missing event").ThrowAsJavaScriptException();
     return env.Null();
   }
-  int status = this->send_event_x(info, OBOE_SEND_EVENT);
+  int status = send_event_x(info, OBOE_SEND_EVENT);
 
   return Napi::Number::New(env, status);
 }
@@ -56,7 +48,7 @@ Napi::Value Reporter::sendReport(const Napi::CallbackInfo& info) {
 //
 // send status. only used for init message.
 //
-Napi::Value Reporter::sendStatus(const Napi::CallbackInfo& info) {
+Napi::Value sendStatus(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (info.Length() < 1 || !Event::isEvent(info[0].As<Napi::Object>())) {
@@ -64,7 +56,7 @@ Napi::Value Reporter::sendStatus(const Napi::CallbackInfo& info) {
     return env.Null();
   }
 
-  int status = this->send_event_x(info, OBOE_SEND_STATUS);
+  int status = send_event_x(info, OBOE_SEND_STATUS);
 
   return Napi::Number::New(env, status);
 }
@@ -72,7 +64,7 @@ Napi::Value Reporter::sendStatus(const Napi::CallbackInfo& info) {
 //
 // Common code for sendReport and sendStatus.
 //
-int Reporter::send_event_x(const Napi::CallbackInfo& info, int channel) {
+int send_event_x(const Napi::CallbackInfo& info, int channel) {
   // info has been passed from a C++ function using that function's info. As
   // this is called only from C++ there is no type checking done.
   Event* event = Napi::ObjectWrap<Event>::Unwrap(info[0].ToObject());
@@ -93,25 +85,25 @@ int Reporter::send_event_x(const Napi::CallbackInfo& info, int channel) {
 //
 // send a metrics span using oboe_http_span
 //
-Napi::Value Reporter::sendHttpSpan(const Napi::CallbackInfo& info) {
+Napi::Value sendHttpSpan(const Napi::CallbackInfo& info) {
     return send_span(info, oboe_http_span);
 }
 
 //
 // send a metrics span using oboe_span
 //
-Napi::Value Reporter::sendNonHttpSpan(const Napi::CallbackInfo& info) {
+Napi::Value sendNonHttpSpan(const Napi::CallbackInfo& info) {
     return send_span(info, oboe_span);
 }
 
 //
 // do all the work to send a span
 //
-Napi::Value Reporter::send_span(const Napi::CallbackInfo& info, send_generic_span_t send_function) {
+Napi::Value send_span(const Napi::CallbackInfo& info, send_generic_span_t send_function) {
   Napi::Env env = info.Env();
 
   if (info.Length() != 1 || !info[0].IsObject()) {
-      Napi::TypeError::New(env, "Reporter::sendXSpan() - requires Object parameter").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "sendXSpan() - requires Object parameter").ThrowAsJavaScriptException();
       return env.Null();
   }
   Napi::Object obj = info[0].ToObject();
@@ -168,25 +160,25 @@ Napi::Value Reporter::send_span(const Napi::CallbackInfo& info, send_generic_spa
 //
 // Initialize the module.
 //
-Napi::Object Reporter::Init(Napi::Env env, Napi::Object exports) {
+namespace Reporter {
+
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 
-  Napi::Function ctor = DefineClass(env, "Reporter", {
-    InstanceMethod("isReadyToSample", &Reporter::isReadyToSample),
-    InstanceMethod("sendReport", &Reporter::sendReport),
-    InstanceMethod("sendStatus", &Reporter::sendStatus),
-    InstanceMethod("sendHttpSpan", &Reporter::sendHttpSpan),
-    InstanceMethod("sendNonHttpSpan", &Reporter::sendNonHttpSpan),
-  });
+  Napi::Object module = Napi::Object::New(env);
 
-  constructor = Napi::Persistent(ctor);
-  constructor.SuppressDestruct();
+  module.Set("isReadyToSample", Napi::Function::New(env, isReadyToSample));
+  module.Set("sendReport", Napi::Function::New(env, sendReport));
+  module.Set("sendStatus", Napi::Function::New(env, sendStatus));
+  module.Set("sendHttpSpan", Napi::Function::New(env, sendHttpSpan));
+  module.Set("sendNonHttpSpan", Napi::Function::New(env, sendNonHttpSpan));
 
-  exports.Set("Reporter", ctor);
+  exports.Set("Reporter", module);
 
   return exports;
 }
 
+}
 //
 // Helpers
 //
