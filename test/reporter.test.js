@@ -7,7 +7,12 @@ var realCollector = (!process.env.APPOPTICS_REPORTER
   || process.env.APPOPTICS_COLLECTOR === 'collector-stg.appoptics.com')
 
 describe('addon.reporter', function () {
-  var r = new bindings.Reporter()
+  let r
+  if (typeof bindings.Reporter === 'function') {
+    r = new bindings.Reporter()
+  } else {
+    r = bindings.Reporter
+  }
 
   it('should initialize oboe with hostnameAlias', function () {
     bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY, {

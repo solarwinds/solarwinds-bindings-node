@@ -10,20 +10,17 @@ let r
 describe('addon.context', function () {
   before(function (done) {
     bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY, {})
-    r = new bindings.Reporter()
+
+    if (typeof bindings.Reporter === 'function') {
+      r = new bindings.Reporter()
+    } else {
+      r = bindings.Reporter
+    }
+
     r.isReadyToSample(2000)
     done()
   })
-  /*
-  beforeEach(function (done) {
-    setTimeout(() => {
-      if (nomore) {
-        this.skip()
-      }
-      done()
-    }, 1000)
-  })
-  // */
+
   it('should set tracing mode to never', function () {
     bindings.Context.setTracingMode(bindings.TRACE_NEVER)
   })
