@@ -284,18 +284,18 @@ Napi::Value sanitize(const Napi::CallbackInfo& info) {
 
   std::string input = info[0].As<Napi::String>();
 
-  int flag = OBOE_SQLSANITIZE_AUTO;
+  int flags = OBOE_SQLSANITIZE_AUTO;
   if (info.Length() == 2) {
-    flag = info[1].As<Napi::Number>().Int32Value();
+    flags = info[1].As<Napi::Number>().Int32Value();
   }
 
-  char* output = new char[input.length()];
-  //char* output = strndup(*input, input.Length());
+  char* output = strndup(input.c_str(), input.length());
 
-  oboe_sanitize_sql(output, input.length(), flag);
+  oboe_sanitize_sql(output, input.length(), flags);
+
   Napi::String s = Napi::String::New(env, output);
-  delete output;
-  //free(output);
+  free(output);
+
   return s;
 }
 
