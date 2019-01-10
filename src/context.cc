@@ -255,7 +255,9 @@ Napi::Value startTrace(const Napi::CallbackInfo& info) {
         md->flags &= ~XTR_FLAGS_SAMPLED;
     }
 
-    Napi::Object event = Event::NewInstance(env, md);
+    // if starting a trace then there is no event to edge back to so pass false as
+    // the third argument.
+    Napi::Object event = Event::NewInstance(env, md, false);
 
     Event* e = Napi::ObjectWrap<Event>::Unwrap(event);
     if (e->oboe_status != 0) {
