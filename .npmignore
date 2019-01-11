@@ -1,3 +1,4 @@
+!build/Release/appoptics-bindings.node
 build/
 node_modules/
 test/

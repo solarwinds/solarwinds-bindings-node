@@ -58,7 +58,6 @@ describe('addon.event', function () {
     // invalid metadata. So it doesn't fail even though it didn't
     // add an edge. Hmmm.
     var e = new bindings.Event(bindings.Metadata.makeRandom())
-    // it seems that .should.throw() doesn't work quite right.
     var threw = false
     try {
       e.addEdge(md)
