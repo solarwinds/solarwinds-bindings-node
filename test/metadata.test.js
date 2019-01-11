@@ -126,18 +126,8 @@ describe('addon.metadata', function () {
     expect(result).equal('undefined')
   })
 
-  it.skip('should clone itself', function () {
-    var rand = bindings.Metadata.makeRandom()
-    rand.copy().toString().should.equal(rand.toString())
-  })
-
   it('should be valid', function () {
     expect(metadata.isValid()).equal(true)
-  })
-
-  it.skip('should create an event', function () {
-    var event = metadata.createEvent()
-    expect(event).instanceof(bindings.Event)
   })
 
   it('should not crash node when getting the prototype of an metadata instance', function () {

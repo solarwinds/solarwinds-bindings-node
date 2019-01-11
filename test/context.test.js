@@ -1,10 +1,6 @@
-var bindings = require('../')
+const bindings = require('../')
 const expect = require('chai').expect
 
-const sfh = require('segfault-handler')
-sfh.registerHandler('context-test.log')
-
-let nomore = false
 let r
 
 describe('addon.context', function () {
@@ -82,7 +78,6 @@ describe('addon.context', function () {
     // appoptics-apm keeps a local copy of the value and handles this correctly.
     rateUsed = bindings.Context.setDefaultSampleRate(NaN)
     expect(rateUsed).equal(-1)
-    nomore = true
   })
 
   it('should serialize context to string', function () {
@@ -91,23 +86,11 @@ describe('addon.context', function () {
     expect(string).equal('2B0000000000000000000000000000000000000000000000000000000000')
   })
 
-  it.skip('should set context to metadata instance (removed)', function () {
-    //const md = bindings.Metadata.fromContext()
-    //const event = new bindings.Event(md)
-    var event = bindings.Context.createEvent()
-    var metadata = event.getMetadata()
-    bindings.Context.set(metadata)
-    var v = bindings.Context.toString()
-    expect(v).not.equal('')
-    expect(v).equal(metadata.toString())
-  })
-
   it('should set context to metadata instance', function () {
     var md = bindings.Metadata.fromContext()
     var event = new bindings.Event(md)
     bindings.Context.set(event.getMetadata())
-    //var v = bindings.Context.toString()
-    const v = event.getMetadata().toString()
+    const v = bindings.Context.toString()
     expect(v).not.equal('')
     expect(v).equal(event.getMetadata().toString())
   })
@@ -121,15 +104,6 @@ describe('addon.context', function () {
     expect(v).not.equal('')
     expect(v).equal(string)
   })
-
-  /* no use for this that i can tell
-  it('should copy context to metadata instance', function () {
-    var metadata = bindings.Context.copy()
-    var v = bindings.Context.toString()
-    v.should.not.equal('')
-    v.should.equal(metadata.toString())
-  })
-  // */
 
   it('should clear the context', function () {
     var string = '2B0000000000000000000000000000000000000000000000000000000000'
