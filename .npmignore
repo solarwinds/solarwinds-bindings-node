@@ -1,14 +1,20 @@
+build/**
 !build/Release/appoptics-bindings.node
-build/
 node_modules/
+src/
 test/
-travis-log/
-rum-templates/
-oracle/
-*.tgz
+# archived versions of oboe
 oboe-*
+# links
 oboe/liboboe-1.0.so.0
 oboe/liboboe.so
+# development focused
+.vscode/
+.npmignore
+.travis.yml
 CONTRIBUTING.md
 Gulpfile.js
 env.sh
+.editorconfig
+*.tgz
+*.tmp
