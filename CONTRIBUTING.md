@@ -60,7 +60,9 @@ First, compile your add-on using node-gyp with the --debug flag.
 
 `$ node-gyp --debug configure rebuild`
 
-Second (this doesn't really apply to appoptics-bindings because it uses the `bindings` module and that will load from `Debug` then `Release`), if you're still in "playground" mode like I am, you're probably loading your module with something like
+(The next point about changing the require path doesn't apply to appoptics-bindings because it uses the `bindings` module and that will find the module in `Debug`, `Release`, and other locations.)
+
+Second, if you're still in "playground" mode like I am, you're probably loading your module with something like
 
 `var ObjModule = require('./ObjModule/build/Release/objModule');`
 
@@ -89,6 +91,8 @@ Breakpoint 1, StringReverse (args=...) at ../objModule.cpp:49
 
 If a signal is thrown gdb will stop on the line generating it.
 
+Finally, here's a link to using output formats (and the whole set of gdb docs) [gdb](http://www.delorie.com/gnu/docs/gdb/gdb_55.html).
+
 ## Project layout
 
 The `src` directory contains the C++ code to bind to liboboe. The `test`
@@ -116,3 +120,9 @@ get merged to master via a pull request.
 
 Again, like `appoptics-apm` the `npm version major.minor.patch` tool is used
 to commit a version bump and tag to push to github. You must use `git push origin 'tagname'` in order to push the tag in addition to the changes. If you do not the tag will not be sent to the repo. The versioning should follow [semver](www.semver.org) conventions, most importantly that breaking changes get a major version update. A pull request should be generated on github. Once the PR has been merged to master on github then, after updating local master with `git pull`, you can run `npm publish` to publish the release. This should be done using a `@solarwinds.cloud` email account. The branch can be deleted once it has been merged.
+
+### Miscellaneous
+
+Find what version of GLIBCXX is supported in /usr/lib/libstdc++.so.?
+
+`readelf -sV /usr/lib/libstdc++.so.6 | sed -n 's/.*@@GLIBCXX_//p' | sort -u -V | tail -1`
