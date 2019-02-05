@@ -224,7 +224,6 @@ Napi::Value createEventX(const Napi::CallbackInfo& info) {
     Napi::Object event = Event::NewInstance(env, &omd, add_edge);
 
     // check for error.
-    // TODO BAM should lower level just throw?
     Event* e = Napi::ObjectWrap<Event>::Unwrap(event);
     if (e->oboe_status != 0) {
       Napi::Error::New(env, "Oboe failed to create event").ThrowAsJavaScriptException();
@@ -246,6 +245,9 @@ Napi::Value startTrace(const Napi::CallbackInfo& info) {
         sample = info[0].ToBoolean().Value();
     }
 
+    // oboe_context_get() gets the context memory for this Posix thread (only
+    // one with node). oboe_metadata_random() then sets the metadata IDs (taskid
+    // and opid) to random data.
     oboe_metadata_t *md = oboe_context_get();
     oboe_metadata_random(md);
 
@@ -269,6 +271,130 @@ Napi::Value startTrace(const Napi::CallbackInfo& info) {
 }
 
 //
+// embed these here until oboe has them.
+//
+typedef struct oboe_tracing_decisions_in {
+  int version;
+  const char* service_name;
+  const char* in_xtrace;
+  int custom_sample_rate;
+  int custom_tracing_mode;
+} oboe_tracing_decisions_in_t;
+
+typedef struct oboe_tracing_decisions_out {
+  int version;
+  int sample_rate;
+  int sample_source;
+  int do_sample;
+  int do_metrics;
+} oboe_tracing_decisions_out_t;
+
+//
+// New function to start a trace. It returns all information necessary in a single call.
+//
+// getTraceSettings(xtrace, localMode)
+//
+// xtrace - Metadata instance or undefined
+// localMode - a route-specific setting, 0 or 1 for 'never' or 'always'
+//
+Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  oboe_tracing_decisions_in_t in;
+  oboe_tracing_decisions_out_t out;
+  oboe_metadata_t omd;
+
+  // in defaults
+  bool have_metadata = false;
+  std::string xtrace("");
+  int rate = -1;
+  int mode = -1;
+
+  // caller specified values. errors are ignored.
+  if (info[0].IsObject()) {
+    Napi::Object o = info[0].ToObject();
+
+    // is an xtrace supplied?
+    Napi::Value v = o.Get("xtrace");
+    if (v.IsString()) {
+      xtrace = v.As<Napi::String>();
+
+      // try to convert it to metadata. if it fails act as if no xtrace was
+      // supplied.
+      int status = oboe_metadata_fromstr(&omd, xtrace.c_str(), xtrace.length());
+      // status can be zero with a version other than 2, so check that too.
+      if (status < 0 || omd.version != 2) {
+        xtrace = "";
+      } else {
+        have_metadata = true;
+      }
+    }
+
+    // if no xtrace or the xtrace was bad then construct new metadata.
+    if (!have_metadata) {
+      oboe_metadata_init(&omd);
+      oboe_metadata_random(&omd);
+    }
+
+    // now get the much simpler integer values
+    v = o.Get("rate");
+    if (v.IsNumber()) {
+      rate = v.As<Napi::Number>().Int64Value();
+    }
+
+    v = o.Get("mode");
+    if (v.IsNumber()) {
+      mode = v.As<Napi::Number>().Int64Value();
+    }
+  }
+
+  // apply default or user specified values.
+  in.version = 1;
+  in.service_name = "";
+  in.in_xtrace = xtrace.c_str();
+  in.custom_sample_rate = rate;
+  in.custom_tracing_mode = mode;
+
+
+  int srate;
+  int ssource;
+
+  // call oboe_tracing_decisions()
+  // but call oboe_sample_layer for now. not really very useful
+  int sample = oboe_sample_layer("", in.in_xtrace, &srate, &ssource);
+
+  // now we have oboe_metadata_t either from an inbound xtrace id or from
+  // a Metadata object created to seed this span. set the sample bit to match
+  // the sample decision and create a JavaScript Metadata instance.
+  if (sample) {
+    omd.flags |= XTR_FLAGS_SAMPLED;
+  } else {
+    omd.flags &= ~XTR_FLAGS_SAMPLED;
+  }
+  Napi::Value v = Napi::External<oboe_metadata_t>::New(env, &omd);
+  Napi::Object md = Metadata::NewInstance(env, v);
+
+  // pretend we called oboe_tracing_decisions() so fill in the output
+  // struct. could be error return handling, but not for now.
+  out.sample_rate = srate;
+  out.sample_source = ssource;
+  out.do_sample = sample;
+  out.do_metrics = sample;
+
+  // create an object to return multiple values
+  Napi::Object o = Napi::Object::New(env);
+  o.Set("metadata", md);
+  o.Set("doSample", Napi::Boolean::New(env, out.do_sample));
+  o.Set("doMetrics", Napi::Boolean::New(env, out.do_sample));
+  o.Set("source", Napi::Number::New(env, out.sample_source));
+  o.Set("rate", Napi::Number::New(env, out.sample_rate));
+
+
+  return o;
+}
+
+
+//
 // This is not a class, just a group of functions in a JavaScript namespace.
 //
 namespace OboeContext {
@@ -287,6 +413,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   module.Set("isValid", Napi::Function::New(env, isValid));
   module.Set("createEventX", Napi::Function::New(env, createEventX));
   module.Set("startTrace", Napi::Function::New(env, startTrace));
+  module.Set("XgetTraceSettings", Napi::Function::New(env, getTraceSettings));
 
   exports.Set("Context", module);
 
