@@ -323,10 +323,11 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     }
   }
 
-  char buf[OBOE_MAX_METADATA_PACK_LEN];
-
+  // want to edge back to metadata if there was a valid xtrace.
+  bool edge = true;
   // if no xtrace or the xtrace was bad then construct new metadata.
   if (!have_metadata) {
+    edge = false;
     oboe_metadata_init(&omd);
     oboe_metadata_random(&omd);
   }
@@ -363,6 +364,7 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   // create an object to return multiple values
   Napi::Object o = Napi::Object::New(env);
   o.Set("metadata", md);
+  o.Set("edge", Napi::Boolean::New(env, edge));
   o.Set("doSample", Napi::Boolean::New(env, out.do_sample));
   o.Set("doMetrics", Napi::Boolean::New(env, out.do_metrics));
   o.Set("source", Napi::Number::New(env, out.sample_source));
