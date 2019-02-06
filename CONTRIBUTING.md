@@ -35,9 +35,9 @@ are required.
 The sourceable script file `env.sh` has options to configure the development environment
 for different purposes. There is also an option to download a new version of oboe.
 
-Generally the command `$ . env.sh ssl` is the most useful - it sets up the environment
-variables to work against a real appoptics collector. This is used during the test suite
-to verify that basic connectivity exists. It does require `AO_TOKEN_STG` be defined
+Generally the command `$ . env.sh prod` is the most useful - it sets up the environment
+variables to work against the real appoptics collector. This is used during the test suite
+to verify that basic connectivity exists. It does require `APPOPTICS_SERVICE_KEY` be defined
 with a valid service key.
 
 
@@ -109,6 +109,9 @@ symbolic links to liboboe so the `SONAME` field can be satisfied. Then the
 compiler output; you may want to skip that if dealing with build issues. There
 are multiple ways to do so. `npm run rebuild` bypasses the `build.js` script
 altogether. You can also set `APPOPTICS\_SHOW_GYP` to any non-empty value.
+
+(This section will not be useful for installing once the N-API version has been
+released.)
 
 
 ### Developing
