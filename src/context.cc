@@ -271,25 +271,6 @@ Napi::Value startTrace(const Napi::CallbackInfo& info) {
 }
 
 //
-// embed these here until oboe has them.
-//
-typedef struct oboe_tracing_decisions_in {
-  int version;
-  const char* service_name;
-  const char* in_xtrace;
-  int custom_sample_rate;
-  int custom_tracing_mode;
-} oboe_tracing_decisions_in_t;
-
-typedef struct oboe_tracing_decisions_out {
-  int version;
-  int sample_rate;
-  int sample_source;
-  int do_sample;
-  int do_metrics;
-} oboe_tracing_decisions_out_t;
-
-//
 // New function to start a trace. It returns all information necessary in a single call.
 //
 // getTraceSettings(xtrace, localMode)
@@ -310,7 +291,7 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   int rate = -1;
   int mode = -1;
 
-  // caller specified values. errors are ignored.
+  // caller specified values. errors are ignored and default values are used.
   if (info[0].IsObject()) {
     Napi::Object o = info[0].ToObject();
 
@@ -330,12 +311,6 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
       }
     }
 
-    // if no xtrace or the xtrace was bad then construct new metadata.
-    if (!have_metadata) {
-      oboe_metadata_init(&omd);
-      oboe_metadata_random(&omd);
-    }
-
     // now get the much simpler integer values
     v = o.Get("rate");
     if (v.IsNumber()) {
@@ -348,6 +323,14 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     }
   }
 
+  char buf[OBOE_MAX_METADATA_PACK_LEN];
+
+  // if no xtrace or the xtrace was bad then construct new metadata.
+  if (!have_metadata) {
+    oboe_metadata_init(&omd);
+    oboe_metadata_random(&omd);
+  }
+
   // apply default or user specified values.
   in.version = 1;
   in.service_name = "";
@@ -355,18 +338,21 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   in.custom_sample_rate = rate;
   in.custom_tracing_mode = mode;
 
+  // set the version in case oboe adds fields in the future.
+  out.version = 1;
 
-  int srate;
-  int ssource;
+  // ask for oboe's decisions on life, the universe, and everything.
+  int status = oboe_tracing_decisions(&in, &out);
 
-  // call oboe_tracing_decisions()
-  // but call oboe_sample_layer for now. not really very useful
-  int sample = oboe_sample_layer("", in.in_xtrace, &srate, &ssource);
+  if (status != 0) {
+    Napi::Error::New(env, "Failed to get trace settings").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
 
-  // now we have oboe_metadata_t either from an inbound xtrace id or from
-  // a Metadata object created to seed this span. set the sample bit to match
+  // now we have oboe_metadata_t either from a supplied xtrace id or from
+  // a Metadata object created for this span. set the sample bit to match
   // the sample decision and create a JavaScript Metadata instance.
-  if (sample) {
+  if (out.do_sample) {
     omd.flags |= XTR_FLAGS_SAMPLED;
   } else {
     omd.flags &= ~XTR_FLAGS_SAMPLED;
@@ -374,25 +360,16 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   Napi::Value v = Napi::External<oboe_metadata_t>::New(env, &omd);
   Napi::Object md = Metadata::NewInstance(env, v);
 
-  // pretend we called oboe_tracing_decisions() so fill in the output
-  // struct. could be error return handling, but not for now.
-  out.sample_rate = srate;
-  out.sample_source = ssource;
-  out.do_sample = sample;
-  out.do_metrics = sample;
-
   // create an object to return multiple values
   Napi::Object o = Napi::Object::New(env);
   o.Set("metadata", md);
   o.Set("doSample", Napi::Boolean::New(env, out.do_sample));
-  o.Set("doMetrics", Napi::Boolean::New(env, out.do_sample));
+  o.Set("doMetrics", Napi::Boolean::New(env, out.do_metrics));
   o.Set("source", Napi::Number::New(env, out.sample_source));
   o.Set("rate", Napi::Number::New(env, out.sample_rate));
 
-
   return o;
 }
-
 
 //
 // This is not a class, just a group of functions in a JavaScript namespace.
@@ -413,7 +390,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   module.Set("isValid", Napi::Function::New(env, isValid));
   module.Set("createEventX", Napi::Function::New(env, createEventX));
   module.Set("startTrace", Napi::Function::New(env, startTrace));
-  module.Set("XgetTraceSettings", Napi::Function::New(env, getTraceSettings));
+  module.Set("getTraceSettings", Napi::Function::New(env, getTraceSettings));
 
   exports.Set("Context", module);
 

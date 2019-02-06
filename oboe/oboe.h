@@ -171,6 +171,22 @@ typedef struct oboe_span_params {
     int has_error;                  // boolean flag whether this transaction contains an error (1) or not (0)
 } oboe_span_params_t;
 
+typedef struct oboe_tracing_decisions_in {
+    int version;
+    const char *service_name;
+    const char *in_xtrace;
+    int custom_sample_rate;
+    int custom_tracing_mode;
+} oboe_tracing_decisions_in_t;
+
+typedef struct oboe_tracing_decisions_out {
+    int version;
+    int sample_rate;
+    int sample_source;
+    int do_sample;
+    int do_metrics;
+} oboe_tracing_decisions_out_t;
+
 #define OBOE_SPAN_PARAMS_VERSION 1              // version of oboe_span_params_t
 #define OBOE_TRANSACTION_NAME_MAX_LENGTH 255    // max allowed length for transaction name
 
@@ -573,6 +589,14 @@ int oboe_sample_layer_custom(
     int *sample_rate_out,
     int *sample_source_out
 );
+
+/**
+ * wrapper for calling oboe_sample_layer_custom() with input/output structs instead of individual params
+ *
+ * @param in Struct containing all params to help making a tracing decision
+ * @param out Struct containing all params that get set during decision making
+ */
+int oboe_tracing_decisions(oboe_tracing_decisions_in_t *in, oboe_tracing_decisions_out_t *out);
 
 /* Oboe configuration interface. */
 

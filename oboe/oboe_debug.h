@@ -17,6 +17,7 @@ extern "C" {
  * Defined diagnostic log detail levels.
  */
 enum OBOE_DEBUG_LOG_LEVEL {
+    OBOE_DEBUG_DISABLED = -1,
     OBOE_DEBUG_FATAL = 0,
     OBOE_DEBUG_ERROR = 1,
     OBOE_DEBUG_WARNING = 2,
