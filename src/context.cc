@@ -234,49 +234,14 @@ Napi::Value createEventX(const Napi::CallbackInfo& info) {
 }
 
 //
-// JavaScript callable event factory to create an event with the sample bit
-// set as specified by the optional argument.
-//
-Napi::Value startTrace(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-
-    bool sample = false;
-    if (info.Length() == 1) {
-        sample = info[0].ToBoolean().Value();
-    }
-
-    // oboe_context_get() gets the context memory for this Posix thread (only
-    // one with node). oboe_metadata_random() then sets the metadata IDs (taskid
-    // and opid) to random data.
-    oboe_metadata_t *md = oboe_context_get();
-    oboe_metadata_random(md);
-
-    if (sample) {
-        md->flags |= XTR_FLAGS_SAMPLED;
-    } else {
-        md->flags &= ~XTR_FLAGS_SAMPLED;
-    }
-
-    // if starting a trace then there is no event to edge back to so pass false as
-    // the third argument.
-    Napi::Object event = Event::NewInstance(env, md, false);
-
-    Event* e = Napi::ObjectWrap<Event>::Unwrap(event);
-    if (e->oboe_status != 0) {
-        Napi::Error::New(env, "Oboe failed to create event").ThrowAsJavaScriptException();
-        return env.Null();
-    }
-
-    return event;
-}
-
-//
 // New function to start a trace. It returns all information necessary in a single call.
 //
-// getTraceSettings(xtrace, localMode)
+// getTraceSettings(object)
 //
-// xtrace - Metadata instance or undefined
-// localMode - a route-specific setting, 0 or 1 for 'never' or 'always'
+// object.xtrace - Metadata instance or undefined
+// object.mode - a route-specific trace mode, 0 or 1 for 'never' or 'always'
+// object.rate - a route-specific sampling rate
+// object.edge - override the default edge setting.
 //
 Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -290,6 +255,8 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   std::string xtrace("");
   int rate = -1;
   int mode = -1;
+  // edge back to supplied metadata unless there is none.
+  bool edge = true;
 
   // caller specified values. errors are ignored and default values are used.
   if (info[0].IsObject()) {
@@ -321,11 +288,18 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     if (v.IsNumber()) {
       mode = v.As<Napi::Number>().Int64Value();
     }
+
+    // allow overriding the edge setting. it's not clear why
+    // this might need to be done but it does add some control
+    // for testing or unforseen cases.
+    if (o.Has("edge")) {
+      edge = o.Get("edge").ToBoolean().Value();
+    }
   }
 
-  // want to edge back to metadata if there was a valid xtrace.
-  bool edge = true;
   // if no xtrace or the xtrace was bad then construct new metadata.
+  // specifying the edge as true makes no sense in this case because
+  // there is no previous metadata.
   if (!have_metadata) {
     edge = false;
     oboe_metadata_init(&omd);
@@ -361,7 +335,7 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   Napi::Value v = Napi::External<oboe_metadata_t>::New(env, &omd);
   Napi::Object md = Metadata::NewInstance(env, v);
 
-  // create an object to return multiple values
+  // assemble the return object
   Napi::Object o = Napi::Object::New(env);
   o.Set("metadata", md);
   o.Set("edge", Napi::Boolean::New(env, edge));
@@ -391,7 +365,6 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   module.Set("clear", Napi::Function::New(env, clear));
   module.Set("isValid", Napi::Function::New(env, isValid));
   module.Set("createEventX", Napi::Function::New(env, createEventX));
-  module.Set("startTrace", Napi::Function::New(env, startTrace));
   module.Set("getTraceSettings", Napi::Function::New(env, getTraceSettings));
 
   exports.Set("Context", module);

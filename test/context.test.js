@@ -119,7 +119,7 @@ describe('addon.context', function () {
   })
 
   it('should start a trace from the current context', function () {
-    var event = bindings.Context.startTrace()
+    var event = bindings.Context.createEventX()
     expect(event).instanceOf(bindings.Event)
   })
 
@@ -148,7 +148,7 @@ describe('addon.context', function () {
   it('should get verification that a request should be sampled', function (done) {
     bindings.Context.setTracingMode(bindings.TRACE_ALWAYS)
     bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE)
-    var event = bindings.Context.startTrace(1)
+    var event = bindings.Context.createEventX(bindings.Metadata.makeRandom(1))
     var metadata = event.getMetadata()
     metadata.setSampleFlagTo(1)
     var xid = metadata.toString();
@@ -172,16 +172,22 @@ describe('addon.context', function () {
     bindings.Context.clear()
     expect(bindings.Context.isValid()).equal(false)
   })
+
   it('should be valid when not empty', function () {
-    var event = bindings.Context.startTrace()
+    const md = bindings.Metadata.makeRandom(1)
+    bindings.Context.set(md)
     expect(bindings.Context.isValid()).equal(true)
   })
 
   it('should not set sample bit unless specified', function () {
-    var event = bindings.Context.startTrace()
+    const md0 = bindings.Metadata.makeRandom(0)
+    const md1 = bindings.Metadata.makeRandom(1)
+
+    let event = bindings.Context.createEventX(md0)
     expect(event.getSampleFlag()).equal(false)
     expect(event.toString().slice(-2)).equal('00')
-    event = bindings.Context.startTrace(1)
+
+    event = bindings.Context.createEventX(md1)
     expect(event.getSampleFlag()).equal(true)
     expect(event.toString().slice(-2)).equal('01')
   })
