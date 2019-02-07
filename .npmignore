@@ -19,3 +19,4 @@ env.sh
 .editorconfig
 *.tgz
 *.tmp
+*-notes.md
