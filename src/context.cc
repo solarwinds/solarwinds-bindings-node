@@ -217,7 +217,7 @@ Napi::Value createEventX(const Napi::CallbackInfo& info) {
     }
 
     if (info.Length() >= 2) {
-        add_edge = info[1].As<Napi::Boolean>().Value();
+        add_edge = info[1].ToBoolean().Value();
     }
 
     // create the event
