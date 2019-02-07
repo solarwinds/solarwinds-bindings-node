@@ -3,6 +3,7 @@ build/**
 node_modules/
 src/
 test/
+archived/
 # archived versions of oboe
 oboe-*
 # links
