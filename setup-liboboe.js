@@ -1,12 +1,13 @@
 'use strict'
 
-var spawn = require('child_process').spawn
-var releaseInfo = require('linux-os-info')
-var request = require('request')
 var fs = require('fs')
-var crypto = require('crypto')
+var releaseInfo = require('linux-os-info')
 
+//var spawn = require('child_process').spawn
+//var request = require('request')
+//var crypto = require('crypto')
 
+/*
 var chars = '⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
 var len = chars.length
 function spinner(fps, fn) {
@@ -20,13 +21,14 @@ function spinner(fps, fn) {
     stop: function () { clearInterval(t) }
   }
 }
+// */
 
 const dir = './oboe/'
 const soname = 'liboboe-1.0.so.0'
 // not downloading files now. it's been tested and doesn't
 // offer significant benefits against the minor cost of including
 // both libraries in the package.
-const downloadFile = false
+//const downloadFile = false
 // don't delete unused yet. old versions of npm (3.10.10) don't
 // have prepare and prepublishOnly which are needed to sequence
 // downloading/installing liboboe and the running setup-liboboe
@@ -54,7 +56,52 @@ const oboeNames = {
   linux: 'liboboe-1.0-x86_64.so.0.0.0'
 }
 
-function setupLiboboe(cb) {
+function setupLiboboe (cb) {
+  const version = fs.readFileSync(dir + 'VERSION', 'utf8').slice(0, -1)
+
+  releaseInfo().then(info => {
+    return info.id === 'alpine' ? 'alpine' : 'linux'
+  }).then(linux => {
+    const liboboeName = oboeNames[linux]
+
+    if (!fs.existsSync(dir + liboboeName)) {
+      throw new Error('cannot find ' + dir + liboboeName)
+    }
+
+    //
+    // now setup the symbolic links to the right version of liboboe
+    //
+
+    // remove this link no matter what
+    if (isSymbolicLink(dir + 'liboboe.so')) {
+      fs.unlinkSync(dir + 'liboboe.so')
+    }
+
+    if (isSymbolicLink(dir + soname)) {
+      fs.unlinkSync(dir + soname)
+    }
+
+    fs.symlinkSync(liboboeName, dir + 'liboboe.so')
+    fs.symlinkSync(liboboeName, dir + soname)
+    // delete the unused file if indicated. ignore errors.
+    if (deleteUnused) {
+      let unusedOboe = oboeNames[linux === 'alpine' ? 'linux' : 'alpine']
+      // do async so errors can easily be ignored
+      fs.unlink(dir + unusedOboe, function (err) {
+        console.log(err)
+        process.exit(0)
+      })
+    }
+    process.exit(0)
+
+  }).catch(e => {
+    console.error(e)
+    process.exit(1)
+  })
+}
+
+/*
+function setupLiboboe (cb) {
   var childOutput = []
   var showOutput = process.env.APPOPTICS_SHOW_OBOE_SETUP
 
@@ -219,7 +266,7 @@ function setupLiboboe(cb) {
     process.exit(1)
   })
 }
-
+// */
 function isSymbolicLink (name) {
   try {
     if (fs.lstatSync(name).isSymbolicLink()) {
