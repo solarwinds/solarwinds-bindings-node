@@ -21,19 +21,19 @@
   },
   "scripts": {
     "test": "mocha test/*.test.js",
+    "prepack": "node-gyp rebuild",
     "install": "node setup-liboboe",
     "rebuild": "node-gyp rebuild"
   },
   "dependencies": {
     "bindings": "~1.2.1",
-    "linux-os-info": "^2.0.0",
-    "node-addon-api": "1.6.2",
-    "node-gyp": "^3.8.0",
-    "request": "^2.87.0"
+    "linux-os-info": "^2.0.0"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
+    "node-addon-api": "1.6.2",
+    "node-gyp": "^3.8.0",
     "eslint": "^5.7.0",
-    "mocha": "^3.5.3"
+    "mocha": "^3.5.3",
+    "chai": "^4.2.0"
   }
 }
