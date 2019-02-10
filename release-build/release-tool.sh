@@ -7,7 +7,7 @@ current_branch=$(git branch | grep \* | cut -d ' ' -f2)
 BRANCH=${BRANCH:-"$current_branch"}
 PULL=${PULL-yes}
 
-echo "build appoptics-bindings.node using node versions $VERSIONS and OSes $OSes"
+
 
 # provide a unique index to each image. it can be used to avoid
 # database/table name conflicts when multiple db tests are executing
@@ -21,6 +21,8 @@ do
     # now setup the node versions requested
     for version in $VERSIONS
     do
+        echo "action $EXECUTE using node version $version on $os"
+
         # make the image name based on the os and version
         if [ "$os" = "debian" ]; then
             # this uses node's official version as debian is relatively current
@@ -38,19 +40,21 @@ do
         tag=bindings-$version-$os-build
         if [ $EXECUTE = "build-bindings" -o $EXECUTE = "release-bindings" ]; then
             # just build the bindings
-            echo "starting build in: $tag"
+            echo "starting build in container: $tag"
             uuid=$(docker run -d \
                 -v $PWD/build/$os:/root/appoptics-bindings-node/output \
                 -e PULL \
                 $tag)
-            docker wait $uuid
-            if [ $? -eq 0 -a $EXECUTE = "release-bindings" ]; then
+            status=$(docker wait $uuid)
+            echo "build done, status $status"
+
+            if [ $status -eq 0 -a $EXECUTE = "release-bindings" ]; then
                 echo "copying $PWD/build/$os/appoptics-bindings.node to $PWD/build/Release/"
                 cp $PWD/build/$os/appoptics-bindings.node $PWD/build/Release/
             fi
         elif [ $EXECUTE = "simulate" ]; then
             # just say what would be done
-            echo "SIMULATE: build appoptics-bindings.node using $tag on branch $BRANCH"
+            echo "SIMULATE: $EXECUTE for appoptics-bindings.node using $tag on branch $BRANCH"
         elif [ $EXECUTE = "build-image" ]; then
           # build the image. this generally only needs to be done once; it's mostly
           # appoptics-bindings.node that will be built, i.e., "build-bindings".
