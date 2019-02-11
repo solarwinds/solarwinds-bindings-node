@@ -126,6 +126,13 @@ to commit a version bump and tag to push to github. You must use `git push origi
 
 ### Miscellaneous
 
-Find what version of GLIBCXX is supported in /usr/lib/libstdc++.so.?
+(Use tail if you only want to see the highest version required, leave it off to see all.)
+
+Find the highest version of GLIBCXX is supported in /usr/lib/libstdc++.so.?
 
 `readelf -sV /usr/lib/libstdc++.so.6 | sed -n 's/.*@@GLIBCXX_//p' | sort -u -V | tail -1`
+
+Find the versions of GLIBCXX required by a file
+
+`readelf -sV build/Release/appoptics-bindings.node | sed -n 's/^.*\(@GLIBCXX_[^ ]*\).*$/\1/p' | sort -u -V`
+`objdump -T /lib/x86_64-linux-gnu/libc.so.6 | sed -n 's/^.*\(GLIBCXX_[^ ]*\).*$/\1/p' | sort -u -V`

@@ -1,8 +1,5 @@
-build/**
-!build/Release/appoptics-bindings.node
-release-build/
+build/
 node_modules/
-src/
 test/
 archived/
 # archived versions of oboe
