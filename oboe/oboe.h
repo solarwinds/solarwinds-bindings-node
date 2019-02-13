@@ -1,12 +1,12 @@
 /**
  * @file oboe.h
- * 
+ *
  * API header for AppOptics' Oboe application tracing library for use with AppOptics.
  *
  * @package             Oboe
  * @author              AppOptics
  * @copyright           Copyright (c) 2016, SolarWinds LLC
- * @license             
+ * @license
  * @link                https://appoptics.com
  **/
 
@@ -349,7 +349,7 @@ int oboe_init(const char *access_key, const oboe_init_options_t* options);
  * Initialize the Oboe subsytems using a specific reporter configuration.
  *
  * This should be called before any other oboe_* functions butm may also be
- * used to change or re-initialize the current reporter.  To reconnect the 
+ * used to change or re-initialize the current reporter.  To reconnect the
  * reporter use oboe_disconnect() and oboe_reconnect() instead.
  *
  * @param protocol One of  OBOE_REPORTER_PROTOCOL_FILE, OBOE_REPORTER_PROTOCOL_UDP,
@@ -506,8 +506,8 @@ typedef struct {
     int tracing_mode;          // pushed from server, override from config file
     int sample_rate;           // pushed from server, override from config file
     oboe_settings_t *settings; // cached settings, updated by tracelyzer (init to NULL)
-    int last_auto_sample_rate; // stores last known automatic sampling rate 
-    uint16_t last_auto_flags;  // stores last known flags associated with above 
+    int last_auto_sample_rate; // stores last known automatic sampling rate
+    uint16_t last_auto_flags;  // stores last known flags associated with above
     uint32_t last_auto_timestamp; // timestamp from last *settings lookup
     uint32_t last_refresh;        // last refresh time
     token_bucket_t bucket;
@@ -565,27 +565,6 @@ int oboe_sample_is_enabled(oboe_settings_cfg_t *cfg);
 int oboe_sample_layer(
     const char *service_name,
     const char *xtrace,
-    int *sample_rate_out,
-    int *sample_source_out
-);
-
-/**
- * Same as oboe_sample_layer() but accepting custom sample rate and custom tracing mode
- *
- * @param service_name Service name used for this request (may be NULL to use default settings)
- * @param xtrace X-Trace ID string from an HTTP request or higher layer (NULL or empty string if not present).
- * @param custom_sample_rate a custom sample rate only used for this request (OBOE_SETTINGS_UNSET won't override)
- * @param custom_tracing_mode a custom tracing mode only used for this request (OBOE_SETTINGS_UNSET won't override)
- * @param sample_rate_out The sample rate used to check if this request should be sampled
- *          (output - may be zero if not used).
- * @param sample_source_out The OBOE_SAMPLE_RATE_SOURCE used to check if this request
- *          should be sampled (output - may be zero if not used).
- */
-int oboe_sample_layer_custom(
-    const char *service_name,
-    const char *in_xtrace,
-    int custom_sample_rate,
-    int custom_tracing_mode,
     int *sample_rate_out,
     int *sample_source_out
 );
@@ -734,21 +713,21 @@ extern int oboe_debug_log_remove(OboeDebugLoggerFcn oldLogger, void *context);
  * We use this to get a reasonable standard format between apps.
  *
  * @param module An OBOE_MODULE_* module identifier.  Use zero for undefined.
- * @param app_name Either NULL or a pointer to a string containing a name for 
- *          the application - will prefix the log entry.  Useful when multiple 
- *          apps log to the same destination. 
+ * @param app_name Either NULL or a pointer to a string containing a name for
+ *          the application - will prefix the log entry.  Useful when multiple
+ *          apps log to the same destination.
  * @param trace_mode A string identifying the configured tracing mode, one of:
  *          "never", "always", "never", "unset", or "undef" (for invalid values)
  *          Use the oboe_tracing_mode_to_string() function to convert from
  *          numeric values.
  * @param sample_rate The configured sampling rate: -1 for unset or a
  *          integer fraction of 1000000.
- * @param reporter_type String identifying the type of reporter configured: 
+ * @param reporter_type String identifying the type of reporter configured:
  *          One of 'udp' (the default), 'ssl', or 'file'.
  * @param reporter_args The string of comma-separated key=value settings
  *          used to initialize the reporter.
  * @param extra: Either NULL or a pointer to a string to be appended to
- *          the log message and designed to include a few other 
+ *          the log message and designed to include a few other
  *          configuration parameters of interest.
  */
 #if OBOE_DEBUG_LEVEL >= OBOE_DEBUG_INFO
@@ -782,7 +761,7 @@ extern int oboe_debug_log_remove(OboeDebugLoggerFcn oldLogger, void *context);
 /**
  * Log a recoverable error.
  *
- * Each message is limited in the number of times that it will be reported at the 
+ * Each message is limited in the number of times that it will be reported at the
  * ERROR level after which it will be logged at the debug MEDIUM level.
  */
 #if OBOE_DEBUG_LEVEL >= OBOE_DEBUG_ERROR
@@ -799,7 +778,7 @@ extern int oboe_debug_log_remove(OboeDebugLoggerFcn oldLogger, void *context);
 /**
  * Log a warning.
  *
- * Each message is limited in the number of times that it will be reported at the 
+ * Each message is limited in the number of times that it will be reported at the
  * WARNING level after which it will be logged at the debug MEDIUM level.
  */
 #if OBOE_DEBUG_LEVEL >= OBOE_DEBUG_WARNING
@@ -816,7 +795,7 @@ extern int oboe_debug_log_remove(OboeDebugLoggerFcn oldLogger, void *context);
 /**
  * Log an informative message.
  *
- * Each message is limited in the number of times that it will be reported at the 
+ * Each message is limited in the number of times that it will be reported at the
  * INFO level after which it will be logged at the debug MEDIUM level.
  */
 #if OBOE_DEBUG_LEVEL >= OBOE_DEBUG_INFO
