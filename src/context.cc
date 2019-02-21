@@ -64,74 +64,6 @@ Napi::Value setDefaultSampleRate(const Napi::CallbackInfo& info) {
 }
 
 //
-// Check if the current request should be sampled based on the current settings.
-//
-// info[0] - layer name
-// info[1] - optional xtrace
-//
-// returns:
-//
-// object - {sample: boolean, source: coded_integer, rate: sample_rate}
-//
-// sample is true if the request should be sampled.
-//
-// If xtrace is empty, or if it is not valid then it will be considered a
-// new trace. Otherwise sampling will add to the existing trace.
-// Different layers may have special rules.
-//
-// This is designed to be called once per request at the entry layer.
-//
-// @param layer Name of the layer being considered for sampling
-// @param in_xtrace Incoming X-Trace ID (NULL or empty string if not present)
-// @return {Object} {sample, source, rate}
-//   sample - boolean true if should sample
-//   source - source used for sampling decision
-//   rate - rate used for sampling decision
-//
-Napi::Value sampleTrace(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-
-  // Validate arguments
-  if (info.Length() < 1 || !info[0].IsString()) {
-    Napi::TypeError::New(env, "invalid arguments").ThrowAsJavaScriptException();
-    return env.Null();
-  }
-
-  std::string layer_name;
-  std::string in_xtrace;
-
-  layer_name = info[0].As<Napi::String>().Utf8Value();
-
-  // If the second argument is present, it must be a string
-  // TODO even though oboe requires a string this could accept
-  // any form of metadata (i.e., string, metadata, or event).
-  if (info.Length() >= 2) {
-    if (!info[1].IsString()) {
-      Napi::TypeError::New(env, "X-Trace ID must be a string").ThrowAsJavaScriptException();
-      return env.Null();
-    }
-    in_xtrace = info[1].As<Napi::String>().Utf8Value();
-  }
-
-  int sample_rate = 0;
-  int sample_source = 0;
-  int sample = oboe_sample_layer(
-    layer_name.c_str(),
-    in_xtrace.c_str(),
-    &sample_rate,
-    &sample_source
-  );
-
-  // create an object to return multiple values
-  Napi::Object o = Napi::Object::New(env);
-  o.Set("sample", Napi::Boolean::New(env, sample));
-  o.Set("source", Napi::Number::New(env, sample_source));
-  o.Set("rate", Napi::Number::New(env, sample_rate));
-
-  return o;
-}
-
-//
 // Stringify the current context's metadata structure.
 //
 Napi::Value toString(const Napi::CallbackInfo& info) {
@@ -359,7 +291,6 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 
   module.Set("setTracingMode", Napi::Function::New(env, setTracingMode));
   module.Set("setDefaultSampleRate", Napi::Function::New(env, setDefaultSampleRate));
-  module.Set("sampleTrace", Napi::Function::New(env, sampleTrace));
   module.Set("toString", Napi::Function::New(env, toString));
   module.Set("set", Napi::Function::New(env, set));
   module.Set("clear", Napi::Function::New(env, clear));
