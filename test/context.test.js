@@ -6,14 +6,7 @@ let r
 describe('addon.context', function () {
   before(function (done) {
     bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY, {})
-
-    if (typeof bindings.Reporter === 'function') {
-      r = new bindings.Reporter()
-    } else {
-      r = bindings.Reporter
-    }
-
-    r.isReadyToSample(2000)
+    bindings.Reporter.isReadyToSample(2000)
     done()
   })
 
@@ -152,20 +145,27 @@ describe('addon.context', function () {
     var metadata = event.getMetadata()
     metadata.setSampleFlagTo(1)
     var xid = metadata.toString();
-    var counter = 8
-    // poll to give time for the SSL connection to complete
+    var counter = 20
+    // poll to give time for the SSL connection to complete. it should have
+    // been waited on in before() but it's possible for the connection to break.
     var id = setInterval(function() {
-      // requires layer name and string X-Trace ID to check if sampling.
-      var check = bindings.Context.sampleTrace('bruce-test', xid)
-      if (--counter <= 0 || typeof check === 'object' && check.source !== 2) {
+      var settings = bindings.Context.getTraceSettings({xtrace: xid})
+      if (--counter <= 0 || typeof settings === 'object' && settings.source !== 2) {
         clearInterval(id)
-        expect(check).property('sample', true)
-        expect(check).property('source', 1)
-        expect(check).property('rate', bindings.MAX_SAMPLE_RATE)
-        done()
-        return
+        expect(settings).property('doSample', true)
+        expect(settings).property('doMetrics', true)
+        expect(settings).property('edge', true)
+        expect(settings.metadata).instanceof(bindings.Metadata)
+        expect(settings).property('source', 1)
+        expect(settings).property('rate', bindings.MAX_SAMPLE_RATE)
+
+        if (counter < 0) {
+          done(new Error('getTraceSettings() never returned valid settings'))
+        } else {
+          done()
+        }
       }
-  }, 500)
+    }, 50)
   })
 
   it('should be invalid when empty', function () {
