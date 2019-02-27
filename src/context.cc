@@ -292,7 +292,6 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
       ", m " << out.do_metrics <<
       ", source " << out.sample_source <<
       ", rate " << out.sample_rate << std::endl;
-    }
   }
 
   // assemble the return object
