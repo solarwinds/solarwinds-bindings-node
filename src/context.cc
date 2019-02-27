@@ -165,14 +165,25 @@ Napi::Value createEventX(const Napi::CallbackInfo& info) {
     return event;
 }
 
+// 1: OBOE_SAMPLE_RATE_SOURCE_FILE - local agent config
+// 2: OBOE_SAMPLE_RATE_SOURCE_DEFAULT - compiled default
+// 3: OBOE_SAMPLE_RATE_SOURCE_OBOE - remote config (layer-specific)
+// 4: OBOE_SAMPLE_RATE_SOURCE_LAST_OBOE - previous oboe setting
+// 5: OBOE_SAMPLE_RATE_SOURCE_DEFAULT_MISCONFIGURED - unknown source
+// 6: OBOE_SAMPLE_RATE_SOURCE_OBOE_DEFAULT - remote setting(default)
+// 7: OBOE_SAMPLE_RATE_SOURCE_CUSTOM - custom setting passed as parameter via
+//                                     the oboe_tracing_decisions(). supports
+//                                     request level customized mode/rates.
+
 //
-// New function to start a trace. It returns all information necessary in a single call.
+// New function to start a trace. It returns all information
+// necessary in a single call.
 //
 // getTraceSettings(object)
 //
 // object.xtrace - Metadata instance or undefined
-// object.mode - a route-specific trace mode, 0 or 1 for 'never' or 'always'
-// object.rate - a route-specific sampling rate
+// object.mode - a route-specific trace mode, 0 or 1 for 'never'
+// or 'always' object.rate - a route-specific sampling rate
 // object.edge - override the default edge setting.
 //
 Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
@@ -189,6 +200,9 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   int mode = -1;
   // edge back to supplied metadata unless there is none.
   bool edge = true;
+
+  // this should log or not
+  bool log = false;
 
   // caller specified values. errors are ignored and default values are used.
   if (info[0].IsObject()) {
@@ -226,6 +240,11 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     // for testing or unforseen cases.
     if (o.Has("edge")) {
       edge = o.Get("edge").ToBoolean().Value();
+    }
+
+    //
+    if (o.Has("log")) {
+      log = o.Get("log").ToBoolean().Value();
     }
   }
 
@@ -266,6 +285,15 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   }
   Napi::Value v = Napi::External<oboe_metadata_t>::New(env, &omd);
   Napi::Object md = Metadata::NewInstance(env, v);
+
+  if (log) {
+    std::cout <<
+      "[bindings] s " << out.do_sample <<
+      ", m " << out.do_metrics <<
+      ", source " << out.sample_source <<
+      ", rate " << out.sample_rate << std::endl;
+    }
+  }
 
   // assemble the return object
   Napi::Object o = Napi::Object::New(env);
