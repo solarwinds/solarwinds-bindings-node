@@ -275,6 +275,12 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     return env.Undefined();
   }
 
+  if (log) {
+    std::cout << "[bindings] s " << out.do_sample << ", m " << out.do_metrics
+              << ", source " << out.sample_source << ", rate "
+              << out.sample_rate << std::endl;
+  }
+
   // now we have oboe_metadata_t either from a supplied xtrace id or from
   // a Metadata object created for this span. set the sample bit to match
   // the sample decision and create a JavaScript Metadata instance.
@@ -285,14 +291,6 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   }
   Napi::Value v = Napi::External<oboe_metadata_t>::New(env, &omd);
   Napi::Object md = Metadata::NewInstance(env, v);
-
-  if (log) {
-    std::cout <<
-      "[bindings] s " << out.do_sample <<
-      ", m " << out.do_metrics <<
-      ", source " << out.sample_source <<
-      ", rate " << out.sample_rate << std::endl;
-  }
 
   // assemble the return object
   Napi::Object o = Napi::Object::New(env);
