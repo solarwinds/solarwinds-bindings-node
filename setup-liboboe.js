@@ -25,10 +25,6 @@ function setupLiboboe (cb) {
   const version = fs.readFileSync(dir + 'VERSION', 'utf8').slice(0, -1)
 
   releaseInfo().then(info => {
-    if (info.platform !== 'linux') {
-      console.error(`appoptics-apm runs on linux; the ${info.platform} platform is not supported`)
-      process.exit(1)
-    }
     return info.id === 'alpine' ? 'alpine' : 'linux'
   }).then(linux => {
     const liboboeName = oboeNames[linux]
