@@ -201,9 +201,6 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   // edge back to supplied metadata unless there is none.
   bool edge = true;
 
-  // this should log or not
-  bool log = false;
-
   // caller specified values. errors are ignored and default values are used.
   if (info[0].IsObject()) {
     Napi::Object o = info[0].ToObject();
@@ -241,11 +238,6 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     if (o.Has("edge")) {
       edge = o.Get("edge").ToBoolean().Value();
     }
-
-    //
-    if (o.Has("log")) {
-      log = o.Get("log").ToBoolean().Value();
-    }
   }
 
   // if no xtrace or the xtrace was bad then construct new metadata.
@@ -270,9 +262,29 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   // ask for oboe's decisions on life, the universe, and everything.
   int status = oboe_tracing_decisions(&in, &out);
 
-  if (status != 0) {
-    Napi::Error::New(env, "Failed to get trace settings").ThrowAsJavaScriptException();
-    return env.Undefined();
+                                                // tracing disabled -2
+                                                // xtrace not sampled -1
+  const char* messages[] = {
+    (const char *) ("ok"),                      // 0
+    (const char *) ("no output structure"),     // 1
+    (const char *) ("no config"),               // 2
+    (const char *) ("reporter not ready"),      // 3
+    (const char *) ("no valid settings"),       // 4
+  };
+
+  if (status > 0) {
+    const char* m;
+    if (status > 4) {
+      m = "failed to get trace settings";
+    } else {
+      m = messages[status];
+    }
+
+    // assemble an error return
+    Napi::Object o = Napi::Object::New(env);
+    o.Set("error", status);
+    o.Set("message", m);
+    return o;
   }
 
   // now we have oboe_metadata_t either from a supplied xtrace id or from
@@ -286,18 +298,10 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   Napi::Value v = Napi::External<oboe_metadata_t>::New(env, &omd);
   Napi::Object md = Metadata::NewInstance(env, v);
 
-  if (log) {
-    std::cout <<
-      "[bindings] s " << out.do_sample <<
-      ", m " << out.do_metrics <<
-      ", source " << out.sample_source <<
-      ", rate " << out.sample_rate << std::endl;
-    }
-  }
-
   // assemble the return object
   Napi::Object o = Napi::Object::New(env);
   o.Set("metadata", md);
+  o.Set("status", Napi::Number::New(env, status));
   o.Set("edge", Napi::Boolean::New(env, edge));
   o.Set("doSample", Napi::Boolean::New(env, out.do_sample));
   o.Set("doMetrics", Napi::Boolean::New(env, out.do_metrics));
