@@ -138,6 +138,13 @@ describe('addon.context', function () {
     expect(event).instanceOf(bindings.Event)
   })
 
+  it('should tell us that a non-traced xtrace doesn\'t need to be sampled', function () {
+    var md = bindings.Metadata.makeRandom(0)
+    var settings = bindings.Context.getTraceSettings({xtrace: md.toString()})
+
+    expect(settings).property('status', -1)       // -1 means non-sampled xtrace
+  })
+
   it('should get verification that a request should be sampled', function (done) {
     bindings.Context.setTracingMode(bindings.TRACE_ALWAYS)
     bindings.Context.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE)
@@ -158,6 +165,7 @@ describe('addon.context', function () {
         expect(settings.metadata).instanceof(bindings.Metadata)
         expect(settings).property('source', 1)
         expect(settings).property('rate', bindings.MAX_SAMPLE_RATE)
+        expect(settings).property('status', 0)
 
         if (counter < 0) {
           done(new Error('getTraceSettings() never returned valid settings'))
