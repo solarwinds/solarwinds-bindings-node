@@ -439,10 +439,8 @@ void oboe_shutdown();
 #define OBOE_SAMPLE_RESOLUTION 1000000
 
 // Used to convert to settings flags:
-#define OBOE_TRACE_NEVER   0    // deprecated: do not use, only here for backward compatibility
-#define OBOE_TRACE_ALWAYS  1    // deprecated: do not use, only here for backward compatibility
-#define OBOE_TRACE_DISABLED   0
-#define OBOE_TRACE_ENABLED  1
+#define OBOE_TRACE_NEVER   0
+#define OBOE_TRACE_ALWAYS  1
 
 #if defined _WIN32
     #pragma pack(push, 1)
@@ -498,7 +496,7 @@ typedef struct {
     char name[OBOE_SETTINGS_MAX_STRLEN]; // Flawfinder: ignore
     volatile uint32_t request_count;            // all the requests that came through this layer
     volatile uint32_t exhaustion_count;         // # of times the token bucket limiting caused a trace to not occur
-    volatile uint32_t trace_count;              // # of traces that were sent (includes "enabled" or "through" traces)
+    volatile uint32_t trace_count;              // # of traces that were sent (includes "always", "through", or "AVW" traces)
     volatile uint32_t sample_count;             // # of traces that caused a random coin-flip (not "through" traces)
     volatile uint32_t through_count;            // # of through traces
     volatile uint32_t through_ignored_count;    // # of new requests, that are rejected due to start_always_flag == 0
@@ -748,7 +746,7 @@ extern int oboe_debug_log_remove(OboeDebugLoggerFcn oldLogger, void *context);
  *          the application - will prefix the log entry.  Useful when multiple 
  *          apps log to the same destination. 
  * @param trace_mode A string identifying the configured tracing mode, one of:
- *          "enabled", "disabled", "unset", or "undef" (for invalid values)
+ *          "never", "always", "never", "unset", or "undef" (for invalid values)
  *          Use the oboe_tracing_mode_to_string() function to convert from
  *          numeric values.
  * @param sample_rate The configured sampling rate: -1 for unset or a
