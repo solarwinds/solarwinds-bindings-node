@@ -264,6 +264,12 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   in.custom_sample_rate = rate;
   in.custom_tracing_mode = mode;
 
+  if (log) {
+    std::cout << "[bindings-in] n " << in.service_name << ", x " << in.in_xtrace
+              << ", r "  << in.custom_sample_rate
+              << ", m " << in.custom_tracing_mode << std::endl;
+  }
+
   // set the version in case oboe adds fields in the future.
   out.version = 1;
 
@@ -276,7 +282,7 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   }
 
   if (log) {
-    std::cout << "[bindings] s " << out.do_sample << ", m " << out.do_metrics
+    std::cout << "[bindings-out] s " << out.do_sample << ", m " << out.do_metrics
               << ", source " << out.sample_source << ", rate "
               << out.sample_rate << std::endl;
   }
