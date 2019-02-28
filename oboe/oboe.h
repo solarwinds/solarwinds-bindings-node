@@ -439,8 +439,10 @@ void oboe_shutdown();
 #define OBOE_SAMPLE_RESOLUTION 1000000
 
 // Used to convert to settings flags:
-#define OBOE_TRACE_NEVER   0
-#define OBOE_TRACE_ALWAYS  1
+#define OBOE_TRACE_NEVER   0    // deprecated: do not use, only here for backward compatibility
+#define OBOE_TRACE_ALWAYS  1    // deprecated: do not use, only here for backward compatibility
+#define OBOE_TRACE_DISABLED   0
+#define OBOE_TRACE_ENABLED  1
 
 #if defined _WIN32
     #pragma pack(push, 1)
@@ -468,8 +470,14 @@ void oboe_shutdown();
 #define OBOE_SPAN_NO_REPORTER -4
 #define OBOE_SPAN_NOT_READY -5
 
+// these codes are used by oboe_sample_layer_custom() and oboe_tracing_decisions()
+#define OBOE_TRACING_DECISIONS_TRACING_DISABLED -2
+#define OBOE_TRACING_DECISIONS_XTRACE_NOT_SAMPLED -1
 #define OBOE_TRACING_DECISIONS_OK 0
 #define OBOE_TRACING_DECISIONS_NULL_OUT 1
+#define OBOE_TRACING_DECISIONS_NO_CONFIG 2
+#define OBOE_TRACING_DECISIONS_REPORTER_NOT_READY 3
+#define OBOE_TRACING_DECISIONS_NO_VALID_SETTINGS 4
 
 typedef struct {
     uint32_t magic;
@@ -496,7 +504,7 @@ typedef struct {
     char name[OBOE_SETTINGS_MAX_STRLEN]; // Flawfinder: ignore
     volatile uint32_t request_count;            // all the requests that came through this layer
     volatile uint32_t exhaustion_count;         // # of times the token bucket limiting caused a trace to not occur
-    volatile uint32_t trace_count;              // # of traces that were sent (includes "always", "through", or "AVW" traces)
+    volatile uint32_t trace_count;              // # of traces that were sent (includes "enabled" or "through" traces)
     volatile uint32_t sample_count;             // # of traces that caused a random coin-flip (not "through" traces)
     volatile uint32_t through_count;            // # of through traces
     volatile uint32_t through_ignored_count;    // # of new requests, that are rejected due to start_always_flag == 0
@@ -593,6 +601,7 @@ int oboe_sample_layer_custom(
     const char *in_xtrace,
     int custom_sample_rate,
     int custom_tracing_mode,
+    int *sampling_decision_out,
     int *sample_rate_out,
     int *sample_source_out,
     uint16_t *flags_out
@@ -746,7 +755,7 @@ extern int oboe_debug_log_remove(OboeDebugLoggerFcn oldLogger, void *context);
  *          the application - will prefix the log entry.  Useful when multiple 
  *          apps log to the same destination. 
  * @param trace_mode A string identifying the configured tracing mode, one of:
- *          "never", "always", "never", "unset", or "undef" (for invalid values)
+ *          "enabled", "disabled", "unset", or "undef" (for invalid values)
  *          Use the oboe_tracing_mode_to_string() function to convert from
  *          numeric values.
  * @param sample_rate The configured sampling rate: -1 for unset or a
