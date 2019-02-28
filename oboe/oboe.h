@@ -798,7 +798,9 @@ extern int oboe_debug_log_remove(OboeDebugLoggerFcn oldLogger, void *context);
 #if OBOE_DEBUG_LEVEL >= OBOE_DEBUG_ERROR
 # define OBOE_DEBUG_LOG_ERROR(module, ...)                   \
   {                                                          \
-    oboe_debug_logger(module, OBOE_DEBUG_ERROR, __FILE__, __LINE__, __VA_ARGS__); \
+    static int usage_counter = 0;                            \
+    int loglev = (++usage_counter <= MAX_DEBUG_MSG_COUNT ? OBOE_DEBUG_ERROR : OBOE_DEBUG_MEDIUM); \
+    oboe_debug_logger(module, loglev, __FILE__, __LINE__, __VA_ARGS__); \
   }
 #else
 # define OBOE_DEBUG_LOG_ERROR(module, format_string, ...) {}
