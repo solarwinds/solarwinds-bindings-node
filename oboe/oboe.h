@@ -475,7 +475,7 @@ void oboe_shutdown();
 #define OBOE_SPAN_NO_REPORTER -4
 #define OBOE_SPAN_NOT_READY -5
 
-// these codes are used by oboe_sample_layer_custom() and oboe_tracing_decisions()
+// these codes are used by oboe_sample_layer_custom(), oboe_tracing_decisions(), oboe_reporter_is_ready()
 #define OBOE_TRACING_DECISIONS_TRACING_DISABLED -2
 #define OBOE_TRACING_DECISIONS_XTRACE_NOT_SAMPLED -1
 #define OBOE_TRACING_DECISIONS_OK 0
@@ -483,6 +483,7 @@ void oboe_shutdown();
 #define OBOE_TRACING_DECISIONS_NO_CONFIG 2
 #define OBOE_TRACING_DECISIONS_REPORTER_NOT_READY 3
 #define OBOE_TRACING_DECISIONS_NO_VALID_SETTINGS 4
+#define OBOE_TRACING_DECISIONS_QUEUE_FULL 5
 
 typedef struct {
     uint32_t magic;
@@ -810,7 +811,9 @@ extern int oboe_debug_log_remove(OboeDebugLoggerFcn oldLogger, void *context);
 #if OBOE_DEBUG_LEVEL >= OBOE_DEBUG_ERROR
 # define OBOE_DEBUG_LOG_ERROR(module, ...)                   \
   {                                                          \
-    oboe_debug_logger(module, OBOE_DEBUG_ERROR, __FILE__, __LINE__, __VA_ARGS__); \
+    static int usage_counter = 0;                            \
+    int loglev = (++usage_counter <= MAX_DEBUG_MSG_COUNT ? OBOE_DEBUG_ERROR : OBOE_DEBUG_MEDIUM); \
+    oboe_debug_logger(module, loglev, __FILE__, __LINE__, __VA_ARGS__); \
   }
 #else
 # define OBOE_DEBUG_LOG_ERROR(module, format_string, ...) {}
