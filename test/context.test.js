@@ -1,8 +1,6 @@
 const bindings = require('../')
 const expect = require('chai').expect
 
-let r
-
 describe('addon.context', function () {
   before(function (done) {
     bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY, {})
