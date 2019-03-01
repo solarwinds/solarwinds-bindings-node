@@ -293,11 +293,6 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     return o;
   }
 
-  // if it used the supplied xtrace then ignore do_sample. probably should fill it in
-  if (status == -1) {
-    out.do_metrics = out.do_sample = omd.flags;
-  }
-
   // now we have oboe_metadata_t either from a supplied xtrace id or from
   // a Metadata object created for this span. set the sample bit to match
   // the sample decision and create a JavaScript Metadata instance.
