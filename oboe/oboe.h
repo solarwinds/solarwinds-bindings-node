@@ -187,6 +187,11 @@ typedef struct oboe_tracing_decisions_out {
     int do_metrics;
 } oboe_tracing_decisions_out_t;
 
+typedef struct oboe_internal_stats {
+    int version;
+    int reporters_initialized;
+} oboe_internal_stats_t;
+
 #define OBOE_SPAN_PARAMS_VERSION 1              // version of oboe_span_params_t
 #define OBOE_TRANSACTION_NAME_MAX_LENGTH 255    // max allowed length for transaction name
 
@@ -805,9 +810,7 @@ extern int oboe_debug_log_remove(OboeDebugLoggerFcn oldLogger, void *context);
 #if OBOE_DEBUG_LEVEL >= OBOE_DEBUG_ERROR
 # define OBOE_DEBUG_LOG_ERROR(module, ...)                   \
   {                                                          \
-    static int usage_counter = 0;                            \
-    int loglev = (++usage_counter <= MAX_DEBUG_MSG_COUNT ? OBOE_DEBUG_ERROR : OBOE_DEBUG_MEDIUM); \
-    oboe_debug_logger(module, loglev, __FILE__, __LINE__, __VA_ARGS__); \
+    oboe_debug_logger(module, OBOE_DEBUG_ERROR, __FILE__, __LINE__, __VA_ARGS__); \
   }
 #else
 # define OBOE_DEBUG_LOG_ERROR(module, format_string, ...) {}
@@ -1013,6 +1016,9 @@ int oboe_get_profiling_interval();
 void* oboe_regex_new_expression(const char* exprString);
 void oboe_regex_delete_expression(void* expression);
 int oboe_regex_match(const char* string, void* expression);
+
+/* oboe internal stats for agents to consume */
+oboe_internal_stats_t* oboe_get_internal_stats();
 
 #ifdef __cplusplus
 } // extern "C"

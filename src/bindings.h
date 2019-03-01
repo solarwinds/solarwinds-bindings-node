@@ -7,15 +7,6 @@
 #include <napi.h>
 #include <oboe/oboe.h>
 
-typedef struct oboe_internal_stats {
-  int version;
-  int reporters_initialized;
-} oboe_internal_stats_t;
-
-extern "C" {
-  oboe_internal_stats_t* oboe_get_internal_stats();
-}
-
 typedef int (*send_generic_span_t) (char*, uint16_t, oboe_span_params_t*);
 
 //
