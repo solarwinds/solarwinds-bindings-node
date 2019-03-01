@@ -14,12 +14,7 @@ Napi::Value getConfigSettings(const Napi::CallbackInfo& info) {
   oboe_settings_cfg_t* cfg = oboe_settings_cfg_get();
 
   // create the return object
-  Napi::Object o = Napi::Object::New(env);
-
   Napi::Object config = Napi::Object::New(env);
-  o.Set("config", config);
-  Napi::Object stats = Napi::Object::New(env);
-  o.Set("stats", stats);
 
   if (cfg != NULL) {
     #define aoSAMPLE_START OBOE_SETTINGS_FLAG_SAMPLE_START
@@ -31,10 +26,18 @@ Napi::Value getConfigSettings(const Napi::CallbackInfo& info) {
     config.Set("flag_through_always", Napi::Boolean::New(env, cfg->settings && cfg->settings->flags & aoTHROUGH_ALWAYS));
   }
 
-  oboe_internal_stats_t* ostats = oboe_get_internal_stats();
+  return config;
+}
+
+Napi::Value getStats(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  oboe_internal_stats_t* stats = oboe_get_internal_stats();
+
+  Napi::Object o = Napi::Object::New(env);
 
   if (stats != NULL) {
-    stats.Set("reporterInitCount", Napi::Number::New(env, ostats->reporters_initialized));
+    o.Set("reporterInitCount", Napi::Number::New(env, stats->reporters_initialized));
   }
 
   return o;
@@ -51,6 +54,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   Napi::Object module = Napi::Object::New(env);
   module.Set("getVersionString", Napi::Function::New(env, getVersionString));
   module.Set("getSettings", Napi::Function::New(env, getConfigSettings));
+  module.Set("getStats", Napi::Function::New(env, getStats));
 
   exports.Set("Config", module);
 
