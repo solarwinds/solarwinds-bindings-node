@@ -38,6 +38,7 @@ Napi::Value getStats(const Napi::CallbackInfo& info) {
 
   if (stats != NULL) {
     o.Set("reporterInitCount", Napi::Number::New(env, stats->reporters_initialized));
+    o.Set("eventQueueFree", Napi::Number::New(env, stats->event_queue_free));
   }
 
   return o;

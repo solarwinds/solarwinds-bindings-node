@@ -190,6 +190,7 @@ typedef struct oboe_tracing_decisions_out {
 typedef struct oboe_internal_stats {
     int version;
     int reporters_initialized;
+    int event_queue_free;
 } oboe_internal_stats_t;
 
 #define OBOE_SPAN_PARAMS_VERSION 1              // version of oboe_span_params_t
