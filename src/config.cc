@@ -39,6 +39,9 @@ Napi::Value getStats(const Napi::CallbackInfo& info) {
   if (stats != NULL) {
     o.Set("reporterInitCount", Napi::Number::New(env, stats->reporters_initialized));
     o.Set("eventQueueFree", Napi::Number::New(env, stats->event_queue_free));
+    o.Set("collectorOk", Napi::Number::New(env, stats->collector_response_ok));
+    o.Set("collectorTryLater", Napi::Number::New(env, stats->collector_response_try_later));
+    o.Set("collectorLimitExceeded", Napi::Number::New(env, stats->collector_response_limit_exceeded));
   }
 
   return o;

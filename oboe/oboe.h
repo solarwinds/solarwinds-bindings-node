@@ -191,6 +191,9 @@ typedef struct oboe_internal_stats {
     int version;
     int reporters_initialized;
     int event_queue_free;
+    int collector_response_ok;
+    int collector_response_try_later;
+    int collector_response_limit_exceeded;
 } oboe_internal_stats_t;
 
 #define OBOE_SPAN_PARAMS_VERSION 1              // version of oboe_span_params_t
