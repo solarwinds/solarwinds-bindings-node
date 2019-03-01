@@ -31,9 +31,9 @@ describe('addon.reporter', function () {
     expect(ready).be.a('number')
 
     if (realCollector) {
-      expect(ready).equal(1)
+      expect(ready).equal(1, `${process.env.APPOPTICS_COLLECTOR} should be ready`)
     } else {
-      expect(ready).not.equal(1)
+      expect(ready).not.equal(1, 'isReadyToSample() should return 0')
     }
   })
 
