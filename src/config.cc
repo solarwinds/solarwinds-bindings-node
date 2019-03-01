@@ -13,19 +13,24 @@ Napi::Value getConfigSettings(const Napi::CallbackInfo& info) {
 
   oboe_settings_cfg_t* cfg = oboe_settings_cfg_get();
 
-  if (cfg == NULL) {
-    return env.Undefined();
+  // create the return object
+  Napi::Object o = Napi::Object::New(env);
+
+  if (cfg != NULL) {
+    #define aoSAMPLE_START OBOE_SETTINGS_FLAG_SAMPLE_START
+    #define aoTHROUGH_ALWAYS OBOE_SETTINGS_FLAG_SAMPLE_THROUGH_ALWAYS
+
+    o.Set("tracing_mode", Napi::Number::New(env, cfg->tracing_mode));
+    o.Set("sample_rate", Napi::Number::New(env, cfg->sample_rate));
+    o.Set("flag_sample_start", Napi::Boolean::New(env, cfg->settings && cfg->settings->flags & aoSAMPLE_START));
+    o.Set("flag_through_always", Napi::Boolean::New(env, cfg->settings && cfg->settings->flags & aoTHROUGH_ALWAYS));
   }
 
-  #define aoSAMPLE_START OBOE_SETTINGS_FLAG_SAMPLE_START
-  #define aoTHROUGH_ALWAYS OBOE_SETTINGS_FLAG_SAMPLE_THROUGH_ALWAYS
+  oboe_internal_stats_t* stats = oboe_get_internal_stats();
 
-  // assemble the return object
-  Napi::Object o = Napi::Object::New(env);
-  o.Set("tracing_mode", Napi::Number::New(env, cfg->tracing_mode));
-  o.Set("sample_rate", Napi::Number::New(env, cfg->sample_rate));
-  o.Set("flag_sample_start", Napi::Boolean::New(env, cfg->settings && cfg->settings->flags & aoSAMPLE_START));
-  o.Set("flag_through_always", Napi::Boolean::New(env, cfg->settings && cfg->settings->flags & aoTHROUGH_ALWAYS));
+  if (stats != NULL) {
+    o.Set("reporterInitCount", Napi::Number::New(env, stats->reporters_initialized));
+  }
 
   return o;
 }
