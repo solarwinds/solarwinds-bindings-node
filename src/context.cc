@@ -210,14 +210,20 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     if (v.IsString()) {
       xtrace = v.As<Napi::String>();
 
-      // try to convert it to metadata. if it fails act as if no xtrace was
-      // supplied.
-      int status = oboe_metadata_fromstr(&omd, xtrace.c_str(), xtrace.length());
-      // status can be zero with a version other than 2, so check that too.
-      if (status < 0 || omd.version != 2) {
-        xtrace = "";
+      // make sure it's the right length before calling oboe.
+      if (xtrace.length() == 60) {
+        // try to convert it to metadata. if it fails act as if no xtrace was
+        // supplied.
+        int status = oboe_metadata_fromstr(&omd, xtrace.c_str(), xtrace.length());
+        // status can be zero with a version other than 2, so check that too.
+        if (status < 0 || omd.version != 2) {
+          xtrace = "";
+        } else {
+          have_metadata = true;
+        }
       } else {
-        have_metadata = true;
+        // if it's the wrong length don't pass it to oboe
+        xtrace = "";
       }
     }
 
@@ -287,6 +293,11 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     return o;
   }
 
+  // if it used the supplied xtrace then ignore do_sample. probably should fill it in
+  if (status == -1) {
+    out.do_metrics = out.do_sample = omd.flags;
+  }
+
   // now we have oboe_metadata_t either from a supplied xtrace id or from
   // a Metadata object created for this span. set the sample bit to match
   // the sample decision and create a JavaScript Metadata instance.
@@ -301,6 +312,7 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   // assemble the return object
   Napi::Object o = Napi::Object::New(env);
   o.Set("metadata", md);
+  o.Set("metadataFromXtrace", Napi::Boolean::New(env, have_metadata));
   o.Set("status", Napi::Number::New(env, status));
   o.Set("edge", Napi::Boolean::New(env, edge));
   o.Set("doSample", Napi::Boolean::New(env, out.do_sample));
