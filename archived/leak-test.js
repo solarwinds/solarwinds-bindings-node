@@ -1,6 +1,6 @@
 'use strict'
 
-const aob = require('.')
+const aob = require('..')
 
 function minutes (n) {
   return n * 60000

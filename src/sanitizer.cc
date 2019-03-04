@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-using namespace v8;
+using namespace Napi;
 
 #define OBOE_SQLSANITIZE_AUTO       1   /*!< Enable SQL sanitizer - automatic configuration */
 #define OBOE_SQLSANITIZE_DROPDOUBLE 2   /*!< Enable SQL sanitizer - drop double-quoted text (overrides KEEP) */
@@ -271,34 +271,57 @@ size_t oboe_sanitize_sql(char *sql, size_t in_len, int saniflags) {
     return pout - sql;
 }
 
-void Sanitizer::sanitize(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+//
+// sanitize is the only function that is exported to JavaScript
+//
+Napi::Value sanitize(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
   if (info.Length() < 1) {
-    return Nan::ThrowError("Wrong number of arguments");
+    Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
+    return env.Null();
   }
 
-  Nan::Utf8String input(info[0]);
+  std::string input = info[0].As<Napi::String>();
 
-  int flag = OBOE_SQLSANITIZE_AUTO;
+  int flags = OBOE_SQLSANITIZE_AUTO;
   if (info.Length() == 2) {
-    flag = info[1]->Int32Value();
+    flags = info[1].As<Napi::Number>().Int32Value();
   }
 
-  char* output = strndup(*input, input.length());
-  oboe_sanitize_sql(output, input.length(), flag);
-  info.GetReturnValue().Set(Nan::New(output).ToLocalChecked());
+  char* output = strndup(input.c_str(), input.length());
+
+  oboe_sanitize_sql(output, input.length(), flags);
+
+  Napi::String s = Napi::String::New(env, output);
   free(output);
+
+  return s;
 }
+
+//
+// only Sanitizer::Init needs to be visible to the bindings.cc initialization code.
+//
+namespace Sanitizer {
 
 // Wrap the C++ object so V8 can understand it
-void Sanitizer::Init(v8::Local<v8::Object> module) {
-  Nan::HandleScope scope;
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
+  Napi::HandleScope scope(env);
 
-  v8::Local<v8::Object> exports = Nan::New<v8::Object>();
-  Nan::Set(exports, Nan::New("OBOE_SQLSANITIZE_AUTO").ToLocalChecked(), Nan::New(OBOE_SQLSANITIZE_AUTO));
-  Nan::Set(exports, Nan::New("OBOE_SQLSANITIZE_DROPDOUBLE").ToLocalChecked(), Nan::New(OBOE_SQLSANITIZE_DROPDOUBLE));
-  Nan::Set(exports, Nan::New("OBOE_SQLSANITIZE_KEEPDOUBLE").ToLocalChecked(), Nan::New(OBOE_SQLSANITIZE_KEEPDOUBLE));
+  // have a separate namespace for the sanitizer module
+  Napi::Object module = Napi::Object::New(env);
 
-  Nan::SetMethod(exports, "sanitize", Sanitizer::sanitize);
+  // constants
+  module.Set("OBOE_SQLSANITIZE_AUTO", Napi::Number::New(env, OBOE_SQLSANITIZE_AUTO));
+  module.Set("OBOE_SQLSANITIZE_DROPDOUBLE", Napi::Number::New(env, OBOE_SQLSANITIZE_DROPDOUBLE));
+  module.Set("OBOE_SQLSANITIZE_KEEPDOUBLE", Napi::Number::New(env, OBOE_SQLSANITIZE_KEEPDOUBLE));
 
-  Nan::Set(module, Nan::New("Sanitizer").ToLocalChecked(), exports);
+  // the function
+  module.Set("sanitize", Napi::Function::New(env, sanitize));
+
+  // attach the sanitizer namespace to the exports object.
+  exports.Set("Sanitizer", module);
+
+  return exports;
 }
+} // end namespace Sanitizer

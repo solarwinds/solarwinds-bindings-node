@@ -1,13 +1,20 @@
 build/
 node_modules/
 test/
-travis-log/
-rum-templates/
-oracle/
-*.tgz
+archived/
+# archived versions of oboe
 oboe-*
+# links
 oboe/liboboe-1.0.so.0
 oboe/liboboe.so
+# development focused
+.vscode/
+.npmignore
+.travis.yml
 CONTRIBUTING.md
 Gulpfile.js
 env.sh
+.editorconfig
+*.tgz
+*.tmp
+*-notes.md

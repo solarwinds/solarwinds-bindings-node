@@ -1,278 +1,137 @@
 #include "bindings.h"
 
-Nan::Persistent<v8::FunctionTemplate> Metadata::constructor;
+Napi::FunctionReference Metadata::constructor;
 
-// currently active
-static int metadata_count = 0;
-// at destruction - size and average size
-static int metadata_deleted_size = 0;
-static int metadata_deleted_count = 0;
+//
+// JavaScript callable method to create a new Javascript instance
+//
+Metadata::Metadata(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Metadata>(info) {
+  Napi::Env env = info.Env();
 
-Metadata::Metadata() {
-    metadata_count += 1;
-}
-
-// Allow construction of clones
-Metadata::Metadata(oboe_metadata_t* md) {
-    metadata_count += 1;
-    oboe_metadata_copy(&metadata, md);
-}
-
-// Remember to cleanup the metadata struct when garbage collected
-Metadata::~Metadata() {
-    metadata_count -= 1;
-    metadata_deleted_size += sizeof(metadata);
-    metadata_deleted_count += 1;
-    oboe_metadata_destroy(&metadata);
-}
-
-bool Metadata::sampleFlagIsOn() {
-  return metadata.flags & XTR_FLAGS_SAMPLED;
-}
-
-/**
- * JavaScript & C++ callable method to create a new Javascript instance
- *
- *
- */
-NAN_METHOD(Metadata::New) {
+  //Napi::Value Metadata::New(const Napi::CallbackInfo& info) {
   if (!info.IsConstructCall()) {
-    return Nan::ThrowError("Metadata() must be called as a constructor");
-  }
-
-  // Go through the various calling signatures.
-  Metadata* md;
-
-  if (info.Length() == 0) {
-    // returns null metadata
-    md = new Metadata();
-  } else if (info.Length() != 1) {
-    return Nan::ThrowError("new Metadata() accepts at most 1 parameter");
-  } else {
-    // there is one argument
-    if (info[0]->IsExternal()) {
-        // this can only be used by C++ methods, not JavaScript. They must pass
-        // the right data - an oboe_metadata_t*.
-        oboe_metadata_t* omd = static_cast<oboe_metadata_t*>(info[0].As<v8::External>()->Value());
-        md = new Metadata(omd);
-    } else {
-        // convert Metadata, Event, or String.
-        md = Metadata::getMetadata(info[0]);
-        if (md == NULL) {
-            return Nan::ThrowError("Invalid argument for new Metadata()");
-        }
-    }
-  }
-
-  md->Wrap(info.This());
-  info.GetReturnValue().Set(info.This());
-}
-
-
-//
-// Create a new instance when a Metadata object argument
-//
-v8::Local<v8::Object> Metadata::NewInstance(Metadata* md) {
-  Nan::EscapableHandleScope scope;
-
-  const unsigned argc = 1;
-  v8::Local<v8::Value> argv[argc] = { Nan::New<v8::External>(&md->metadata) };
-  v8::Local<v8::Function> cons = Nan::New<v8::FunctionTemplate>(constructor)->GetFunction();
-  //v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
-  v8::Local<v8::Object> instance = Nan::NewInstance(cons, argc, argv).ToLocalChecked();
-
-  return scope.Escape(instance);
-}
-
-//
-// Create a new instance when no arguments.
-//
-v8::Local<v8::Object> Metadata::NewInstance() {
-    Nan::EscapableHandleScope scope;
-
-    const unsigned argc = 0;
-    v8::Local<v8::Value> argv[argc] = {};
-    v8::Local<v8::Function> cons = Nan::New<v8::FunctionTemplate>(constructor)->GetFunction();
-    //v8::Local<v8::Object> instance = cons->NewInstance(argc, argv);
-    v8::Local<v8::Object> instance = Nan::NewInstance(cons, argc, argv).ToLocalChecked();
-
-    return scope.Escape(instance);
-}
-
-NAN_METHOD(Metadata::getMetadataData) {
-    v8::Local<v8::String> active = Nan::New<v8::String>("active").ToLocalChecked();
-    v8::Local<v8::String> freedBytes = Nan::New<v8::String>("freedBytes").ToLocalChecked();
-    v8::Local<v8::String> freedCount = Nan::New<v8::String>("freedCount").ToLocalChecked();
-
-    v8::Local<v8::Object> o = Nan::New<v8::Object>();
-    Nan::Set(o, active, Nan::New<v8::Number>(metadata_count));
-    Nan::Set(o, freedBytes, Nan::New<v8::Number>(metadata_deleted_size));
-    Nan::Set(o, freedCount, Nan::New<v8::Number>(metadata_deleted_count));
-
-    info.GetReturnValue().Set(o);
-}
-
-/**
- * JavaScript callable static method to return metadata constructed from the current
- * oboe context.
- */
-NAN_METHOD(Metadata::fromContext) {
-    Metadata* md = new Metadata(oboe_context_get());
-    info.GetReturnValue().Set(Metadata::NewInstance(md));
-    delete md;
-}
-
-// Transform a string back into a metadata instance
-NAN_METHOD(Metadata::fromString) {
-  Nan::Utf8String str(info[0]);
-
-  oboe_metadata_t md;
-  int status = oboe_metadata_fromstr(&md, *str, str.length());
-  // status can be zero with a version other than 2, so check that too.
-  if (status < 0 || md.version != 2) {
-    info.GetReturnValue().Set(Nan::Undefined());
+    Napi::Error::New(env, "Metadata() must be called as a constructor").ThrowAsJavaScriptException();
     return;
   }
 
-  Metadata* metadata = new Metadata(&md);
-  info.GetReturnValue().Set(Metadata::NewInstance(metadata));
-  delete metadata;
+  if (info.Length() > 1) {
+    Napi::TypeError::New(env, "Invalid signature").ThrowAsJavaScriptException();
+  }
+
+  // no argument gets empty metadata
+  if (info.Length() == 0) {
+    oboe_metadata_init(&metadata);
+    return;
+  }
+
+  // use a native function to figure out and extract the metadata from one
+  // of: Metadata, Event, or String.
+  bool ok = Metadata::getMetadata(info[0], &metadata);
+
+  // if it's not any of those it's an error
+  if (!ok) {
+    Napi::TypeError::New(env, "argument must be Metadata, Event, or a valid X-Trace string");
+    return;
+  }
+
+}
+
+Metadata::~Metadata() {}
+
+//
+// c++ callable constructor
+//
+Napi::Object Metadata::NewInstance(Napi::Env env, Napi::Value arg) {
+    Napi::EscapableHandleScope scope(env);
+
+    Napi::Object o = constructor.New({arg});
+    return scope.Escape(napi_value(o)).ToObject();
+}
+
+//
+// JavaScript callable static method to return metadata constructed from the current
+// oboe context.
+//
+Napi::Value Metadata::fromContext(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    oboe_metadata_t* omd = oboe_context_get();
+
+    Napi::Value v = Napi::External<oboe_metadata_t>::New(env, omd);
+    Napi::Object md = Metadata::NewInstance(env, v);
+    return md;
+}
+
+//
+// Transform a string back into a metadata instance
+//
+Napi::Value Metadata::fromString(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  std::string str = info[0].As<Napi::String>();
+
+  oboe_metadata_t omd;
+  int status = oboe_metadata_fromstr(&omd, str.c_str(), str.length());
+  // status can be zero with a version other than 2, so check that too.
+  if (status < 0 || omd.version != 2) {
+    return env.Undefined();
+  }
+
+  Napi::Value v = Napi::External<oboe_metadata_t>::New(env, &omd);
+  return Metadata::NewInstance(env, v);
 }
 
 //
 // Metadata factory for randomized metadata
 //
-NAN_METHOD(Metadata::makeRandom) {
-    oboe_metadata_t md;
-    oboe_metadata_init(&md);
-    oboe_metadata_random(&md);
+Napi::Value Metadata::makeRandom(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    oboe_metadata_t omd;
+
+    oboe_metadata_init(&omd);
+    oboe_metadata_random(&omd);
 
     // set or clear the sample flag appropriately if an argument specified.
     if (info.Length() == 1) {
-        if (info[0]->ToBoolean()->BooleanValue()) {
-            md.flags |= XTR_FLAGS_SAMPLED;
+        if (info[0].ToBoolean().Value()) {
+            omd.flags |= XTR_FLAGS_SAMPLED;
         } else {
-            md.flags &= ~XTR_FLAGS_SAMPLED;
+            omd.flags &= ~XTR_FLAGS_SAMPLED;
         }
     }
 
-    // create intermediate metadata so it can be deleted and doesn't leak memory.
-    Metadata* metadata = new Metadata(&md);
+    Napi::Value v = Napi::External<oboe_metadata_t>::New(env, &omd);
 
-    // create a metadata object so this parallels the JS invocation.
-    info.GetReturnValue().Set(Metadata::NewInstance(metadata));
-    delete metadata;
+    return Metadata::NewInstance(env, v);
 }
 
-// Copy the contents of the metadata instance to a new instance
-NAN_METHOD(Metadata::copy) {
-    Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
-    info.GetReturnValue().Set(Metadata::NewInstance(self));
-}
-
+//
 // Verify that the state of the metadata instance is valid
-NAN_METHOD(Metadata::isValid) {
-    Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
-    bool status = oboe_metadata_is_valid(&self->metadata);
-    info.GetReturnValue().Set(Nan::New(status));
+//
+Napi::Value Metadata::isValid(const Napi::CallbackInfo& info) {
+    bool status = oboe_metadata_is_valid(&this->metadata);
+    return Napi::Boolean::New(info.Env(), status);
 }
 
-NAN_METHOD(Metadata::getSampleFlag) {
-    Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
-    bool sampleFlag = self->sampleFlagIsOn();
-    info.GetReturnValue().Set(Nan::New(sampleFlag));
+Napi::Value Metadata::getSampleFlag(const Napi::CallbackInfo& info) {
+    return Napi::Boolean::New(info.Env(), this->sampleFlagIsOn());
 }
 
-NAN_METHOD(Metadata::setSampleFlagTo) {
+Napi::Value Metadata::setSampleFlagTo(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+
     if (info.Length() != 1) {
-        return Nan::ThrowError("setSampleFlagTo requires one argument");
+        Napi::TypeError::New(env, "requires one argument").ThrowAsJavaScriptException();
+        return env.Null();
     }
 
-    Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
-    bool previous = self->metadata.flags & XTR_FLAGS_SAMPLED;
+    bool previous = this->metadata.flags & XTR_FLAGS_SAMPLED;
 
     // truthy to set it, falsey to clear it
-    if (info[0]->ToBoolean()->BooleanValue()) {
-        self->metadata.flags |= XTR_FLAGS_SAMPLED;
+    if (info[0].ToBoolean().Value()) {
+        this->metadata.flags |= XTR_FLAGS_SAMPLED;
     } else {
-        self->metadata.flags &= ~XTR_FLAGS_SAMPLED;
+        this->metadata.flags &= ~XTR_FLAGS_SAMPLED;
     }
-    info.GetReturnValue().Set(Nan::New(previous));
-}
-
-// Serialize a metadata object to a string
-NAN_METHOD(Metadata::toString) {
-  // Unwrap the Metadata instance from V8
-  Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
-  char buf[OBOE_MAX_METADATA_PACK_LEN];
-
-  int rc;
-  // for now any argument counts. maybe accept 'A' or 'a'?
-  if (info.Length() == 1) {
-    rc = format(&self->metadata, sizeof(buf), buf) ? 0 : -1;
-  } else {
-    rc = oboe_metadata_tostr(&self->metadata, buf, sizeof(buf) - 1);
-  }
-
-  info.GetReturnValue().Set(Nan::New(rc == 0 ? buf : "").ToLocalChecked());
-}
-
-// Create an event from this metadata instance
-NAN_METHOD(Metadata::createEvent) {
-  Metadata* self = Nan::ObjectWrap::Unwrap<Metadata>(info.This());
-  info.GetReturnValue().Set(Event::NewInstance(self));
-}
-
-//
-// Internal method to determine if an object is an instance of
-// JavaScript Metadata
-//
-bool Metadata::isMetadata(v8::Local<v8::Value> object) {
-  return Nan::New(Metadata::constructor)->HasInstance(object);
-}
-
-//
-// Internal method to return new metadata object if an object
-// represents metadata.
-//
-Metadata* Metadata::getMetadata(v8::Local<v8::Value> object) {
-    Metadata* metadata;
-
-    if (Metadata::isMetadata(object)) {
-        // it's a metadata instance
-        Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(object->ToObject());
-        metadata = new Metadata(&md->metadata);
-    } else if (Event::isEvent(object)) {
-        // it's an event instance
-        Event* e = Nan::ObjectWrap::Unwrap<Event>(object->ToObject());
-        metadata = new Metadata(&e->event.metadata);
-    } else if (object->IsString()) {
-        // it's a string, this can fail and return NULL.
-        Nan::Utf8String str(object);
-
-        oboe_metadata_t md;
-        int status = oboe_metadata_fromstr(&md, *str, str.length());
-        if (status < 0) {
-            return NULL;
-        }
-        metadata = new Metadata(&md);
-    } else {
-        // it's not something we know how to convert
-        return NULL;
-    }
-
-    return metadata;
-}
-
-// JavaScript callable method to determine if an object is an
-// instance of JavaScript Metadata.
-NAN_METHOD(Metadata::isInstance) {
-    bool is = false;
-    if (info.Length() == 1) {
-        v8::Local<v8::Value> arg = info[0];
-        is = Metadata::isMetadata(arg);
-    }
-    info.GetReturnValue().Set(is);
+    return Napi::Boolean::New(env, previous);
 }
 
 //
@@ -284,60 +143,127 @@ NAN_METHOD(Metadata::isInstance) {
 // if a string argument cannot be converted to metadata it
 // returns undefined
 //
-NAN_METHOD(Metadata::sampleFlagIsSet) {
-    bool sampleFlag = false;
+Napi::Value Metadata::sampleFlagIsSet(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  bool sampleFlag = false;
 
-    // handle each argument type appropriately
-    if (info.Length() >= 1) {
-        if (Metadata::isMetadata(info[0])) {
-            Metadata* md = Nan::ObjectWrap::Unwrap<Metadata>(info[0]->ToObject());
-            sampleFlag = md->metadata.flags & XTR_FLAGS_SAMPLED;
-        } else if (Event::isEvent(info[0])) {
-            Event* e = Nan::ObjectWrap::Unwrap<Event>(info[0]->ToObject());
-            sampleFlag = e->event.metadata.flags & XTR_FLAGS_SAMPLED;
-        } else if (info[0]->IsString()) {
-            Nan::Utf8String str(info[0]);
+  // handle each argument type appropriately
+  if (info.Length() >= 1) {
+    Napi::Object o = info[0].As<Napi::Object>();
+    if (Metadata::isMetadata(o)) {
+      Metadata* md = Napi::ObjectWrap<Metadata>::Unwrap(o);
+      sampleFlag = md->metadata.flags & XTR_FLAGS_SAMPLED;
+    } else if (Event::isEvent(o)) {
+      Event* e = Napi::ObjectWrap<Event>::Unwrap(o);
+      sampleFlag = e->event.metadata.flags & XTR_FLAGS_SAMPLED;
+    } else if (info[0].IsString()) {
+      std::string str = info[0].As<Napi::String>();
 
-            oboe_metadata_t md;
-            int status = oboe_metadata_fromstr(&md, *str, str.length());
-            if (status < 0) {
-                info.GetReturnValue().Set(Nan::Undefined());
-                return;
-            }
-            sampleFlag = md.flags & XTR_FLAGS_SAMPLED;
-        }
+      oboe_metadata_t md;
+      int status = oboe_metadata_fromstr(&md, str.c_str(), str.length());
+      if (status < 0) {
+        return env.Undefined();
+      }
+      sampleFlag = md.flags & XTR_FLAGS_SAMPLED;
     }
+  }
 
-    info.GetReturnValue().Set(Nan::New(sampleFlag));
+  return Napi::Boolean::New(env, sampleFlag);
 }
 
-// Wrap the C++ object so V8 can understand it
-void Metadata::Init(v8::Local<v8::Object> exports) {
-  Nan::HandleScope scope;
+//
+// Serialize a metadata object to a string
+//
+Napi::Value Metadata::toString(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  char buf[OBOE_MAX_METADATA_PACK_LEN];
 
-  // Prepare constructor template
-  v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(Metadata::New);
-  constructor.Reset(ctor);
-  ctor->InstanceTemplate()->SetInternalFieldCount(2);
-  ctor->SetClassName(Nan::New("Metadata").ToLocalChecked());
+  int rc;
+  // for now any argument means use our delimited, lowercase format.
+  // TODO BAM consider making the args control upper/lower, other?
+  if (info.Length() >= 1) {
+    rc = format(&this->metadata, sizeof(buf), buf) ? 0 : -1;
+  } else {
+    rc = oboe_metadata_tostr(&this->metadata, buf, sizeof(buf) - 1);
+  }
 
-  // Statics
-  Nan::SetMethod(ctor, "getMetadataData", Metadata::getMetadataData);
-  Nan::SetMethod(ctor, "fromString", Metadata::fromString);
-  Nan::SetMethod(ctor, "fromContext", Metadata::fromContext);
-  Nan::SetMethod(ctor, "makeRandom", Metadata::makeRandom);
-  Nan::SetMethod(ctor, "isInstance", Metadata::isInstance);
-  Nan::SetMethod(ctor, "sampleFlagIsSet", Metadata::sampleFlagIsSet);
+  return Napi::String::New(env, rc == 0 ? buf : "");
+}
 
-  // Prototype
-  Nan::SetPrototypeMethod(ctor, "copy", Metadata::copy);
-  Nan::SetPrototypeMethod(ctor, "isValid", Metadata::isValid);
-  Nan::SetPrototypeMethod(ctor, "getSampleFlag", Metadata::getSampleFlag);
-  Nan::SetPrototypeMethod(ctor, "setSampleFlagTo", Metadata::setSampleFlagTo);
-  Nan::SetPrototypeMethod(ctor, "toString", Metadata::toString);
-  Nan::SetPrototypeMethod(ctor, "createEvent", Metadata::createEvent);
+//
+// C++ method to determine if an object is an instance of Metadata
+//
+bool Metadata::isMetadata(Napi::Object o) {
+  return o.IsObject() && o.InstanceOf(constructor.Value());
+}
 
-  Nan::Set(exports, Nan::New("Metadata").ToLocalChecked(), ctor->GetFunction());
+//
+// C++ internal method to copy metadata from Object o. Returns
+// boolean true if it copied valid oboe_metadata_t, false otherwise.
+//
+bool Metadata::getMetadata(Napi::Value v, oboe_metadata_t* omd) {
+  Napi::Object o = v.ToObject();
+
+  if (Metadata::isMetadata(o)) {
+    // it's a metadata instance
+    Metadata* md = Napi::ObjectWrap<Metadata>::Unwrap(o);
+    *omd = md->metadata;
+  } else if (Event::isEvent(o)) {
+    // it's an event instance
+    Event* e = Napi::ObjectWrap<Event>::Unwrap(o);
+    *omd = e->event.metadata;
+  } else if (v.IsString()) {
+    std::string str = v.As<Napi::String>();
+
+    // it's a string, oboe_metadata_fromstr() can fail and return non-zero.
+    oboe_metadata_t md;
+    int status = oboe_metadata_fromstr(&md, str.c_str(), str.length());
+    if (status < 0) {
+      return false;
+    }
+    *omd = md;
+  } else if (v.IsExternal()) {
+    oboe_metadata_t* md = v.As<Napi::External<oboe_metadata_t>>().Data();
+    *omd = *md;
+  } else {
+    // it's not something we know how to convert
+    return false;
+  }
+
+  return true;
+}
+
+//
+// C++ callable method to get sample flag boolean.
+//
+bool Metadata::sampleFlagIsOn() {
+  return metadata.flags & XTR_FLAGS_SAMPLED;
+}
+
+//
+// initialize the module and expose the Metadata class.
+//
+Napi::Object Metadata::Init(Napi::Env env, Napi::Object exports) {
+  Napi::HandleScope scope(env);
+
+  Napi::Function ctor = DefineClass(env, "Metadata", {
+    // Statics
+    StaticMethod("fromString", &Metadata::fromString),
+    StaticMethod("fromContext", &Metadata::fromContext),
+    StaticMethod("makeRandom", &Metadata::makeRandom),
+    StaticMethod("sampleFlagIsSet", &Metadata::sampleFlagIsSet),
+    // Instance methods (prototype)
+    InstanceMethod("isValid", &Metadata::isValid),
+    InstanceMethod("getSampleFlag", &Metadata::getSampleFlag),
+    InstanceMethod("setSampleFlagTo", &Metadata::setSampleFlagTo),
+    InstanceMethod("toString", &Metadata::toString),
+  });
+
+  constructor = Napi::Persistent(ctor);
+  constructor.SuppressDestruct();
+  exports.Set("Metadata", ctor);
+
+  return exports;
 }
 
 //
