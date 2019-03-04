@@ -26,12 +26,14 @@ function setupLiboboe (cb) {
 
   releaseInfo().then(info => {
     if (info.platform !== 'linux') {
-      const line = `appoptics-bindings run on linux, the ${info.platform} platform is not yet supported`
-      const bar = '='.repeat(line.length)
+      const line1 = `AppopticsApm warning: the ${info.platform} platform is not yet supported`
+      const line2 = `see: https://docs.appoptics.com/kb/apm_tracing/supported_platforms/`
+      const line3 = 'Contact support@appoptics.com if this is unexpected.'
+      const bar = '='.repeat([line1, line2, line3].reduce((m, l) => l.length > m ? l.length : m, 0))
       console.log(bar)
-      console.log(bar)
-      console.log(line)
-      console.log(bar)
+      console.log(line1)
+      console.log(line2)
+      console.log(line3)
       console.log(bar)
       process.exit(1)
     }
