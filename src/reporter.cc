@@ -1,4 +1,5 @@
 #include "bindings.h"
+#include <vector>
 
 int64_t get_integer(Napi::Object, const char*, int64_t = 0);
 std::string* get_string(Napi::Object, const char*, const char* = "");
@@ -158,6 +159,166 @@ Napi::Value send_span(const Napi::CallbackInfo& info, send_generic_span_t send_f
 }
 
 //
+// sendMetric(name, object)
+//
+// only the first argument is required for an increment call.
+//
+// name - the name of the metric
+// object - an object containing optional parameters
+// object.count - the number of observations being reported (default: 1)
+// object.addHostTag - boolean - {host: hostname} to tags.
+// object.tags - an object containing {tag: value} pairs.
+// object.value - if present this call is a valued-based call and this contains
+//                the value, or sum of values if count is greater than 1, being
+//                reported.
+//
+// there are two types of metrics:
+//   1) count-based - the number of times something has occurred (no value associated with this metric)
+//   2) value-based - a specific value is being reported (or a sum of values)
+//
+//
+// simplest forms:
+// sendMetric('my.little.count')
+// sendMetric('my.little.value', {value: 234.7})
+//
+// to report two observations:
+// sendMetric('my.little.count', {count: 2})
+// sendMetric('my.little.value', {count: 2, value: 469.4})
+//
+// to supply tags that can be used for filtering:
+// sendMetric('my.little.count', {tags: {status: error}})
+//
+// to add a host name tag:
+// sendMetric('my.little.count', {addHostTag: true, tags: {status: error}})
+//
+Napi::Value sendMetric (const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  // check args
+  if (info.Length() == 0) {
+    Napi::TypeError::New(env, "sendMetric() requires 1 or 2 arguments")
+        .ThrowAsJavaScriptException();
+    return env.Null();
+  } else if (!info[0].IsString()) {
+      Napi::TypeError::New(env, "sendMetric(name) name argument must be a string")
+          .ThrowAsJavaScriptException();
+      return env.Null();
+  }
+  // default the object if not supplied
+  Napi::Object o;
+  if (info.Length() == 1) {
+    o = Napi::Object::New(env);
+  } else if (info[1].IsObject()) {
+    o = info[1].ToObject();
+  } else {
+    Napi::TypeError::New(env, "sendMetric(name, params) params must be an object")
+        .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+
+  // name
+  std::string name(info[0].As<Napi::String>());
+
+  // count
+  int count = 1;
+  Napi::Value v = o.Get("count");
+  if (v.IsNumber()) {
+    count = v.As<Napi::Number>().Int64Value();
+  }
+
+  // value. unclear why zero is not a valid value in summary metrics. but
+  // either way the presence of "value" indicates that this is a summary
+  // metric (values) and not an increment metric (count of occurrences).
+  bool is_summary = false;
+  double value = 0;
+  v = o.Get("value");
+  if (v.IsNumber()) {
+    value = v.As<Napi::Number>().DoubleValue();
+    is_summary = true;
+  }
+
+  // host_tag
+  bool host_tag = false;
+  if (o.Has("addHostTag")) {
+    host_tag = o.Get("addHostTag").ToBoolean().Value();
+  }
+
+  // noop - don't call oboe if set.
+  v = o.Get("noop");
+  bool noop = v.ToBoolean().Value();
+
+  // service_name. unused but required by oboe.
+  const char* service_name = "";
+
+  // now look at a tags object if it's present.
+  Napi::Object tagsObj;
+  size_t tags_count = 0;
+  Napi::Array keys;
+
+  // if tags is present and is an object that's not an array then fetch the
+  // keys so we know how many there are.
+  if (o.Has("tags")) {
+    v = o.Get("tags");
+    if (!v.IsObject() || v.IsArray()) {
+      Napi::TypeError::New(env, "sendMetric() tags must be a plain object").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+
+    // get the keys of the tags object.
+    tagsObj = v.As<Napi::Object>();
+    keys = tagsObj.GetPropertyNames();
+    tags_count = keys.Length();
+  }
+
+  // use the tag count, possibly zero, to allocate the structures needed
+  // to store each tag's key and value.
+
+  // oboe's key-value pair structure
+  oboe_metric_tag_t otags[tags_count];
+
+  // a place to save the strings so they won't go out of scope at
+  // the end of each iteration of the loop.
+  std::vector<std::string> holdKeys(tags_count);
+  std::vector<std::string> holdValues(tags_count);
+
+  if (tags_count) {
+    // coerce the keys and values to strings. they might
+    // fail oboe's checks but this makes sure they are strings.
+    for (size_t i = 0; i < tags_count; i++) {
+      Napi::Value key = keys[i];
+      holdKeys[i] = key.ToString();
+
+      Napi::Value value = tagsObj.Get(keys[i]);
+      holdValues[i] = value.ToString();
+
+      otags[i].key = (char*) holdValues[i].c_str();
+      otags[i].value = (char*) holdValues[i].c_str();
+    }
+  }
+
+  // noop allows checking for memory leaks in this code, verifying
+  // internal argument handling, etc.
+  if (noop) {
+    return info.Env().Undefined();
+  }
+
+  // having two separate calls is less optimal than just passing the is_summary
+  // flag but that's the way it is.
+  int status;
+  if (is_summary) {
+    status = oboe_custom_metric_summary(
+      name.c_str(), value, count, host_tag, service_name, otags, tags_count
+    );
+  } else {
+    status = oboe_custom_metric_increment(
+      name.c_str(), count, host_tag, service_name, otags, tags_count
+    );
+  }
+
+  return Napi::Number::New(env, status ? tags_count : -1);
+}
+
+//
 // Initialize the module.
 //
 namespace Reporter {
@@ -170,8 +331,11 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   module.Set("isReadyToSample", Napi::Function::New(env, isReadyToSample));
   module.Set("sendReport", Napi::Function::New(env, sendReport));
   module.Set("sendStatus", Napi::Function::New(env, sendStatus));
+
   module.Set("sendHttpSpan", Napi::Function::New(env, sendHttpSpan));
   module.Set("sendNonHttpSpan", Napi::Function::New(env, sendNonHttpSpan));
+
+  module.Set("sendMetric", Napi::Function::New(env, sendMetric));
 
   exports.Set("Reporter", module);
 
