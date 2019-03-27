@@ -74,7 +74,8 @@ Napi::Value toString(const Napi::CallbackInfo& info) {
 
   // for now any argument means use our format. maybe accept options/flags?
   if (info.Length() == 1) {
-    rc = Metadata::format(md, sizeof(buf), buf) ? 0 : -1;
+    const int fmtHuman = Metadata::ff_header | Metadata::ff_task | Metadata::ff_op | Metadata::ff_flags | Metadata::ff_separators;
+    rc = Metadata::format(md, sizeof(buf), buf, fmtHuman) ? 0 : -1;
   } else {
     rc = oboe_metadata_tostr(md, buf, sizeof(buf) - 1);
   }

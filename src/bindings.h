@@ -44,18 +44,26 @@ public:
 
   // work with existing metadata
   static Napi::Value sampleFlagIsSet(const Napi::CallbackInfo& info);
-  static bool format(oboe_metadata_t*, size_t, char*);
+  static bool format(oboe_metadata_t*, size_t, char*, uint flags, char sep = ':');
+  const static int ff_none = 0;
+  const static int ff_header = 1;
+  const static int ff_task = 2;
+  const static int ff_op = 4;
+  const static int ff_flags = 8;
+  const static int ff_sample = 16;
+  const static int ff_separators = 32;
+  const static int ff_lowercase = 64;
 
   // C++ callable for creating an instance of Metadata
   static Napi::Object NewInstance(Napi::Env, Napi::Value);
 
 private:
   static Napi::FunctionReference constructor;
-  static char* PutHex(uint8_t, char*, char = 'a');
 
 public:
   static Napi::Object Init(Napi::Env, Napi::Object);
 };
+
 
 //
 // Event - work with oboe's oboe_event_t structure.

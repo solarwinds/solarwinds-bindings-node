@@ -123,7 +123,11 @@ Napi::Value Event::toString(const Napi::CallbackInfo& info) {
     int rc;
     // TODO consider accepting an argument to select upper or lower case.
     if (info.Length() == 1 && info[0].ToBoolean().Value()) {
-      rc = Metadata::format(md, sizeof(buf), buf) ? 0 : -1;
+      const int fmtHuman = Metadata::ff_header | Metadata::ff_task |
+                           Metadata::ff_op | Metadata::ff_flags |
+                           Metadata::ff_separators;
+
+      rc = Metadata::format(md, sizeof(buf), buf, fmtHuman) ? 0 : -1;
     } else {
       rc = oboe_metadata_tostr(md, buf, sizeof(buf) - 1);
     }

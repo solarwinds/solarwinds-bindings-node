@@ -115,7 +115,10 @@ describe('addon.reporter', function () {
   it('should execute without losing memory', function (done) {
     this.timeout(5000);
     const warmup =  1000000;
-    const check =  1000000;
+    const checkCount =  1000000;
+    // garbage collect if available
+    const gc = typeof global.gc === 'function' ? global.gc : () => null;
+
     // allow the system to come to a steady state. garbage collection makes it
     // hard to isolate memory losses.
     const start1 = process.memoryUsage().rss;
@@ -123,17 +126,26 @@ describe('addon.reporter', function () {
       r.sendMetric('nothing.really', {value: i, testing: true});
     }
 
-    // now see if the code loses memory.
-    const start2 = process.memoryUsage().rss;
-    for (let i = check; i > 0; i--) {
+    gc();
+
+    // now see if the code loses memory. if it's less than 1 byte per iteration
+    // then it's not losing memory for all practical purposes.
+    const start2 = process.memoryUsage().rss + checkCount;
+    for (let i = checkCount; i > 0; i--) {
       r.sendMetric('nothing.really', {value: i, testing: true});
     }
+
+    gc();
 
     // give garbage collection a window to kick in.
     setTimeout(function () {
       const finish = process.memoryUsage().rss;
-      expect(finish).lte(start2, `should execute ${check} metrics without memory growth`);
+      expect(finish).lte(start2, `should execute ${checkCount} metrics without memory growth`);
       done()
     }, 250)
+
+    if (typeof global.gc === 'function') {
+      global.gc();
+    }
   })
 })
