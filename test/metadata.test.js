@@ -130,6 +130,48 @@ describe('addon.metadata', function () {
     expect(metadata.isValid()).equal(true)
   })
 
+  it('should format metadata correctly for all options', function () {
+    // 2B 123456789ABCDEF0123456789ABCDEF012345678 FEDCBA9876543210 01
+    const h = '2B';
+    const t = '123456789ABCDEF0123456789ABCDEF012345678';
+    const o = 'FEDCBA9876543210';
+    const f = '01';
+
+    //const mds = '2B123456789ABCDEF0123456789ABCDEF012345678FEDCBA987654321001';
+    const mds = `${h}${t}${o}${f}`;
+    const md = bindings.Metadata.fromString(mds);
+    // simple formatting
+    let s = md.toString();
+    expect(s).equal(mds);
+    // the human readable version i use for testing and logging. this is special-cased in the code
+    // because the 1 bit really means display the header (2B) but because that's not useful and 1
+    // was historically used to display colon-separated lowercase trace ids, i'm keeping it that way.
+    s = md.toString(1);
+    expect(s).equal(`${h}-${t}-${o}-${f}`.toLowerCase());
+
+    // if there is an argument and it is not 1 then the argument is bit flags specifying the format.
+    // 1 header
+    // 2 task id
+    // 4 op id
+    // 8 flags - display whole flags byte (if this is present then the 16 sample bit is ignored)
+    // 16 sample bit - display only sample bit
+    // 32 separators - insert dash separators between elements
+    // 64 lowercase alpha characters
+
+    // reproduce simple formatting with explicit bits
+    s = md.toString(1 + 2 + 4 + 8);
+    expect(s).equal(mds);
+    // the human readable form, explicitly specified but removing lowercase
+    s = md.toString(bindings.Metadata.fmtHuman ^ 64);
+    expect(s).equal(`${h}-${t}-${o}-${f}`);
+    // the format to link to traces in logs
+    s = md.toString(bindings.Metadata.fmtLog);
+    expect(s).equal(`${t}-1`);
+    // and let's make that easier to look at so we can add the option later
+    s = md.toString(bindings.Metadata.fmtLog | 64);
+    expect(s).equal(`${t}-1`.toLowerCase());
+  })
+
   it('should not crash node when getting the prototype of an metadata instance', function () {
     var p = Object.getPrototypeOf(bindings.Metadata.makeRandom())
   })

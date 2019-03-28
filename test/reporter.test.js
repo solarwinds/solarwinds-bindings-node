@@ -14,6 +14,12 @@ describe('addon.reporter', function () {
     r = bindings.Reporter
   }
 
+  beforeEach(function () {
+    if (this.currentTest.title === 'should execute without losing memory') {
+
+    }
+  })
+
   it('should initialize oboe with hostnameAlias', function () {
     bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY, {
       hostnameAlias: 'node-testing-hostname'
@@ -104,5 +110,63 @@ describe('addon.reporter', function () {
 
   it('should not crash node getting the prototype of a reporter instance', function () {
     var p = Object.getPrototypeOf(r)
+  })
+
+  it('should throw errors for bad arguments to sendMetric', function () {
+    const defaultOptions = {noop: true};
+
+    const tests = [
+      {args: [], text: 'no args'},
+      {args: [1], text: 'non-string metric name'},
+      {args: ['name', 'a'], text: 'non-object options'},
+      {args: ['name', []], text: 'array-object options'},
+      {args: ['name', {value: 'x'}], text: 'non-numeric value'},
+      {args: ['name', {tags: []}], text: 'array-object tags'},
+      {args: ['name', {tags: 11}], text: 'non-object tags'},
+    ];
+
+    for (let t of tests) {
+      const options = Object.assign({}, defaultOptions, t.options)
+      const fn = () => r.sendMetric(...t.args);
+      expect(fn, `${t.text} should throw`).throws(TypeError);
+    }
+
+  })
+
+  it('should send metrics without losing memory', function (done) {
+    this.timeout(5000);
+    const warmup =  1000000;
+    const checkCount =  1000000;
+    // garbage collect if available
+    const gc = typeof global.gc === 'function' ? global.gc : () => null;
+
+    // allow the system to come to a steady state. garbage collection makes it
+    // hard to isolate memory losses.
+    const start1 = process.memoryUsage().rss;
+    for (let i = warmup; i > 0; i--) {
+      r.sendMetric('nothing.really', {value: i, testing: true});
+    }
+
+    gc();
+
+    // now see if the code loses memory. if it's less than 1 byte per iteration
+    // then it's not losing memory for all practical purposes.
+    const start2 = process.memoryUsage().rss + checkCount;
+    for (let i = checkCount; i > 0; i--) {
+      r.sendMetric('nothing.really', {value: i, testing: true});
+    }
+
+    gc();
+
+    // give garbage collection a window to kick in.
+    setTimeout(function () {
+      const finish = process.memoryUsage().rss;
+      expect(finish).lte(start2, `should execute ${checkCount} metrics without memory growth`);
+      done()
+    }, 250)
+
+    if (typeof global.gc === 'function') {
+      global.gc();
+    }
   })
 })

@@ -118,12 +118,17 @@ Napi::Object Event::NewInstance(Napi::Env env, oboe_metadata_t* omd, bool edge) 
 //
 Napi::Value Event::toString(const Napi::CallbackInfo& info) {
     oboe_metadata_t* md = &this->event.metadata;
-    char buf[OBOE_MAX_METADATA_PACK_LEN];
+    char buf[Metadata::fmtBufferSize];
 
     int rc;
-    // TODO consider accepting an argument to select upper or lower case.
-    if (info.Length() == 1 && info[0].ToBoolean().Value()) {
-      rc = Metadata::format(md, sizeof(buf), buf) ? 0 : -1;
+
+    if (info.Length() == 1 && info[0].IsNumber()) {
+      int fmt = info[0].As<Napi::Number>().Int64Value();
+      // default 1 to a human readable form for historical reasons.
+      if (fmt == 1) {
+        fmt = Metadata::fmtHuman;
+      }
+      rc = Metadata::format(md, sizeof(buf), buf, fmt) ? 0 : -1;
     } else {
       rc = oboe_metadata_tostr(md, buf, sizeof(buf) - 1);
     }

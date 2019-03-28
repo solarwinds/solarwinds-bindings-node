@@ -176,15 +176,25 @@ Napi::Value Metadata::sampleFlagIsSet(const Napi::CallbackInfo& info) {
 //
 Napi::Value Metadata::toString(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  char buf[OBOE_MAX_METADATA_PACK_LEN];
+  char buf[Metadata::fmtBufferSize];
 
   int rc;
-  // for now any argument means use our delimited, lowercase format.
-  // TODO BAM consider making the args control upper/lower, other?
-  if (info.Length() >= 1) {
-    rc = format(&this->metadata, sizeof(buf), buf) ? 0 : -1;
-  } else {
+  // no args is non-human-readable form - no delimiters, uppercase
+  // if arg == 1 it's the original human readable form.
+  // otherwise arg is a bitmask of options.
+  if (info.Length() == 0) {
     rc = oboe_metadata_tostr(&this->metadata, buf, sizeof(buf) - 1);
+  } else {
+    int style = info[0].ToNumber().Int64Value();
+    int flags;
+    // make style 1 the previous default because ff_header alone is not very useful.
+    if (style == 1) {
+      flags = Metadata::ff_header | Metadata::ff_task | Metadata::ff_op | Metadata::ff_flags | Metadata::ff_separators | Metadata::ff_lowercase;
+    } else {
+      // the style are the flags and the separator is a dash.
+      flags = style;
+    }
+    rc = format(&this->metadata, sizeof(buf), buf, flags) ? 0 : -1;
   }
 
   return Napi::String::New(env, rc == 0 ? buf : "");
@@ -247,11 +257,15 @@ Napi::Object Metadata::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 
   Napi::Function ctor = DefineClass(env, "Metadata", {
-    // Statics
+    // Static methods
     StaticMethod("fromString", &Metadata::fromString),
     StaticMethod("fromContext", &Metadata::fromContext),
     StaticMethod("makeRandom", &Metadata::makeRandom),
     StaticMethod("sampleFlagIsSet", &Metadata::sampleFlagIsSet),
+    // Static values
+    StaticValue("fmtHuman", Napi::Number::New(env, Metadata::fmtHuman)),
+    StaticValue("fmtLog", Napi::Number::New(env, Metadata::fmtLog)),
+
     // Instance methods (prototype)
     InstanceMethod("isValid", &Metadata::isValid),
     InstanceMethod("getSampleFlag", &Metadata::getSampleFlag),
@@ -267,50 +281,86 @@ Napi::Object Metadata::Init(Napi::Env env, Napi::Object exports) {
 }
 
 //
-// function to format an x-trace with components split by ':'
+// function to format an x-trace with components split by sep.
 //
-bool Metadata::format(oboe_metadata_t* md, size_t len, char* buffer) {
+bool Metadata::format(oboe_metadata_t* md, size_t len, char* buffer, uint flags) {
     char* b = buffer;
+    char base = (flags & Metadata::ff_lowercase ? 'a' : 'A') - 10;
+    const char sep = '-';
 
-    // length counts prefix chars, flag chars, 3 colons and null termination
+    auto puthex = [&b, base](uint8_t byte) {
+      int digit = (byte >> 4);
+      digit += digit <= 9 ? '0' : base;
+      *b++ = (char) digit;
+      digit = byte & 0xF;
+      digit += digit <= 9 ? '0' : base;
+      *b++ = (char) digit;
+
+      return b;
+    };
+
+    // make sure there is enough room in the buffer.
+    // prefix + task + op + flags + 3 colons + null terminator.
     if (2 + md->task_len + md->op_len + 2 + 4 > len) return false;
 
-    // fix up the first byte (because it's not 2B in memory)
-    int task_bits = (md->task_len >> 2) - 1;
-    if (task_bits == 4) task_bits = 3;
-    uint8_t packed = md->version << 4 | ((md->op_len >> 2) - 1) << 3 | task_bits;
-    b = PutHex(packed, b);
-    *b++ = ':';
+    const bool separators = flags & Metadata::ff_separators;
+
+    if (flags & Metadata::ff_header) {
+      if (md->version == 2) {
+        // the encoding of the task and op lengths is kind of silly so
+        // skip it if version two. it seems like using the whole byte for
+        // a major/minor version then tying the length to the version makes
+        // more sense. what's the point of the version if it's not used to
+        // make decisions in the code?
+        b = puthex(0x2b);
+      } else {
+        // fix up the first byte using arcane length encoding rules.
+        uint task_bits = (md->task_len >> 2) - 1;
+        if (task_bits == 4) task_bits = 3;
+        uint8_t packed = md->version << 4 | ((md->op_len >> 2) - 1) << 3 | task_bits;
+        b = puthex(packed);
+      }
+      // only add a separator if more fields will be output.
+      const uint more = Metadata::ff_task | Metadata::ff_op | Metadata::ff_flags | Metadata::ff_sample;
+      if (flags & more && separators) {
+        *b++ = sep;
+      }
+    }
+
+    // place to hold pointer to each byte of task and/or op ids.
+    uint8_t* mdp;
 
     // put the task ID
-    uint8_t* mdp = (uint8_t *) &md->ids.task_id;
-    for(unsigned int i = 0; i < md->task_len; i++) {
-        b = PutHex(*mdp++, b);
+    if (flags & Metadata::ff_task) {
+      mdp = (uint8_t *) &md->ids.task_id;
+      for(unsigned int i = 0; i < md->task_len; i++) {
+          b = puthex(*mdp++);
+      }
+      if (flags & (Metadata::ff_op | Metadata::ff_flags | Metadata::ff_sample) && separators) {
+        *b++ = sep;
+      }
     }
-    *b++ = ':';
 
     // put the op ID
-    mdp = (uint8_t *) &md->ids.op_id;
-    for (unsigned int i = 0; i < md->op_len; i++) {
-        b = PutHex(*mdp++, b);
+    if (flags & Metadata::ff_op) {
+      mdp = (uint8_t *) &md->ids.op_id;
+      for (unsigned int i = 0; i < md->op_len; i++) {
+          b = puthex(*mdp++);
+      }
+      if (flags & (Metadata::ff_flags | Metadata::ff_sample) && separators) {
+        *b++ = sep;
+      }
     }
-    *b++ = ':';
 
-    // put the flags byte and null terminate the string.
-    b = PutHex(md->flags, b);
+    // put the flags byte or sample flag only. flags, if specified, takes precedence over sample.
+    if (flags & Metadata::ff_flags) {
+      b = puthex(md->flags);
+    } else if (flags & Metadata::ff_sample) {
+      *b++ = (md->flags & 1) + '0';
+    }
+
+    // null terminate the string
     *b = '\0';
 
     return true;
-}
-
-char* Metadata::PutHex(uint8_t byte, char *p, char base) {
-    base -= 10;
-    int digit = (byte >> 4);
-    digit += digit <= 9 ? '0' : base;
-    *p++ = (char) digit;
-    digit = byte & 0xF;
-    digit += digit <= 9 ? '0' : base;
-    *p++ = (char) digit;
-
-    return p;
 }
