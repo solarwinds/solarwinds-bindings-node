@@ -176,9 +176,7 @@ Napi::Value Metadata::sampleFlagIsSet(const Napi::CallbackInfo& info) {
 //
 Napi::Value Metadata::toString(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  // allow for the three colons inserted when using the optional
-  // colon-delimited format.
-  char buf[OBOE_MAX_METADATA_PACK_LEN + 3];
+  char buf[Metadata::fmtBufferSize];
 
   int rc;
   // no args is non-human-readable form - no delimiters, uppercase
@@ -189,16 +187,14 @@ Napi::Value Metadata::toString(const Napi::CallbackInfo& info) {
   } else {
     int style = info[0].ToNumber().Int64Value();
     int flags;
-    char separator = '-';
     // make style 1 the previous default because ff_header alone is not very useful.
     if (style == 1) {
       flags = Metadata::ff_header | Metadata::ff_task | Metadata::ff_op | Metadata::ff_flags | Metadata::ff_separators | Metadata::ff_lowercase;
-      separator = ':';
     } else {
       // the style are the flags and the separator is a dash.
       flags = style;
     }
-    rc = format(&this->metadata, sizeof(buf), buf, flags, separator) ? 0 : -1;
+    rc = format(&this->metadata, sizeof(buf), buf, flags) ? 0 : -1;
   }
 
   return Napi::String::New(env, rc == 0 ? buf : "");
@@ -267,8 +263,8 @@ Napi::Object Metadata::Init(Napi::Env env, Napi::Object exports) {
     StaticMethod("makeRandom", &Metadata::makeRandom),
     StaticMethod("sampleFlagIsSet", &Metadata::sampleFlagIsSet),
     // Static values
-    StaticValue("fmtHuman", Napi::Number::New(env, Metadata::ff_header | Metadata::ff_task | Metadata::ff_op | Metadata::ff_flags | Metadata::ff_separators)),
-    StaticValue("fmtLog", Napi::Number::New(env, Metadata::ff_task | Metadata::ff_sample | Metadata::ff_separators)),
+    StaticValue("fmtHuman", Napi::Number::New(env, Metadata::fmtHuman)),
+    StaticValue("fmtLog", Napi::Number::New(env, Metadata::fmtLog)),
 
     // Instance methods (prototype)
     InstanceMethod("isValid", &Metadata::isValid),
@@ -287,9 +283,10 @@ Napi::Object Metadata::Init(Napi::Env env, Napi::Object exports) {
 //
 // function to format an x-trace with components split by sep.
 //
-bool Metadata::format(oboe_metadata_t* md, size_t len, char* buffer, uint flags, char sep) {
+bool Metadata::format(oboe_metadata_t* md, size_t len, char* buffer, uint flags) {
     char* b = buffer;
     char base = (flags & Metadata::ff_lowercase ? 'a' : 'A') - 10;
+    const char sep = '-';
 
     auto puthex = [&b, base](uint8_t byte) {
       int digit = (byte >> 4);

@@ -147,7 +147,7 @@ describe('addon.metadata', function () {
     // because the 1 bit really means display the header (2B) but because that's not useful and 1
     // was historically used to display colon-separated lowercase trace ids, i'm keeping it that way.
     s = md.toString(1);
-    expect(s).equal(`${h}:${t}:${o}:${f}`.toLowerCase());
+    expect(s).equal(`${h}-${t}-${o}-${f}`.toLowerCase());
 
     // if there is an argument and it is not 1 then the argument is bit flags specifying the format.
     // 1 header
@@ -161,8 +161,8 @@ describe('addon.metadata', function () {
     // reproduce simple formatting with explicit bits
     s = md.toString(1 + 2 + 4 + 8);
     expect(s).equal(mds);
-    // the human readable form, explicitly specified (gets dashes instead of colons)
-    s = md.toString(bindings.Metadata.fmtHuman);
+    // the human readable form, explicitly specified but removing lowercase
+    s = md.toString(bindings.Metadata.fmtHuman ^ 64);
     expect(s).equal(`${h}-${t}-${o}-${f}`);
     // the format to link to traces in logs
     s = md.toString(bindings.Metadata.fmtLog);

@@ -67,15 +67,18 @@ Napi::Value setDefaultSampleRate(const Napi::CallbackInfo& info) {
 // Stringify the current context's metadata structure.
 //
 Napi::Value toString(const Napi::CallbackInfo& info) {
-  char buf[OBOE_MAX_METADATA_PACK_LEN];
+  char buf[Metadata::fmtBufferSize];
   oboe_metadata_t* md = oboe_context_get();
 
   int rc;
 
-  // for now any argument means use our format. maybe accept options/flags?
-  if (info.Length() == 1) {
-    const int fmtHuman = Metadata::ff_header | Metadata::ff_task | Metadata::ff_op | Metadata::ff_flags | Metadata::ff_separators;
-    rc = Metadata::format(md, sizeof(buf), buf, fmtHuman) ? 0 : -1;
+  if (info.Length() == 1 && info[0].IsNumber()) {
+    int fmt = info[0].As<Napi::Number>().Int64Value();
+    // default 1 to a human readable form for historical reasons.
+    if (fmt == 1) {
+      fmt = Metadata::fmtHuman;
+    }
+    rc = Metadata::format(md, sizeof(buf), buf, fmt);
   } else {
     rc = oboe_metadata_tostr(md, buf, sizeof(buf) - 1);
   }
