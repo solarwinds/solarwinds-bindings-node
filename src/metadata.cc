@@ -285,7 +285,7 @@ Napi::Object Metadata::Init(Napi::Env env, Napi::Object exports) {
 }
 
 //
-// function to format an x-trace with components split by ':'
+// function to format an x-trace with components split by sep.
 //
 bool Metadata::format(oboe_metadata_t* md, size_t len, char* buffer, uint flags, char sep) {
     char* b = buffer;

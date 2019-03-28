@@ -204,14 +204,15 @@ Napi::Value sendMetric (const Napi::CallbackInfo& info) {
           .ThrowAsJavaScriptException();
       return env.Null();
   }
-  // default the object if not supplied
+
+  // default the options object if not supplied
   Napi::Object o;
   if (info.Length() == 1) {
     o = Napi::Object::New(env);
-  } else if (info[1].IsObject()) {
+  } else if (info[1].IsObject() && !info[1].IsArray()) {
     o = info[1].ToObject();
   } else {
-    Napi::TypeError::New(env, "sendMetric(name, params) params must be an object")
+    Napi::TypeError::New(env, "sendMetric(name, params) params must be a plain object")
         .ThrowAsJavaScriptException();
     return env.Null();
   }
@@ -226,16 +227,22 @@ Napi::Value sendMetric (const Napi::CallbackInfo& info) {
     count = v.As<Napi::Number>().Int64Value();
   }
 
-  // value. unclear why zero is not a valid value in summary metrics. but
-  // either way the presence of "value" indicates that this is a summary
-  // metric (values) and not an increment metric (count of occurrences).
+  // value
+  // the presence of "value" indicates that this is a summary metric (values)
+  // and not an increment metric (count of occurrences).
   bool is_summary = false;
   double value = 0;
-  v = o.Get("value");
-  if (v.IsNumber()) {
+  if (o.Has("value")) {
+    v = o.Get("value");
+    if (!v.IsNumber()) {
+      Napi::TypeError::New(env, "sendMetric options.value must be a number")
+          .ThrowAsJavaScriptException();
+      return env.Null();
+    }
     value = v.As<Napi::Number>().DoubleValue();
     is_summary = true;
   }
+
 
   // host_tag
   bool host_tag = false;
@@ -315,7 +322,9 @@ Napi::Value sendMetric (const Napi::CallbackInfo& info) {
     );
   }
 
-  return Napi::Number::New(env, status ? tags_count : -1);
+  // returns negative number on success else error (currently oboe returns
+  // only 0 or 1).
+  return Napi::Number::New(env, -status);
 }
 
 //

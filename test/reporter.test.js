@@ -112,7 +112,28 @@ describe('addon.reporter', function () {
     var p = Object.getPrototypeOf(r)
   })
 
-  it('should execute without losing memory', function (done) {
+  it('should throw errors for bad arguments to sendMetric', function () {
+    const defaultOptions = {noop: true};
+
+    const tests = [
+      {args: [], text: 'no args'},
+      {args: [1], text: 'non-string metric name'},
+      {args: ['name', 'a'], text: 'non-object options'},
+      {args: ['name', []], text: 'array-object options'},
+      {args: ['name', {value: 'x'}], text: 'non-numeric value'},
+      {args: ['name', {tags: []}], text: 'array-object tags'},
+      {args: ['name', {tags: 11}], text: 'non-object tags'},
+    ];
+
+    for (let t of tests) {
+      const options = Object.assign({}, defaultOptions, t.options)
+      const fn = () => r.sendMetric(...t.args);
+      expect(fn, `${t.text} should throw`).throws(TypeError);
+    }
+
+  })
+
+  it('should send metrics without losing memory', function (done) {
     this.timeout(5000);
     const warmup =  1000000;
     const checkCount =  1000000;
