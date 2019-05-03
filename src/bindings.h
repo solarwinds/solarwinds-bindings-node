@@ -45,7 +45,6 @@ public:
   // work with existing metadata
   static Napi::Value sampleFlagIsSet(const Napi::CallbackInfo& info);
   static bool format(oboe_metadata_t* md, size_t len, char* buffer, uint flags);
-  const static int ff_none = 0;
   const static int ff_header = 1;
   const static int ff_task = 2;
   const static int ff_op = 4;
