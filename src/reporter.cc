@@ -176,7 +176,6 @@ Napi::Value send_span(const Napi::CallbackInfo& info, send_generic_span_t send_f
 //   1) count-based - the number of times something has occurred (no value associated with this metric)
 //   2) value-based - a specific value is being reported (or a sum of values)
 //
-//
 // simplest forms:
 // sendMetric('my.little.count')
 // sendMetric('my.little.value', {value: 234.7})
@@ -190,6 +189,8 @@ Napi::Value send_span(const Napi::CallbackInfo& info, send_generic_span_t send_f
 //
 // to add a host name tag:
 // sendMetric('my.little.count', {addHostTag: true, tags: {status: error}})
+//
+// returns -1 for success else error code. the only error now is 0.
 //
 Napi::Value sendMetric (const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
