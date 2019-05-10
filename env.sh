@@ -40,7 +40,9 @@ get_new_oboe() {
         echo "Must supply a version (which will be used as the destination"
         echo "directory). N.B. the script is not bulletproof."
         echo "example:"
-        echo "$ . env.sh new-get-new-oboe latest"
+        echo "$ . env.sh fetch-oboe-version latest"
+        echo "or:"
+        echo "$ . env.sh install-oboe-version 4.1.0"
         return
     fi
     if [ $(which wget) ]; then
@@ -53,7 +55,9 @@ get_new_oboe() {
     fi
     # pretend to download for testing by adding an extra parameter
     PRETEND=$PARAM2
-    PAIRS="liboboe-1.0-x86_64.so.0.0.0  liboboe-1.0-alpine-x86_64.so.0.0.0"
+    PAIRS="liboboe-1.0-x86_64.so.0.0.0  liboboe-1.0-alpine-x86_64.so.0.0.0 liboboe-1.0-alpine-libressl-x86_64.so.0.0.0"
+    # earlier versions of oboe don't have multiple versions for alpine.
+    OKMISSING="liboboe-1.0-alpine-libressl-x86_64.so.0.0.0 liboboe-1.0-alpine-libressl-x86_64.so.0.0.0.sha256"
     # add the static files if using them.
     #PAIRS="$PAIRS  liboboe-static-alpine-x86_64.gz  liboboe-static-x86_64.gz"
     ERRORS=0
@@ -99,7 +103,7 @@ get_new_oboe() {
         fi
     done
 
-    if [ $ERRORS -gt 0 ]; then
+    if [ $ERRORS -gt 0 -a "$ERRORFILES" -ne "$OKMISSING"]; then
         echo "$ERRORS SHA mismatches:$ERRORFILES"
         return 1
     fi

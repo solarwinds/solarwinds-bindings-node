@@ -98,6 +98,7 @@ extern "C" {
 #define OBOE_REPORTER_PROTOCOL_FILE "file"
 #define OBOE_REPORTER_PROTOCOL_UDP "udp"
 #define OBOE_REPORTER_PROTOCOL_SSL "ssl"
+#define OBOE_REPORTER_PROTOCOL_NULL "null"
 #define OBOE_REPORTER_PROTOCOL_DEFAULT OBOE_REPORTER_PROTOCOL_UDP
 
 /** Maximum reasonable length of an arguments string for configuring a reporter. */
@@ -169,6 +170,7 @@ typedef struct oboe_span_params {
     int status;                     // HTTP status code (e.g. 200, 500, ...)
     const char *method;             // HTTP method (e.g. GET, POST, ...)
     int has_error;                  // boolean flag whether this transaction contains an error (1) or not (0)
+    int do_metrics;                 // boolean flag whether a (HTTP) span should be sent (1) or not (0)
 } oboe_span_params_t;
 
 typedef struct oboe_tracing_decisions_in {
@@ -196,7 +198,7 @@ typedef struct oboe_internal_stats {
     int collector_response_limit_exceeded;
 } oboe_internal_stats_t;
 
-#define OBOE_SPAN_PARAMS_VERSION 1              // version of oboe_span_params_t
+#define OBOE_SPAN_PARAMS_VERSION 2              // version of oboe_span_params_t
 #define OBOE_TRANSACTION_NAME_MAX_LENGTH 255    // max allowed length for transaction name
 
 #ifndef MIN
@@ -244,6 +246,8 @@ int oboe_event_add_info_bool (oboe_event_t *, const char *, const int);
 int oboe_event_add_info_bson (oboe_event_t *, const char *key, const bson *val);
 int oboe_event_add_edge (oboe_event_t *, const oboe_metadata_t *);
 int oboe_event_add_edge_fromstr(oboe_event_t *, const char *, size_t);
+
+int oboe_event_add_timestamp(oboe_event_t *evt);
 
 /**
  * Send event message using the default reporter.

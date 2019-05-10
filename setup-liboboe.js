@@ -13,12 +13,12 @@ const soname = 'liboboe-1.0.so.0'
 const deleteUnused = false
 
 //
-// both versions of the .so library are included in the package.
+// these versions of the .so library are included in the package.
 //
-
 const oboeNames = {
+  linux: 'liboboe-1.0-x86_64.so.0.0.0',
   alpine: 'liboboe-1.0-alpine-x86_64.so.0.0.0',
-  linux: 'liboboe-1.0-x86_64.so.0.0.0'
+  alpineLibreSSL: 'liboboe-1.0-alpine-libressl-x86_64.so.0.0.0',
 }
 
 function setupLiboboe (cb) {
@@ -37,13 +37,24 @@ function setupLiboboe (cb) {
       console.log(bar)
       process.exit(1)
     }
-    return info.id === 'alpine' ? 'alpine' : 'linux'
+    let versionKey = 'linux';
+    if (info.id === 'alpine') {
+      // if greater than version 3.9 then use alpine with openSSL. if less than 3.9
+      // use the libreSSL version.
+      const parts = info.version_id.split('.').map(p => parseInt(p));
+      if (parts[0] > 3) {
+        versionKey = 'alpine';
+      } else {
+        versionKey = parts[0] === 3 && parts[1] >= 9 ? 'alpine' : 'alpineLibreSSL';
+      }
+    }
+    return versionKey;
   }).then(linux => {
     const liboboeName = oboeNames[linux]
 
     // must find the library
     if (!fs.existsSync(dir + liboboeName)) {
-      throw new Error('cannot find ' + dir + liboboeName)
+      throw new Error(`cannot find ${dir}${liboboeName}`);
     }
 
     //
