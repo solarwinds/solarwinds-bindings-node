@@ -299,7 +299,7 @@ Napi::Value sendMetric (const Napi::CallbackInfo& info) {
       Napi::Value value = tagsObj.Get(keys[i]);
       holdValues[i] = value.ToString();
 
-      otags[i].key = (char*) holdValues[i].c_str();
+      otags[i].key = (char*) holdKeys[i].c_str();
       otags[i].value = (char*) holdValues[i].c_str();
     }
   }
