@@ -1,10 +1,11 @@
 {
   "name": "appoptics-bindings",
-  "version": "6.2.0",
+  "version": "6.2.1",
   "description": "Bindings to liboboe for the AppOptics APM agent",
   "author": "Bruce A. MacNaughton <bruce@solarwinds.cloud>",
   "contributors": [
-    "Stephen Belanger <admin@stephenbelanger.com>"
+    "Stephen Belanger <admin@stephenbelanger.com>",
+    "Silvio Fernandes <silviofernandes.developer@gmail.com"
   ],
   "main": "index.js",
   "gypfile": true,
