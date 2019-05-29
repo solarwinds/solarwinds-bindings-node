@@ -99,7 +99,6 @@ extern "C" {
 #define OBOE_REPORTER_PROTOCOL_UDP "udp"
 #define OBOE_REPORTER_PROTOCOL_SSL "ssl"
 #define OBOE_REPORTER_PROTOCOL_NULL "null"
-#define OBOE_REPORTER_PROTOCOL_DEFAULT OBOE_REPORTER_PROTOCOL_UDP
 
 /** Maximum reasonable length of an arguments string for configuring a reporter. */
 #define OBOE_REPORTER_ARGS_SIZE 4000
@@ -148,15 +147,26 @@ typedef struct oboe_metric_tag {
 } oboe_metric_tag_t;
 
 typedef struct oboe_init_options {
-    int version;                    // the version of this structure (currently at 4)
-    const char *hostname_alias;     // optional hostname alias
-    int log_level;                  // level at which log messages will be written to log file (0-6)
-                                    // use LOGLEVEL_DEFAULT for default log level
-    const char* log_file_path;      // file name including path for log file
-    int max_transactions;           // maximum number of transaction names to track
-    int max_flush_wait_time;        // maximum wait time for flushing data before terminating in milli seconds
-    int events_flush_interval;      // events flush timeout in seconds (threshold for batching messages before sending off)
-    int events_flush_batch_size;    // events flush batch size in KB (threshold for batching messages before sending off)
+    int version;                            // the version of this structure
+    const char *hostname_alias;             // optional hostname alias
+    int log_level;                          // level at which log messages will be written to log file (0-6)
+                                            // use LOGLEVEL_DEFAULT for default log level
+    const char *log_file_path;              // file name including path for log file
+    int max_transactions;                   // maximum number of transaction names to track
+    int max_flush_wait_time;                // maximum wait time for flushing data before terminating in milli seconds
+    int events_flush_interval;              // events flush timeout in seconds (threshold for batching messages before sending off)
+    int events_flush_batch_size;            // events flush batch size in KB (threshold for batching messages before sending off)
+
+    const char *reporter;                   // the reporter to be used (ssl, upd, file, null)
+    const char *host;                       // collector endpoint (reporter=ssl), udp address (reporter=udp), or file path (reporter=file)
+    const char *service_key;                // the service key
+    const char *trusted_path;               // path to the SSL certificate (only for ssl)
+    int buffer_size;                        // size of the message buffer
+    int trace_metrics;                      // flag indicating if trace metrics reporting should be enabled (default) or disabled
+    int histogram_precision;                // the histogram precision (only for ssl)
+    int token_bucket_capacity;              // custom token bucket capacity
+    int token_bucket_rate;                  // custom token bucket rate
+    int file_single;                        // use single files in file reporter for each event
 } oboe_init_options_t;
 
 typedef struct oboe_span_params {
@@ -303,23 +313,6 @@ typedef struct oboe_reporter {
     reporter_profiling_interval profilingInterval;
 } oboe_reporter_t;
 
-int oboe_reporter_udp_init  (oboe_reporter_t *, const char *, const char *);    /* DEPRECATE - Use oboe_init_reporter() */
-int oboe_reporter_udp_init_str(oboe_reporter_t *, const char *);    /* DEPRECATE - Use oboe_init_reporter() */
-int oboe_reporter_file_init (oboe_reporter_t *, const char *);      /* DEPRECATE - Use oboe_init_reporter() */
-int oboe_reporter_file_init_str(oboe_reporter_t *, const char *);   /* DEPRECATE - Use oboe_init_reporter() */
-int oboe_reporter_ssl_init (oboe_reporter_t *, const char *);       /* DEPRECATE - Use oboe_init_reporter() */
-
-
-/**
- * Initialize a reporter structure for use with the specified protocol.
- *
- * @param protocol One of  OBOE_REPORTER_PROTOCOL_FILE, OBOE_REPORTER_PROTOCOL_UDP,
- *      or OBOE_REPORTER_PROTOCOL_SSL.
- * @param args A configuration string for the specified protocol (protocol dependent syntax).
- * @return Zero on success; otherwise -1.
- */
-int oboe_reporter_init (const char *protocol, const char *args);  /* DEPRECATE - Use oboe_init_reporter() */
-
 /**
  * Check if the reporter is ready to send.
  *
@@ -355,11 +348,10 @@ ssize_t oboe_reporter_udp_send(void *desc, const char *data, size_t len);   /* D
  * reporter based on the values of environment variables, configuration
  * file options, and whether a tracelyzer is installed.
  *
- * @param access_key  Client access key
- * @param options additional options
- * @return true if initialization succeeded, false otherwise
+ * @param options init options
+ * @return One of the OBOE_INIT_* macros
  */
-int oboe_init(const char *access_key, const oboe_init_options_t* options);
+int oboe_init(oboe_init_options_t* options);
 
 /**
  * Initialize the Oboe subsytems using a specific reporter configuration.
@@ -371,9 +363,11 @@ int oboe_init(const char *access_key, const oboe_init_options_t* options);
  * @param protocol One of  OBOE_REPORTER_PROTOCOL_FILE, OBOE_REPORTER_PROTOCOL_UDP,
  *      or OBOE_REPORTER_PROTOCOL_SSL.
  * @param args A configuration string for the specified protocol (protocol dependent syntax).
- * @return Zero on success; otherwise an error code.
+ * @return One of the OBOE_INIT_* macros
  */
-int oboe_init_reporter(const char *protocol, const char *args);
+int oboe_init_reporter(const char *protocol, oboe_init_options_t *options);
+
+void oboe_init_options_set_defaults(oboe_init_options_t *options);
 
 /**
  * Disconnect or shut down the Oboe reporter, but allow it to be reconnect()ed.
@@ -492,6 +486,20 @@ void oboe_shutdown();
 #define OBOE_TRACING_DECISIONS_REPORTER_NOT_READY 3
 #define OBOE_TRACING_DECISIONS_NO_VALID_SETTINGS 4
 #define OBOE_TRACING_DECISIONS_QUEUE_FULL 5
+
+// these codes are used by oboe_init(), oboe_init_reporter(), _oboe_create_reporter()
+#define OBOE_INIT_ALREADY_INIT -1
+#define OBOE_INIT_OK 0
+#define OBOE_INIT_WRONG_VERSION 1
+#define OBOE_INIT_INVALID_PROTOCOL 2
+#define OBOE_INIT_NULL_REPORTER 3
+#define OBOE_INIT_DESC_ALLOC 4
+#define OBOE_INIT_FILE_OPEN_LOG 5
+#define OBOE_INIT_UDP_NO_SUPPORT 6
+#define OBOE_INIT_UDP_OPEN 7
+#define OBOE_INIT_SSL_CONFIG_AUTH 8
+#define OBOE_INIT_SSL_LOAD_CERT 9
+#define OBOE_INIT_SSL_REPORTER_CREATE 10
 
 typedef struct {
     uint32_t magic;
@@ -994,9 +1002,6 @@ int oboe_custom_metric_increment(const char *name, const int count, const int ho
         const oboe_metric_tag_t tags[], const size_t tags_count);
 
 // Service names
-
-char* oboe_get_config_service_name_copy();
-char* oboe_get_env_service_name_copy();
 
 /*
  * Perform validation and replacement of invalid characters on the given service name.
