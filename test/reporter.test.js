@@ -13,6 +13,7 @@ describe('addon.reporter', function () {
   } else {
     r = bindings.Reporter
   }
+  const serviceKey = `${process.env.AO_TOKEN_PROD}:node-bindings-test`;
 
   beforeEach(function () {
     if (this.currentTest.title === 'should execute without losing memory') {
@@ -20,14 +21,19 @@ describe('addon.reporter', function () {
     }
   })
 
-  it('should initialize oboe with hostnameAlias', function () {
-    bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY, {
-      hostnameAlias: 'node-testing-hostname'
-    })
+
+  it('should initialize oboe with only a service key', function () {
+    const status = bindings.oboeInit({serviceKey})
+    // kind of funky but -1 is already initialized, 0 is ok. mocha runs
+    // multiple tests in one process so the result is 0 if run standalone
+    // but -1 on all but the first if run as a suite.
+    expect(status).oneOf([-1, 0]);
   })
 
-  it('should initialize oboe with empty options', function () {
-    bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY, {})
+  it('should initialize oboe with hostnameAlias', function () {
+    const options = {serviceKey, hostnameAlias: 'node-testing-hostname'};
+    const status = bindings.oboeInit(options);
+    expect(status).equal(-1);
   })
 
   it('should check if ready to sample', function () {

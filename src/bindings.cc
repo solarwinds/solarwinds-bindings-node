@@ -14,40 +14,183 @@
 Napi::Value oboeInit(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 
-    if (info.Length() < 1 || !info[0].IsString() || (info.Length() > 1 && !info[1].IsObject())) {
-        Napi::TypeError::New(env, "invalid arguments").ThrowAsJavaScriptException();
+    if (info.Length() != 1 || !info[0].IsObject()) {
+        Napi::TypeError::New(env, "invalid calling signature").ThrowAsJavaScriptException();
         return env.Null();
     }
-    std::string service_key = info[0].As<Napi::String>();
 
-    // setup the options
+    // get the options object
+    Napi::Object o = info[0].ToObject();
+
+    // setup oboe's options structure
     oboe_init_options_t options;
-    options.version = 1;
-    options.hostname_alias = NULL;
-    options.log_level = 0;
-    options.log_file_path = NULL;
-    options.max_transactions = 0;
+    options.version = 5;
+    oboe_init_options_set_defaults(&options);
 
-    // if not options supplied then init with default values.
-    if (info.Length() == 1) {
-        oboe_init(service_key.c_str(), &options);
-        return env.Null();
+    // a place to save the strings so they won't go out of scope. using the
+    // number of properties is more than will ever be needed because neither
+    // booleans nor integers are stored.
+    Napi::Array keys = o.GetPropertyNames();
+    std::string fill;
+    std::vector<std::string> holdKeys(keys.Length(), fill);
+    int kix = -1;
+
+    bool debug = o.Get("debug").ToBoolean().Value();
+    // make an output object. it's only filled in when debugging.
+    Napi::Object oo = Napi::Object::New(env);
+
+    //
+    // for each possible field see if a value was provided.
+    //
+    if (o.Has("hostnameAlias")) {
+      Napi::Value hostnameAlias = o.Get("hostnameAlias");
+      if (hostnameAlias.IsString()) {
+        if (debug)
+          oo.Set("hostnameAlias", hostnameAlias);
+        holdKeys[++kix] = hostnameAlias.ToString();
+        options.hostname_alias = holdKeys[kix].c_str();
+      }
+    }
+    if (o.Has("logLevel")) {
+      Napi::Value logLevel = o.Get("logLevel");
+      if (logLevel.IsNumber()) {
+        if (debug)
+          oo.Set("logLevel", logLevel);
+        options.log_level = logLevel.ToNumber().Int64Value();
+      }
+    }
+    if (o.Has("logFilePath")) {
+      Napi::Value logFilePath = o.Get("logFilePath");
+      if (logFilePath.IsString()) {
+        if (debug)
+          oo.Set("logFilePath", logFilePath);
+        holdKeys[++kix] = logFilePath.ToString();
+        options.log_file_path = holdKeys[kix].c_str();
+      }
+    }
+    if (o.Has("maxTransactions")) {
+      Napi::Value maxTransactions = o.Get("maxTransactions");
+      if (maxTransactions.IsNumber()) {
+        if (debug)
+          oo.Set("maxTransactions", maxTransactions);
+        options.max_transactions = maxTransactions.ToNumber().Int64Value();
+      }
+    }
+    if (o.Has("maxFlushWaitTime")) {
+      Napi::Value maxFlushWaitTime = o.Get("maxFlushWaitTime");
+      if (maxFlushWaitTime.IsNumber()) {
+        if (debug)
+          oo.Set("maxFlushWaitTime", maxFlushWaitTime);
+        options.max_flush_wait_time = maxFlushWaitTime.ToNumber().Int64Value();
+      }
+    }
+    if (o.Has("eventsFlushInterval")) {
+      Napi::Value eventsFlushInterval = o.Get("eventsFlushInterval");
+      if (eventsFlushInterval.IsNumber()) {
+        if (debug)
+          oo.Set("eventsFlushInterval", eventsFlushInterval);
+        options.events_flush_interval = eventsFlushInterval.ToNumber().Int64Value();
+      }
+    }
+    if (o.Has("eventsFlushBatchSize")) {
+      Napi::Value eventsFlushBatchSize = o.Get("eventsFlushBatchSize");
+      if (eventsFlushBatchSize.IsNumber()) {
+        if (debug)
+          oo.Set("eventsFlushBatchSize", eventsFlushBatchSize);
+        options.events_flush_batch_size = eventsFlushBatchSize.ToNumber().Int64Value();
+      }
+    }
+    if (o.Has("reporter")) {
+      Napi::Value reporter = o.Get("reporter");
+      if (reporter.IsString()) {
+        if (debug)
+          oo.Set("reporter", reporter);
+        holdKeys[++kix] = reporter.ToString();
+        options.reporter = holdKeys[kix].c_str();
+      }
+    }
+    // endpoint maps to "host" field.
+    if (o.Has("endpoint")) {
+      Napi::Value endpoint = o.Get("endpoint");
+      if (endpoint.IsString()) {
+        if (debug)
+          oo.Set("endpoint", endpoint);
+        holdKeys[++kix] = endpoint.ToString();
+        options.host = holdKeys[kix].c_str();
+      }
+    }
+    // is the service key
+    if (o.Has("serviceKey")) {
+      Napi::Value serviceKey = o.Get("serviceKey");
+      if (serviceKey.IsString()) {
+        if (debug)
+          oo.Set("serviceKey", serviceKey);
+        holdKeys[++kix] = serviceKey.ToString();
+        options.service_key = holdKeys[kix].c_str();
+      }
+    }
+    if (o.Has("trustedPath")) {
+      Napi::Value trustedPath = o.Get("trustedPath");
+      if (trustedPath.IsString()) {
+        if (debug)
+          oo.Set("trustedPath", trustedPath);
+        holdKeys[++kix] = trustedPath.ToString();
+        options.trusted_path = holdKeys[kix].c_str();
+      }
+    }
+    if (o.Has("bufferSize")) {
+      Napi::Value bufferSize = o.Get("bufferSize");
+      if (bufferSize.IsNumber()) {
+        if (debug)
+          oo.Set("bufferSize", bufferSize);
+        options.buffer_size = bufferSize.ToNumber().Int64Value();
+      }
+    }
+    if (o.Has("traceMetrics")) {
+      Napi::Value traceMetrics = o.Get("traceMetrics");
+      options.trace_metrics = traceMetrics.ToBoolean().Value();
+      if (debug)
+        oo.Set("traceMetrics", traceMetrics.ToBoolean().Value());
+    }
+    if (o.Has("histogramPrecision")) {
+      Napi::Value histogramPrecision = o.Get("histogramPrecision");
+      if (histogramPrecision.IsNumber()) {
+        if (debug)
+          oo.Set("histogramPrecision", histogramPrecision);
+        options.histogram_precision = histogramPrecision.ToNumber().Int64Value();
+      }
+    }
+    if (o.Has("tokenBucketCapacity")) {
+      Napi::Value tokenBucketCapacity = o.Get("tokenBucketCapacity");
+      if (tokenBucketCapacity.IsNumber()) {
+        if (debug)
+          oo.Set("tokenBucketCapacity", tokenBucketCapacity);
+        options.token_bucket_capacity = tokenBucketCapacity.ToNumber().Int64Value();
+      }
+    }
+    if (o.Has("tokenBucketRate")) {
+      Napi::Value tokenBucketRate = o.Get("tokenBucketRate");
+      if (tokenBucketRate.IsNumber()) {
+        if (debug)
+          oo.Set("tokenBucketRate", tokenBucketRate);
+        options.token_bucket_rate = tokenBucketRate.ToNumber().Int64Value();
+      }
+    }
+    // oneFilePerEvent maps to "file_single" field.
+    if (o.Has("oneFilePerEvent")) {
+      Napi::Value oneFilePerEvent = o.Get("oneFilePerEvent");
+      options.file_single = oneFilePerEvent.ToBoolean().Value();
+      if (debug)
+        oo.Set("oneFilePerEvent", oneFilePerEvent.ToBoolean().Value());;
     }
 
-    Napi::Object opts = info[1].ToObject();
-    std::string aliasString;
-
-    // hostnameAlias is the only field in oboe_init_options_t that node uses at this point
-    if (opts.Has("hostnameAlias")) {
-        Napi::Value alias = opts.Get("hostnameAlias");
-        if (!alias.IsEmpty()) {
-            aliasString = alias.As<Napi::String>();
-            options.hostname_alias = aliasString.c_str();
-        }
+    if (debug) {
+      return oo;
     }
 
-    oboe_init(service_key.c_str(), &options);
-    return env.Null();
+    // initialize oboe
+    int result = oboe_init(&options);
+    return Napi::Number::New(env, result);
 }
 
 //

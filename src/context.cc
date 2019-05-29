@@ -280,11 +280,12 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     (const char *) ("no config"),               // 2
     (const char *) ("reporter not ready"),      // 3
     (const char *) ("no valid settings"),       // 4
+    (const char *) ("queue full"),              // 5
   };
 
   if (status > 0) {
     const char* m;
-    if (status > 4) {
+    if (status > 5) {
       m = "failed to get trace settings";
     } else {
       m = messages[status];
