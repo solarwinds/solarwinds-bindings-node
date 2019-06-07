@@ -4,6 +4,8 @@ ARG=$1
 PARAM=$2
 PARAM2=$3
 
+# where to get files: STAGING or PRODUCTION (default)
+SOURCE=${SOURCE:-PRODUCTION}
 
 #a="/$0"; a=${a%/*}; a=${a#/}; a=${a:-.}; BASEDIR=$(cd "$a"; pwd)
 #echo $BASEDIR
@@ -53,7 +55,7 @@ get_new_oboe() {
         echo "Neither wget nor curl is available, aborting"
         return 1
     fi
-    # pretend to download for testing by adding an extra parameter
+    # pretend to download for testing by adding any extra parameter
     PRETEND=$PARAM2
     PAIRS="liboboe-1.0-x86_64.so.0.0.0  liboboe-1.0-alpine-x86_64.so.0.0.0 liboboe-1.0-alpine-libressl-x86_64.so.0.0.0"
     # earlier versions of oboe don't have multiple versions for alpine.
@@ -67,8 +69,9 @@ get_new_oboe() {
     URL="https://files.appoptics.com/c-lib"
     if [ "$SOURCE" = "STAGING" ]; then
         URL="https://s3-us-west-2.amazonaws.com/rc-files-t2/c-lib"
-    elif [ "$SOURCE" != "PRODUCTION" -a "$SOURCE" != "" ]; then
+    elif [ "$SOURCE" != "PRODUCTION" ]; then
         echo "Invalid SOURCE value $SOURCE, aborting"
+        exit 1
     fi
     URL="$URL/$PARAM/"
 
@@ -93,17 +96,19 @@ get_new_oboe() {
         correct=`cat "./oboe-$PARAM/$f.sha256" | awk '{print $1}'`
         checked=`sha256sum "./oboe-$PARAM/$f" | awk '{print $1}'`
         if [ "$checked" != "$correct" -o "$checked" = "" -o "$correct" = "" ]; then
-            ERRORS=`expr $ERRORS + 1`
-            ERRORFILES="$ERRORFILES $f"
-            echo "WARNING: SHA256 for $f DOES NOT MATCH!"
-            echo "found    ${checked:-nothing}"
-            echo "expected ${correct:-SHA}"
+            if [ "$PRETEND" = "" ]; then
+              ERRORS=`expr $ERRORS + 1`
+              ERRORFILES="$ERRORFILES $f"
+              echo "WARNING: SHA256 for $f DOES NOT MATCH!"
+              echo "found    ${checked:-nothing}"
+              echo "expected ${correct:-SHA}"
+            fi
         else
             echo "SHA256 matches expected value for $f"
         fi
     done
 
-    if [ $ERRORS -gt 0 -a "$ERRORFILES" -ne "$OKMISSING"]; then
+    if [ $ERRORS -gt 0 -a "$ERRORFILES" != "$OKMISSING" ]; then
         echo "$ERRORS SHA mismatches:$ERRORFILES"
         return 1
     fi
@@ -192,6 +197,7 @@ elif [ "$ARG" = "install-oboe-version" ]; then
     # move the new one over
     mv oboe-$PARAM oboe
 
+    [ -n "$PRETEND" ] && echo "PRETEND THAT"
     echo "a new version of oboe ($PARAM) has been placed in the oboe directory"
     echo "'node setup-liboboe' must be run before building in order to set up"
     echo "the necessary symlinks. 'npm run install' will run 'node setup-liboboe'"
