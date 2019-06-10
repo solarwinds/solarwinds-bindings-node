@@ -1,11 +1,14 @@
 const bindings = require('../')
 const expect = require('chai').expect
 
+const serviceKey = `${process.env.AO_TOKEN_PROD}:node-bindings-test`;
+
 describe('addon.context', function () {
-  before(function (done) {
-    bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY, {})
+
+  it('should initialize oboe with only a service key', function () {
+    const result = bindings.oboeInit({serviceKey});
+    expect(result).equal(0);
     bindings.Reporter.isReadyToSample(2000)
-    done()
   })
 
   it('should set tracing mode to never', function () {
@@ -161,7 +164,7 @@ describe('addon.context', function () {
         expect(settings).property('doMetrics', true)
         expect(settings).property('edge', true)
         expect(settings.metadata).instanceof(bindings.Metadata)
-        expect(settings).property('source', 1)
+        expect(settings).property('source', 6)
         expect(settings).property('rate', bindings.MAX_SAMPLE_RATE)
         expect(settings).property('status', 0)
 

@@ -1,12 +1,12 @@
 /**
  * @file oboe.h
- * 
+ *
  * API header for AppOptics' Oboe application tracing library for use with AppOptics.
  *
  * @package             Oboe
  * @author              AppOptics
  * @copyright           Copyright (c) 2016, SolarWinds LLC
- * @license             
+ * @license
  * @link                https://appoptics.com
  **/
 
@@ -99,7 +99,6 @@ extern "C" {
 #define OBOE_REPORTER_PROTOCOL_UDP "udp"
 #define OBOE_REPORTER_PROTOCOL_SSL "ssl"
 #define OBOE_REPORTER_PROTOCOL_NULL "null"
-#define OBOE_REPORTER_PROTOCOL_DEFAULT OBOE_REPORTER_PROTOCOL_UDP
 
 /** Maximum reasonable length of an arguments string for configuring a reporter. */
 #define OBOE_REPORTER_ARGS_SIZE 4000
@@ -148,15 +147,26 @@ typedef struct oboe_metric_tag {
 } oboe_metric_tag_t;
 
 typedef struct oboe_init_options {
-    int version;                    // the version of this structure (currently at 4)
-    const char *hostname_alias;     // optional hostname alias
-    int log_level;                  // level at which log messages will be written to log file (0-6)
-                                    // use LOGLEVEL_DEFAULT for default log level
-    const char* log_file_path;      // file name including path for log file
-    int max_transactions;           // maximum number of transaction names to track
-    int max_flush_wait_time;        // maximum wait time for flushing data before terminating in milli seconds
-    int events_flush_interval;      // events flush timeout in seconds (threshold for batching messages before sending off)
-    int events_flush_batch_size;    // events flush batch size in KB (threshold for batching messages before sending off)
+    int version;                            // the version of this structure
+    const char *hostname_alias;             // optional hostname alias
+    int log_level;                          // level at which log messages will be written to log file (0-6)
+                                            // use LOGLEVEL_DEFAULT for default log level
+    const char *log_file_path;              // file name including path for log file
+    int max_transactions;                   // maximum number of transaction names to track
+    int max_flush_wait_time;                // maximum wait time for flushing data before terminating in milli seconds
+    int events_flush_interval;              // events flush timeout in seconds (threshold for batching messages before sending off)
+    int events_flush_batch_size;            // events flush batch size in KB (threshold for batching messages before sending off)
+
+    const char *reporter;                   // the reporter to be used (ssl, upd, file, null)
+    const char *host;                       // collector endpoint (reporter=ssl), udp address (reporter=udp), or file path (reporter=file)
+    const char *service_key;                // the service key
+    const char *trusted_path;               // path to the SSL certificate (only for ssl)
+    int buffer_size;                        // size of the message buffer
+    int trace_metrics;                      // flag indicating if trace metrics reporting should be enabled (default) or disabled
+    int histogram_precision;                // the histogram precision (only for ssl)
+    int token_bucket_capacity;              // custom token bucket capacity
+    int token_bucket_rate;                  // custom token bucket rate
+    int file_single;                        // use single files in file reporter for each event
 } oboe_init_options_t;
 
 typedef struct oboe_span_params {
@@ -303,23 +313,6 @@ typedef struct oboe_reporter {
     reporter_profiling_interval profilingInterval;
 } oboe_reporter_t;
 
-int oboe_reporter_udp_init  (oboe_reporter_t *, const char *, const char *);    /* DEPRECATE - Use oboe_init_reporter() */
-int oboe_reporter_udp_init_str(oboe_reporter_t *, const char *);    /* DEPRECATE - Use oboe_init_reporter() */
-int oboe_reporter_file_init (oboe_reporter_t *, const char *);      /* DEPRECATE - Use oboe_init_reporter() */
-int oboe_reporter_file_init_str(oboe_reporter_t *, const char *);   /* DEPRECATE - Use oboe_init_reporter() */
-int oboe_reporter_ssl_init (oboe_reporter_t *, const char *);       /* DEPRECATE - Use oboe_init_reporter() */
-
-
-/**
- * Initialize a reporter structure for use with the specified protocol.
- *
- * @param protocol One of  OBOE_REPORTER_PROTOCOL_FILE, OBOE_REPORTER_PROTOCOL_UDP,
- *      or OBOE_REPORTER_PROTOCOL_SSL.
- * @param args A configuration string for the specified protocol (protocol dependent syntax).
- * @return Zero on success; otherwise -1.
- */
-int oboe_reporter_init (const char *protocol, const char *args);  /* DEPRECATE - Use oboe_init_reporter() */
-
 /**
  * Check if the reporter is ready to send.
  *
@@ -355,25 +348,26 @@ ssize_t oboe_reporter_udp_send(void *desc, const char *data, size_t len);   /* D
  * reporter based on the values of environment variables, configuration
  * file options, and whether a tracelyzer is installed.
  *
- * @param access_key  Client access key
- * @param options additional options
- * @return true if initialization succeeded, false otherwise
+ * @param options init options
+ * @return One of the OBOE_INIT_* macros
  */
-int oboe_init(const char *access_key, const oboe_init_options_t* options);
+int oboe_init(oboe_init_options_t* options);
 
 /**
  * Initialize the Oboe subsytems using a specific reporter configuration.
  *
  * This should be called before any other oboe_* functions butm may also be
- * used to change or re-initialize the current reporter.  To reconnect the 
+ * used to change or re-initialize the current reporter.  To reconnect the
  * reporter use oboe_disconnect() and oboe_reconnect() instead.
  *
  * @param protocol One of  OBOE_REPORTER_PROTOCOL_FILE, OBOE_REPORTER_PROTOCOL_UDP,
  *      or OBOE_REPORTER_PROTOCOL_SSL.
  * @param args A configuration string for the specified protocol (protocol dependent syntax).
- * @return Zero on success; otherwise an error code.
+ * @return One of the OBOE_INIT_* macros
  */
-int oboe_init_reporter(const char *protocol, const char *args);
+int oboe_init_reporter(const char *protocol, oboe_init_options_t *options);
+
+void oboe_init_options_set_defaults(oboe_init_options_t *options);
 
 /**
  * Disconnect or shut down the Oboe reporter, but allow it to be reconnect()ed.
@@ -493,6 +487,20 @@ void oboe_shutdown();
 #define OBOE_TRACING_DECISIONS_NO_VALID_SETTINGS 4
 #define OBOE_TRACING_DECISIONS_QUEUE_FULL 5
 
+// these codes are used by oboe_init(), oboe_init_reporter(), _oboe_create_reporter()
+#define OBOE_INIT_ALREADY_INIT -1
+#define OBOE_INIT_OK 0
+#define OBOE_INIT_WRONG_VERSION 1
+#define OBOE_INIT_INVALID_PROTOCOL 2
+#define OBOE_INIT_NULL_REPORTER 3
+#define OBOE_INIT_DESC_ALLOC 4
+#define OBOE_INIT_FILE_OPEN_LOG 5
+#define OBOE_INIT_UDP_NO_SUPPORT 6
+#define OBOE_INIT_UDP_OPEN 7
+#define OBOE_INIT_SSL_CONFIG_AUTH 8
+#define OBOE_INIT_SSL_LOAD_CERT 9
+#define OBOE_INIT_SSL_REPORTER_CREATE 10
+
 typedef struct {
     uint32_t magic;
     uint32_t timestamp;
@@ -534,8 +542,8 @@ typedef struct {
     int tracing_mode;          // pushed from server, override from config file
     int sample_rate;           // pushed from server, override from config file
     oboe_settings_t *settings; // cached settings, updated by tracelyzer (init to NULL)
-    int last_auto_sample_rate; // stores last known automatic sampling rate 
-    uint16_t last_auto_flags;  // stores last known flags associated with above 
+    int last_auto_sample_rate; // stores last known automatic sampling rate
+    uint16_t last_auto_flags;  // stores last known flags associated with above
     uint32_t last_auto_timestamp; // timestamp from last *settings lookup
     uint32_t last_refresh;        // last refresh time
     token_bucket_t bucket;
@@ -765,21 +773,21 @@ extern int oboe_debug_log_remove(OboeDebugLoggerFcn oldLogger, void *context);
  * We use this to get a reasonable standard format between apps.
  *
  * @param module An OBOE_MODULE_* module identifier.  Use zero for undefined.
- * @param app_name Either NULL or a pointer to a string containing a name for 
- *          the application - will prefix the log entry.  Useful when multiple 
- *          apps log to the same destination. 
+ * @param app_name Either NULL or a pointer to a string containing a name for
+ *          the application - will prefix the log entry.  Useful when multiple
+ *          apps log to the same destination.
  * @param trace_mode A string identifying the configured tracing mode, one of:
  *          "enabled", "disabled", "unset", or "undef" (for invalid values)
  *          Use the oboe_tracing_mode_to_string() function to convert from
  *          numeric values.
  * @param sample_rate The configured sampling rate: -1 for unset or a
  *          integer fraction of 1000000.
- * @param reporter_type String identifying the type of reporter configured: 
+ * @param reporter_type String identifying the type of reporter configured:
  *          One of 'udp' (the default), 'ssl', or 'file'.
  * @param reporter_args The string of comma-separated key=value settings
  *          used to initialize the reporter.
  * @param extra: Either NULL or a pointer to a string to be appended to
- *          the log message and designed to include a few other 
+ *          the log message and designed to include a few other
  *          configuration parameters of interest.
  */
 #if OBOE_DEBUG_LEVEL >= OBOE_DEBUG_INFO
@@ -813,7 +821,7 @@ extern int oboe_debug_log_remove(OboeDebugLoggerFcn oldLogger, void *context);
 /**
  * Log a recoverable error.
  *
- * Each message is limited in the number of times that it will be reported at the 
+ * Each message is limited in the number of times that it will be reported at the
  * ERROR level after which it will be logged at the debug MEDIUM level.
  */
 #if OBOE_DEBUG_LEVEL >= OBOE_DEBUG_ERROR
@@ -830,7 +838,7 @@ extern int oboe_debug_log_remove(OboeDebugLoggerFcn oldLogger, void *context);
 /**
  * Log a warning.
  *
- * Each message is limited in the number of times that it will be reported at the 
+ * Each message is limited in the number of times that it will be reported at the
  * WARNING level after which it will be logged at the debug MEDIUM level.
  */
 #if OBOE_DEBUG_LEVEL >= OBOE_DEBUG_WARNING
@@ -847,7 +855,7 @@ extern int oboe_debug_log_remove(OboeDebugLoggerFcn oldLogger, void *context);
 /**
  * Log an informative message.
  *
- * Each message is limited in the number of times that it will be reported at the 
+ * Each message is limited in the number of times that it will be reported at the
  * INFO level after which it will be logged at the debug MEDIUM level.
  */
 #if OBOE_DEBUG_LEVEL >= OBOE_DEBUG_INFO
@@ -994,9 +1002,6 @@ int oboe_custom_metric_increment(const char *name, const int count, const int ho
         const oboe_metric_tag_t tags[], const size_t tags_count);
 
 // Service names
-
-char* oboe_get_config_service_name_copy();
-char* oboe_get_env_service_name_copy();
 
 /*
  * Perform validation and replacement of invalid characters on the given service name.

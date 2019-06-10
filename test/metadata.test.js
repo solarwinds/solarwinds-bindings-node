@@ -4,9 +4,14 @@ const expect = require('chai').expect
 describe('addon.metadata', function () {
   var metadata
   var string
+  const serviceKey = `${process.env.AO_TOKEN_PROD}:node-bindings-test`;
 
-  it('should initialize oboe without options', function () {
-    bindings.oboeInit(process.env.APPOPTICS_SERVICE_KEY)
+  it('should initialize oboe with only a service key', function () {
+    const status = bindings.oboeInit({serviceKey})
+    // kind of funky but -1 is already initialized, 0 is ok. mocha runs
+    // multiple tests in one process so the result is 0 if run standalone
+    // but -1 on all but the first if run as a suite.
+    expect(status).oneOf([-1, 0]);
   })
 
   it('should construct', function () {
