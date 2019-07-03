@@ -1,10 +1,7 @@
 var bindings = require('../')
 const expect = require('chai').expect
 
-var realCollector = (!process.env.APPOPTICS_REPORTER
-  || process.env.APPOPTICS_REPORTER === 'ssl')
-  && (process.env.APPOPTICS_COLLECTOR === 'collector.appoptics.com'
-  || process.env.APPOPTICS_COLLECTOR === 'collector-stg.appoptics.com')
+const env = process.env;
 
 describe('addon.reporter', function () {
   let r
@@ -13,7 +10,7 @@ describe('addon.reporter', function () {
   } else {
     r = bindings.Reporter
   }
-  const serviceKey = `${process.env.AO_TOKEN_PROD}:node-bindings-test`;
+  const serviceKey = `${env.AO_TOKEN_PROD}:node-bindings-test`;
 
   beforeEach(function () {
     if (this.currentTest.title === 'should execute without losing memory') {
@@ -42,11 +39,7 @@ describe('addon.reporter', function () {
     var ready = r.isReadyToSample(5000)
     expect(ready).be.a('number')
 
-    if (realCollector) {
-      expect(ready).equal(1, `${process.env.APPOPTICS_COLLECTOR} should be ready`)
-    } else {
-      expect(ready).not.equal(1, 'isReadyToSample() should return 0')
-    }
+    expect(ready).equal(1, `${env.APPOPTICS_COLLECTOR} should be ready`)
   })
 
   it('should send a generic span', function () {
