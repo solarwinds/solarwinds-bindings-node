@@ -63,112 +63,6 @@ Napi::Value setDefaultSampleRate(const Napi::CallbackInfo& info) {
     return Napi::Number::New(info.Env(), rateUsed);
 }
 
-//
-// Stringify the current context's metadata structure.
-//
-Napi::Value toString(const Napi::CallbackInfo& info) {
-  char buf[Metadata::fmtBufferSize];
-  oboe_metadata_t* md = oboe_context_get();
-
-  int rc;
-
-  if (info.Length() == 1 && info[0].IsNumber()) {
-    int fmt = info[0].As<Napi::Number>().Int64Value();
-    // default 1 to a human readable form for historical reasons.
-    if (fmt == 1) {
-      fmt = Metadata::fmtHuman;
-    }
-    rc = Metadata::format(md, sizeof(buf), buf, fmt);
-  } else {
-    rc = oboe_metadata_tostr(md, buf, sizeof(buf) - 1);
-  }
-
-  return Napi::String::New(info.Env(), rc == 0 ? buf : "");
-}
-
-//
-// Set oboe's context to the argument supplied. The argument can
-// be in any form that Metadata::getMetadata() can decode.
-//
-Napi::Value set(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-
-  // Validate arguments
-  if (info.Length() != 1) {
-    Napi::Error::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
-    return env.Null();
-  }
-
-  //bool Metadata::getMetadata(Napi::Value v, oboe_metadata_t * omd)
-  oboe_metadata_t omd;
-
-  int status = Metadata::getMetadata(info[0], &omd);
-  if (!status) {
-    Napi::TypeError::New(env, "invalid metadata").ThrowAsJavaScriptException();
-    return env.Null();
-  }
-
-  // Set the context
-  oboe_context_set(&omd);
-
-  return env.Null();
-}
-
-//
-// clear is used for testing.
-//
-Napi::Value clear(const Napi::CallbackInfo& info) {
-  oboe_context_clear();
-  return info.Env().Null();
-}
-
-//
-// return a boolean indicating whether oboe's current context is
-// valid.
-//
-Napi::Value isValid(const Napi::CallbackInfo& info) {
-  return Napi::Boolean::New(info.Env(), oboe_context_is_valid());
-}
-
-//
-// Extended method to create events. Replaced createEvent but allows
-// an argument of the metadata to use to create the event. With no
-// argument it uses oboe's current context as the metadata.
-//
-Napi::Value createEventX(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-
-    oboe_metadata_t omd;
-    bool add_edge = true;
-
-    //
-    // If no metadata is supplied use oboe's.
-    //
-    if (info.Length() == 0) {
-      oboe_metadata_t* context = oboe_context_get();
-      omd = *context;
-    } else if (!Metadata::getMetadata(info[0], &omd)) {
-      Napi::TypeError::New(env, "Invalid argument").ThrowAsJavaScriptException();
-      return env.Null();
-    }
-
-    if (info.Length() >= 2) {
-        add_edge = info[1].ToBoolean().Value();
-    }
-
-    // create the event
-    Napi::Object event = Event::NewInstance(env, &omd, add_edge);
-
-    // check for error.
-    Event* e = Napi::ObjectWrap<Event>::Unwrap(event);
-    if (e->oboe_status != 0) {
-      Napi::Error::New(env, "Oboe failed to create event").ThrowAsJavaScriptException();
-      return env.Null();
-    }
-
-    return event;
-}
-
 // 1: OBOE_SAMPLE_RATE_SOURCE_FILE - local agent config
 // 2: OBOE_SAMPLE_RATE_SOURCE_DEFAULT - compiled default
 // 3: OBOE_SAMPLE_RATE_SOURCE_OBOE - remote config (layer-specific)
@@ -325,8 +219,9 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
 
 //
 // This is not a class, just a group of functions in a JavaScript namespace.
+// (well, in two javascript namespaces.)
 //
-namespace OboeContext {
+namespace Settings {
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
@@ -335,16 +230,17 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 
   module.Set("setTracingMode", Napi::Function::New(env, setTracingMode));
   module.Set("setDefaultSampleRate", Napi::Function::New(env, setDefaultSampleRate));
-  module.Set("toString", Napi::Function::New(env, toString));
-  module.Set("set", Napi::Function::New(env, set));
-  module.Set("clear", Napi::Function::New(env, clear));
-  module.Set("isValid", Napi::Function::New(env, isValid));
-  module.Set("createEventX", Napi::Function::New(env, createEventX));
+
   module.Set("getTraceSettings", Napi::Function::New(env, getTraceSettings));
 
+  exports.Set("Settings", module);
+
+  //
+  // for legacy compatibility, keep the Context namespace valid
+  //
   exports.Set("Context", module);
 
   return exports;
 }
 
-} // end namespace OboeContext
+} // end namespace Settings

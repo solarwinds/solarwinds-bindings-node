@@ -49,19 +49,6 @@ Napi::Object Metadata::NewInstance(Napi::Env env, Napi::Value arg) {
 }
 
 //
-// JavaScript callable static method to return metadata constructed from the current
-// oboe context.
-//
-Napi::Value Metadata::fromContext(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    oboe_metadata_t* omd = oboe_context_get();
-
-    Napi::Value v = Napi::External<oboe_metadata_t>::New(env, omd);
-    Napi::Object md = Metadata::NewInstance(env, v);
-    return md;
-}
-
-//
 // Transform a string back into a metadata instance
 //
 Napi::Value Metadata::fromString(const Napi::CallbackInfo& info) {
@@ -259,7 +246,6 @@ Napi::Object Metadata::Init(Napi::Env env, Napi::Object exports) {
   Napi::Function ctor = DefineClass(env, "Metadata", {
     // Static methods
     StaticMethod("fromString", &Metadata::fromString),
-    StaticMethod("fromContext", &Metadata::fromContext),
     StaticMethod("makeRandom", &Metadata::makeRandom),
     StaticMethod("sampleFlagIsSet", &Metadata::sampleFlagIsSet),
     // Static values

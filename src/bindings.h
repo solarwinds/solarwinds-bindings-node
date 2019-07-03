@@ -30,7 +30,6 @@ public:
   Napi::Value toString(const Napi::CallbackInfo& info);
 
   // return a Metadata object
-  static Napi::Value fromContext(const Napi::CallbackInfo& info);
   static Napi::Value fromString(const Napi::CallbackInfo& info);
   static Napi::Value makeRandom(const Napi::CallbackInfo& info);
 
@@ -84,7 +83,7 @@ public:
   oboe_event_t event;
   // oboe status returned by constructor rather than throwing a JavaScript
   // error. allows C++ code to do cleanup if necessary.
-  int oboe_status;
+  int init_status;
 
   // methods that manipulate the instance's oboe_event_t
   Napi::Value addInfo(const Napi::CallbackInfo& info);
@@ -109,10 +108,10 @@ public:
 };
 
 //
-// OboeContext is a collection of functions providing access to the oboe
-// context functions.
+// Settings is a collection of functions for getting/setting
+// oboe's tracing settings
 //
-namespace OboeContext {
+namespace Settings {
   Napi::Object Init(Napi::Env, Napi::Object);
 }
 

@@ -145,7 +145,8 @@ describe('addon.oboeInit()', function () {
   })
 
   it('should init without losing memory', function (done) {
-    this.timeout(30000);
+    // node 8, 10 completes in < 30 seconds but node 12 takes longer
+    this.timeout(40000);
     const warmup = 1000000;
     const checkCount = 1000000;
     const options = Object.assign({}, goodOptions, defaultOptions);

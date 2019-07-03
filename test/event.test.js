@@ -17,8 +17,53 @@ describe('addon.event', function () {
     randomSample = bindings.Metadata.makeRandom(1)
   })
 
-  it('should construct an event', function () {
-    event = new bindings.Event()
+  it('should throw if the constructor is called without "new"', function () {
+    function badCall () {
+      bindings.Event();
+    }
+    expect(badCall, 'should throw without "new"').throws(TypeError, 'Class constructors cannot be invoked without \'new\'');
+  })
+
+  it('should throw if the constructor is called with bad arguments', function () {
+    const random = bindings.Metadata.makeRandom();
+
+    const tests = [
+      {args: [], text: 'no args', e: 'invalid signature'},
+      {args: [1], text: 'non-metadata', e: 'no metadata found'},
+      {args: ['invalid-x-trace-string'], text: 'invalid x-trace', e: 'Event::New - invalid X-Trace ID string'},
+    ];
+
+    for (let t of tests) {
+      function badCall () {
+        new bindings.Event(...t.args);
+      }
+      expect(badCall, `${t.text} should throw "${t.e}"`).throws(TypeError, t.e);
+    }
+  })
+
+  it('should construct an event using metadata', function () {
+    const fmt = 1|2|8;        // header, task, flags
+    const metadata = bindings.Metadata.makeRandom();
+    const event = new bindings.Event(metadata);
+    expect(event.toString(fmt)).equal(metadata.toString(fmt));
+  })
+
+  it('should construct an event using any form of metadata', function () {
+    const fmt = 1|2|8;        // just compare the header, task, and flags.
+    const metadata = bindings.Metadata.makeRandom();
+    const event = new bindings.Event(metadata);
+
+    const tests = [
+      {args: [metadata], text: 'metadata'},
+      {args: [event], text: 'an event'},
+      {args: [metadata.toString()], text: 'a string'},
+      {args: [metadata, false], text: 'metadata, no edge'},
+      {args: [metadata, true], text: 'metadata, edge'},
+    ];
+
+    for (let t of tests) {
+      expect(event.toString(fmt), `from "${t.text}"`).equal(metadata.toString(fmt));
+    }
   })
 
   it('should construct an event using metadata', function () {

@@ -4,7 +4,7 @@ test/
 archived/
 # archived versions of oboe
 oboe-*
-# links
+# links created by setup-liboboe
 oboe/liboboe-1.0.so.0
 oboe/liboboe.so
 # development focused

@@ -3,7 +3,7 @@
 // Components
 #include "sanitizer.cc"
 #include "metadata.cc"
-#include "context.cc"
+#include "settings.cc"
 #include "config.cc"
 #include "event.cc"
 #include "reporter.cc"
@@ -230,7 +230,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 
   // classes and objects supplying different namespaces
   exports = Reporter::Init(env, exports);
-  exports = OboeContext::Init(env, exports);
+  exports = Settings::Init(env, exports);
   exports = Sanitizer::Init(env, exports);
   exports = Metadata::Init(env, exports);
   exports = Event::Init(env, exports);

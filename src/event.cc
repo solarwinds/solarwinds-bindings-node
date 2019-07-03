@@ -4,7 +4,10 @@
 Napi::FunctionReference Event::constructor;
 
 Event::~Event() {
-  oboe_event_destroy(&event);
+  // don't ask oboe to clean up unless the event was successfully created.
+  if (init_status == 0) {
+    oboe_event_destroy(&event);
+  }
 }
 
 
@@ -21,44 +24,41 @@ Event::~Event() {
 Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
     Napi::Env env = info.Env();
 
-    // throw an error if constructor is called as a function without "new"
-    if(!info.IsConstructCall()) {
-        Napi::Error::New(env, "Event must be called as a constructor").ThrowAsJavaScriptException();
-        return;
-    }
-
     oboe_metadata_t omd;
 
-    // Handle the no argument signature.
-    if (info.Length() == 0) {
-      oboe_metadata_t* context = oboe_context_get();
-      omd = *context;
-    } else {
-      Napi::Object o = info[0].As<Napi::Object>();
+    // indicate that the construction failed so the destructor won't ask oboe to free it.
+    init_status = -1;
 
-      if (Metadata::isMetadata(o)) {
-        Metadata* md = Napi::ObjectWrap<Metadata>::Unwrap(o);
-        omd = md->metadata;
-      } else if (Event::isEvent(o)) {
-        Event* ev = Napi::ObjectWrap<Event>::Unwrap(o);
-        omd = ev->event.metadata;
-      } else if (info[0].IsExternal()) {
-        omd = *info[0].As<Napi::External<oboe_metadata_t>>().Data();
-      } else if (info[0].IsString()) {
-        std::string xtrace = info[0].As<Napi::String>();
-        int status = oboe_metadata_fromstr(&omd, xtrace.c_str(), xtrace.length());
-        if (status != 0) {
-          Napi::Error::New(env, "Event::New - invalid X-Trace ID string").ThrowAsJavaScriptException();
-          return;
-        }
-      } else {
-        Napi::TypeError::New(env, "invalid arguments");
+    if (info.Length() < 1) {
+      Napi::TypeError::New(env, "invalid signature").ThrowAsJavaScriptException();
+      return;
+    }
+
+    //Napi::Object o = info[0].As<Napi::Object>();
+    Napi::Object o = info[0].ToObject();
+
+    if (Metadata::isMetadata(o)) {
+      Metadata* md = Napi::ObjectWrap<Metadata>::Unwrap(o);
+      omd = md->metadata;
+    } else if (Event::isEvent(o)) {
+      Event* ev = Napi::ObjectWrap<Event>::Unwrap(o);
+      omd = ev->event.metadata;
+    } else if (info[0].IsExternal()) {
+      omd = *info[0].As<Napi::External<oboe_metadata_t>>().Data();
+    } else if (info[0].IsString()) {
+      std::string xtrace = info[0].As<Napi::String>();
+      int status = oboe_metadata_fromstr(&omd, xtrace.c_str(), xtrace.length());
+      if (status != 0) {
+        Napi::TypeError::New(env, "Event::New - invalid X-Trace ID string").ThrowAsJavaScriptException();
         return;
       }
+    } else {
+      Napi::TypeError::New(env, "no metadata found").ThrowAsJavaScriptException();
+      return;
     }
 
     // here there is metadata in omd and that's all the information needed in order
-    // to create an event. add an edge unless the callers specifies not to.
+    // to create an event. add an edge if the caller requests.
     bool add_edge = false;
     if (info.Length() >= 2) {
       add_edge = info[1].ToBoolean().Value();
@@ -67,19 +67,19 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
     // supply the metadata for the event. oboe_event_init() will create a new
     // random op ID for the event. (The op ID can be specified using the 3rd
     // argument but there is no benefit to doing so.)
-    oboe_status = oboe_event_init(&this->event, &omd, NULL);
-
-    // if the event init succeeded and an edge must be added do so.
-    if (oboe_status == 0 && add_edge) {
-      oboe_status = oboe_event_add_edge(&this->event, &omd);
-    }
-    // if it failed cleanup.
-    if (oboe_status != 0) {
-      oboe_event_destroy(&this->event);
+    init_status = oboe_event_init(&this->event, &omd, NULL);
+    if (init_status != 0) {
+      Napi::Error::New(env, "oboe.event_init: " + std::to_string(init_status)).ThrowAsJavaScriptException();
+      return;
     }
 
-    // oboe_status is an instance property that can be used by c++ functions so
-    // they can clean up, if necessary, as opposed to handle a JavaScript exception.
+    if (add_edge) {
+      int edge_status = oboe_event_add_edge(&this->event, &omd);
+      if (edge_status != 0) {
+        Napi::Error::New(env, "oboe.add_edge: " + std::to_string(edge_status)).ThrowAsJavaScriptException();
+        return;
+      }
+    }
 }
 
 //

@@ -70,15 +70,13 @@ int send_event_x(const Napi::CallbackInfo& info, int channel) {
   // this is called only from C++ there is no type checking done.
   Event* event = Napi::ObjectWrap<Event>::Unwrap(info[0].ToObject());
 
-  // if metadata was passed in use it otherwise grab it from oboe.
-  oboe_metadata_t* md;
-  if (info.Length() >= 2 && Metadata::isMetadata(info[1].As<Napi::Object>())) {
-    md = &Napi::ObjectWrap<Metadata>::Unwrap(info[1].ToObject())->metadata;
-  } else {
-    md = oboe_context_get();
-  }
+  // fake up metadata so oboe can check it. change the op_id so it doesn't
+  // match the event's in oboe's check.
+  oboe_metadata_t omd = event->event.metadata;
+  omd.ids.op_id[0] += 1;
 
-  int status = oboe_event_send(channel, &event->event, md);
+  // send the event. 0 is success.
+  int status = oboe_event_send(channel, &event->event, &omd);
 
   return status;
 }

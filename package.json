@@ -1,6 +1,6 @@
 {
   "name": "appoptics-bindings",
-  "version": "6.3.1",
+  "version": "6.4.0",
   "description": "Bindings to liboboe for the AppOptics APM agent",
   "author": "Bruce A. MacNaughton <bruce@solarwinds.cloud>",
   "contributors": [
@@ -32,6 +32,7 @@
     "node-gyp": "^4.0.0"
   },
   "devDependencies": {
-    "chai": "^4.2.0"
+    "chai": "^4.2.0",
+    "segfault-handler": "^1.2.0"
   }
 }
