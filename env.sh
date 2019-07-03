@@ -155,7 +155,7 @@ if [ -z "$ARG" ]; then
     echo
 elif [ "$ARG" = "udp" ]; then
     export APPOPTICS_REPORTER=udp
-    export APPOPTICS_REPORTER_UDP=localhost:7832
+    export APPOPTICS_COLLECTOR=${AO_TEST_COLLECTOR:-localhost:7832}
 elif [ "$ARG" = "stg" ]; then
     export APPOPTICS_REPORTER=ssl
     export APPOPTICS_COLLECTOR=${AO_TEST_COLLECTOR:-collector-stg.appoptics.com}
