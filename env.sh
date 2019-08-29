@@ -45,6 +45,8 @@ get_new_oboe() {
         echo "$ . env.sh fetch-oboe-version latest"
         echo "or:"
         echo "$ . env.sh install-oboe-version 4.1.0"
+        echo "or if wanting to fetch from staging rather than production:"
+        echo "$ SOURCE=STAGING . env.sh install-oboe-version 6.0.0"
         return
     fi
     if [ $(which wget) ]; then

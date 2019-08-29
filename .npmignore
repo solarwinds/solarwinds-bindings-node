@@ -18,3 +18,4 @@ env.sh
 *.tgz
 *.tmp
 *-notes.md
+working/

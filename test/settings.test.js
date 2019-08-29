@@ -96,13 +96,15 @@ describe('addon.settings', function () {
       var settings = bindings.Settings.getTraceSettings({xtrace: xid})
       if (--counter <= 0 || typeof settings === 'object' && settings.source !== 2) {
         clearInterval(id)
+        expect(settings).property('status', 0);
         expect(settings).property('doSample', true)
         expect(settings).property('doMetrics', true)
         expect(settings).property('edge', true)
         expect(settings.metadata).instanceof(bindings.Metadata)
-        expect(settings).property('source', 6)
-        expect(settings).property('rate', bindings.MAX_SAMPLE_RATE)
-        expect(settings).property('status', 0)
+        expect(settings).property('rate', bindings.MAX_SAMPLE_RATE);
+        // the following depends on whether this suite is run standalone or with other
+        // test files.
+        expect(settings.source).oneOf([1, 6]);
 
         if (counter < 0) {
           done(new Error('getTraceSettings() never returned valid settings'))

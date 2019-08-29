@@ -99,6 +99,21 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   // edge back to supplied metadata unless there is none.
   bool edge = true;
 
+  // debugging booleans
+  //bool showIn = false;
+  //bool showOut = false;
+
+  //
+  // trigger trace extensions
+  //
+
+  // type_requested 0 = normal, 1 = trigger-trace
+  int type_requested = 0;
+  std::string xtraceOpts("");
+  std::string xtraceOptsSig("");
+  int64_t xtraceOptsTimestamp = 0;
+  int customTriggerMode = -1;
+
   // caller specified values. errors are ignored and default values are used.
   if (info[0].IsObject()) {
     Napi::Object o = info[0].ToObject();
@@ -142,6 +157,32 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     if (o.Has("edge")) {
       edge = o.Get("edge").ToBoolean().Value();
     }
+
+    // now handle x-trace-options and x-trace-options-signature
+    v = o.Get("typeRequested");
+    if (v.IsNumber()) {
+      type_requested = v.As<Napi::Number>().Int64Value();
+    }
+    v = o.Get("xtraceOpts");
+    if (v.IsString()) {
+      xtraceOpts = v.As<Napi::String>();
+    }
+    v = o.Get("xtraceOptsSig");
+    if (v.IsString()) {
+      xtraceOptsSig = v.As<Napi::String>();
+    }
+    v = o.Get("xtraceOptsTimestamp");
+    if (v.IsNumber()) {
+      xtraceOptsTimestamp = v.As<Napi::Number>().Int64Value();
+    }
+    v = o.Get("customTriggerMode");
+    if (v.IsNumber()) {
+      customTriggerMode = v.As<Napi::Number>().Int32Value();
+    }
+
+    // debug options
+    //showIn = o.Get("showIn").ToBoolean().Value();
+    //showOut = o.Get("showOut").ToBoolean().Value();
   }
 
   // if no xtrace or the xtrace was bad then construct new metadata.
@@ -154,41 +195,54 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   }
 
   // apply default or user specified values.
-  in.version = 1;
+  in.version = 2;
   in.service_name = "";
   in.in_xtrace = xtrace.c_str();
   in.custom_sample_rate = rate;
   in.custom_tracing_mode = mode;
 
-  // set the version in case oboe adds fields in the future.
-  out.version = 1;
+  // v2 fields (added for trigger-trace support)
+  in.custom_trigger_mode = customTriggerMode;
+  in.request_type = type_requested;
+  in.header_options = xtraceOpts.c_str();
+  in.header_signature = xtraceOptsSig.c_str();
+  in.header_timestamp = xtraceOptsTimestamp;
+
+  //if (showIn) {
+  //  std::cout << "version: " << in.version << std::endl;
+  //  std::cout << "service_name: " << in.service_name << std::endl;
+  //  std::cout << "in_xtrace: " << in.in_xtrace << std::endl;
+  //  std::cout << "custom_sample_rate: " << in.custom_sample_rate << std::endl;
+  //  std::cout << "custom_tracing_mode: " << in.custom_tracing_mode << std::endl;
+  //  std::cout << "custom_trigger_mode: " << in.custom_trigger_mode << std::endl;
+  //  std::cout << "request_type: " << in.request_type << std::endl;
+  //  std::cout << "header_options: " << in.header_options << std::endl;
+  //  std::cout << "header_signature: " << in.header_signature << std::endl;
+  //  std::cout << "header_timestamp: " << in.header_timestamp << std::endl;
+  //}
 
   // ask for oboe's decisions on life, the universe, and everything.
+  out.version = 2;
   int status = oboe_tracing_decisions(&in, &out);
 
-                                                // tracing disabled -2
-                                                // xtrace not sampled -1
-  const char* messages[] = {
-    (const char *) ("ok"),                      // 0
-    (const char *) ("no output structure"),     // 1
-    (const char *) ("no config"),               // 2
-    (const char *) ("reporter not ready"),      // 3
-    (const char *) ("no valid settings"),       // 4
-    (const char *) ("queue full"),              // 5
-  };
+  // version 2 of the oboe_tracing_decisions_out structure returns a
+  // pointer to the message string for all codes.
+  //
+  // -2 tracing-mode-disabled
+  // -1 xtrace-not-sampled
+  // 0 ok
 
+
+  // set the message and auth info for both error and successful returns
+  Napi::Object o = Napi::Object::New(env);
+  o.Set("status", Napi::Number::New(env, status));
+  o.Set("message", Napi::String::New(env, out.status_message));
+  o.Set("authStatus", Napi::Number::New(env, out.auth_status));
+  o.Set("authMessage", Napi::String::New(env, out.auth_message));
+  o.Set("typeProvisioned", Napi::Number::New(env, out.request_provisioned));
+
+  // status > 0 is an error return; do no additional processing.
   if (status > 0) {
-    const char* m;
-    if (status > 5) {
-      m = "failed to get trace settings";
-    } else {
-      m = messages[status];
-    }
-
-    // assemble an error return
-    Napi::Object o = Napi::Object::New(env);
-    o.Set("error", status);
-    o.Set("message", m);
     return o;
   }
 
@@ -203,11 +257,10 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   Napi::Value v = Napi::External<oboe_metadata_t>::New(env, &omd);
   Napi::Object md = Metadata::NewInstance(env, v);
 
-  // assemble the return object
-  Napi::Object o = Napi::Object::New(env);
+  // augment the return object
   o.Set("metadata", md);
   o.Set("metadataFromXtrace", Napi::Boolean::New(env, have_metadata));
-  o.Set("status", Napi::Number::New(env, status));
+  //o.Set("status", Napi::Number::New(env, status));
   o.Set("edge", Napi::Boolean::New(env, edge));
   o.Set("doSample", Napi::Boolean::New(env, out.do_sample));
   o.Set("doMetrics", Napi::Boolean::New(env, out.do_metrics));
@@ -219,7 +272,7 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
 
 //
 // This is not a class, just a group of functions in a JavaScript namespace.
-// (well, in two javascript namespaces.)
+// (well, in two javascript namespaces for compatability.)
 //
 namespace Settings {
 

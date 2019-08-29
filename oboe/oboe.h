@@ -81,6 +81,10 @@ extern "C" {
  * Default events flush batch size in KB.
  */
 #define OBOE_DEFAULT_EVENTS_FLUSH_BATCH_SIZE 2000
+/**
+ * Default EC2 metadata timeout in milliseconds
+ */
+#define OBOE_DEFAULT_EC2_METADATA_TIMEOUT 1000
 
 #define OBOE_SAMPLE_RESOLUTION 1000000
 
@@ -167,6 +171,8 @@ typedef struct oboe_init_options {
     int token_bucket_capacity;              // custom token bucket capacity
     int token_bucket_rate;                  // custom token bucket rate
     int file_single;                        // use single files in file reporter for each event
+
+    int ec2_metadata_timeout;               // EC2 metadata timeout in milliseconds
 } oboe_init_options_t;
 
 typedef struct oboe_span_params {
@@ -183,12 +189,22 @@ typedef struct oboe_span_params {
     int do_metrics;                 // boolean flag whether a (HTTP) span should be sent (1) or not (0)
 } oboe_span_params_t;
 
+//
+// oboe_get_tracing_decisions input and output structures
+//
 typedef struct oboe_tracing_decisions_in {
-    int version;
-    const char *service_name;
-    const char *in_xtrace;
-    int custom_sample_rate;
-    int custom_tracing_mode;
+    int version;                    // the version of this structure
+    const char *service_name;       // custom service name
+    const char *in_xtrace;          // existing X-Trace from passed in HTTP header
+    int custom_sample_rate;         // custom sample rate
+    int custom_tracing_mode;        // custom tracing mode
+
+    // v2
+    int custom_trigger_mode;        // custom trigger mode
+    int request_type;               // the request type: OBOE_REQUEST_TYPE_REGULAR, OBOE_REQUEST_TYPE_TRIGGER
+    const char *header_options;     // X-Trace-Options HTTP header value
+    const char *header_signature;   // X-Trace-Options-Signature HTTP header value
+    time_t header_timestamp;        // timestamp from X-Trace-Options header, converted to UNIX timestamp format
 } oboe_tracing_decisions_in_t;
 
 typedef struct oboe_tracing_decisions_out {
@@ -197,6 +213,12 @@ typedef struct oboe_tracing_decisions_out {
     int sample_source;
     int do_sample;
     int do_metrics;
+
+    // v2
+    int request_provisioned;
+    int auth_status;
+    const char *auth_message;
+    const char *status_message;
 } oboe_tracing_decisions_out_t;
 
 typedef struct oboe_internal_stats {
@@ -367,7 +389,12 @@ int oboe_init(oboe_init_options_t* options);
  */
 int oboe_init_reporter(const char *protocol, oboe_init_options_t *options);
 
-void oboe_init_options_set_defaults(oboe_init_options_t *options);
+/**
+ * returns one of these:
+ * - OBOE_INIT_OPTIONS_SET_DEFAULTS_OK
+ * - OBOE_INIT_OPTIONS_SET_DEFAULTS_WRONG_VERSION
+ */
+int oboe_init_options_set_defaults(oboe_init_options_t *options);
 
 /**
  * Disconnect or shut down the Oboe reporter, but allow it to be reconnect()ed.
@@ -429,6 +456,7 @@ void oboe_shutdown();
 #define OBOE_SETTINGS_FLAG_SAMPLE_START   0x4
 #define OBOE_SETTINGS_FLAG_SAMPLE_THROUGH 0x8
 #define OBOE_SETTINGS_FLAG_SAMPLE_THROUGH_ALWAYS 0x10
+#define OBOE_SETTINGS_FLAG_TRIGGERED_TRACE 0x20
 #define OBOE_SETTINGS_MAX_STRLEN 256
 
 #define OBOE_SETTINGS_UNSET -1
@@ -455,9 +483,6 @@ void oboe_shutdown();
     #pragma pack(push, 1)
 #endif
 
-#define TOKEN_BUCKET_CAPACITY_DEFAULT 16               // bucket capacity (how many tokens fit into the bucket)
-#define TOKEN_BUCKET_RATE_PER_SECOND_DEFAULT 8         // rate per second (number of tokens per second)
-
 #define OBOE_SEND_EVENT 0
 #define OBOE_SEND_STATUS 1
 #define OBOE_SEND_PROFILING 2
@@ -477,7 +502,17 @@ void oboe_shutdown();
 #define OBOE_SPAN_NO_REPORTER -4
 #define OBOE_SPAN_NOT_READY -5
 
-// these codes are used by oboe_sample_layer_custom(), oboe_tracing_decisions(), oboe_reporter_is_ready()
+// these codes are returned by oboe_sample_layer_custom(), oboe_tracing_decisions(),
+// oboe_reporter_is_ready(), and referenced in settings_messages.c (to convert
+// error codes to messages.)
+//
+// they are structured such that codes that are <= 0 are successful, i.e., no
+// error status needs to be reported to the user, while codes > 0 are errors that
+// need to be reported.
+
+#define OBOE_TRACING_DECISIONS_FAILED_AUTH -5
+#define OBOE_TRACING_DECISIONS_TRIGGERED_TRACE_EXHAUSTED -4
+#define OBOE_TRACING_DECISIONS_TRIGGERED_TRACE_DISABLED -3
 #define OBOE_TRACING_DECISIONS_TRACING_DISABLED -2
 #define OBOE_TRACING_DECISIONS_XTRACE_NOT_SAMPLED -1
 #define OBOE_TRACING_DECISIONS_OK 0
@@ -486,8 +521,31 @@ void oboe_shutdown();
 #define OBOE_TRACING_DECISIONS_REPORTER_NOT_READY 3
 #define OBOE_TRACING_DECISIONS_NO_VALID_SETTINGS 4
 #define OBOE_TRACING_DECISIONS_QUEUE_FULL 5
+#define OBOE_TRACING_DECISIONS_BAD_ARG 6
 
-// these codes are used by oboe_init(), oboe_init_reporter(), _oboe_create_reporter()
+// convert above codes into const char* messages.
+const char* oboe_get_tracing_decisions_message(int code);
+
+#define OBOE_TRACING_DECISIONS_AUTH_NOT_CHECKED -2
+#define OBOE_TRACING_DECISIONS_AUTH_NOT_PRESENT -1
+#define OBOE_TRACING_DECISIONS_AUTH_OK 0
+#define OBOE_TRACING_DECISIONS_AUTH_NO_SIG_KEY 1
+#define OBOE_TRACING_DECISIONS_AUTH_INVALID_SIG 2
+#define OBOE_TRACING_DECISIONS_AUTH_BAD_TIMESTAMP 3
+
+// convert above codes into const char* messages.
+const char* oboe_get_tracing_decisions_auth_message (int code);
+
+#define OBOE_REQUEST_TYPE_NONE -1
+#define OBOE_REQUEST_TYPE_REGULAR 0
+#define OBOE_REQUEST_TYPE_TRIGGER 1
+
+#define OBOE_INIT_OPTIONS_SET_DEFAULTS_OK 0
+#define OBOE_INIT_OPTIONS_SET_DEFAULTS_WRONG_VERSION 1
+
+//
+// these codes are returned by oboe_init(), oboe_init_reporter(), _oboe_create_reporter()
+//
 #define OBOE_INIT_ALREADY_INIT -1
 #define OBOE_INIT_OK 0
 #define OBOE_INIT_WRONG_VERSION 1
@@ -501,6 +559,17 @@ void oboe_shutdown();
 #define OBOE_INIT_SSL_LOAD_CERT 9
 #define OBOE_INIT_SSL_REPORTER_CREATE 10
 
+// token buckets
+enum TOKEN_BUCKETS {
+  TOKEN_BUCKET_SAMPLING,    // for normal requests
+  TOKEN_BUCKET_TT_RELAXED,  // for triggered traces initiated by Pingdom and
+                            // other trusted sources (relaxed settings)
+  TOKEN_BUCKET_TT_STRICT,   // for triggered traces initiated by CLI and
+                            // other untrusted sources (strict settings)
+  TOKEN_BUCKET_COUNT        // IMPORTANT NOTE: this must be the last element
+                            // inside the enum
+};
+
 typedef struct {
     uint32_t magic;
     uint32_t timestamp;
@@ -510,8 +579,9 @@ typedef struct {
     uint32_t ttl;
     uint32_t _pad;
     char layer[OBOE_SETTINGS_MAX_STRLEN]; // Flawfinder: ignore
-    double bucket_capacity;
-    double bucket_rate_per_sec;
+    double bucket_capacity[TOKEN_BUCKET_COUNT];
+    double bucket_rate_per_sec[TOKEN_BUCKET_COUNT];
+    char signature_key[OBOE_SETTINGS_MAX_STRLEN]; // Flawfinder: ignore
 } oboe_settings_t;
 
 typedef struct {
@@ -531,6 +601,7 @@ typedef struct {
     volatile uint32_t through_count;            // # of through traces
     volatile uint32_t through_ignored_count;    // # of new requests, that are rejected due to start_always_flag == 0
                                                 // that have through_always_flag == 1
+    volatile uint32_t triggered_count;             // # of triggered traces
     volatile uint32_t last_used_sample_rate;
     volatile uint32_t last_used_sample_source;
 
@@ -541,12 +612,13 @@ typedef struct {
 typedef struct {
     int tracing_mode;          // pushed from server, override from config file
     int sample_rate;           // pushed from server, override from config file
+    int trigger_mode;          // pushed from server, override from config file
     oboe_settings_t *settings; // cached settings, updated by tracelyzer (init to NULL)
     int last_auto_sample_rate; // stores last known automatic sampling rate
     uint16_t last_auto_flags;  // stores last known flags associated with above
     uint32_t last_auto_timestamp; // timestamp from last *settings lookup
     uint32_t last_refresh;        // last refresh time
-    token_bucket_t bucket;
+    token_bucket_t bucket[TOKEN_BUCKET_COUNT];     // token buckets for various tasks
 } oboe_settings_cfg_t;
 
 int oboe_settings_init_local();
@@ -560,9 +632,10 @@ entry_layer_t* oboe_settings_entry_layer_get(const char* name);
 oboe_settings_cfg_t* oboe_settings_cfg_get();
 void oboe_settings_cfg_init(oboe_settings_cfg_t *cfg);
 
-void oboe_settings_set(int sample_rate, int tracing_mode);
+void oboe_settings_set(int sample_rate, int tracing_mode, int trigger_mode);
 void oboe_settings_rate_set(int sample_rate);
 void oboe_settings_mode_set(int tracing_mode);
+void oboe_settings_trigger_set(int trigger_mode);
 
 int oboe_rand_get_value();
 
@@ -588,49 +661,7 @@ int oboe_sample_is_enabled(oboe_settings_cfg_t *cfg);
  * headers, and, if appropriate, rolls the virtual dice to
  * decide if this request should be sampled.
  *
- * This is designed to be called once per layer per request.
- *
- * @param service_name Service name used for this request (may be NULL to use default settings)
- * @param xtrace X-Trace ID string from an HTTP request or higher layer (NULL or empty string if not present).
- * @param sample_rate_out The sample rate used to check if this request should be sampled
- *          (output - may be zero if not used).
- * @param sample_source_out The OBOE_SAMPLE_RATE_SOURCE used to check if this request
- *          should be sampled (output - may be zero if not used).
- * @return Non-zero if the given request should be sampled.
- */
-int oboe_sample_layer(
-    const char *service_name,
-    const char *xtrace,
-    int *sample_rate_out,
-    int *sample_source_out
-);
-
-/**
- * Same as oboe_sample_layer() but accepting custom sample rate and custom tracing mode
- *
- * @param service_name Service name used for this request (may be NULL to use default settings)
- * @param xtrace X-Trace ID string from an HTTP request or higher layer (NULL or empty string if not present).
- * @param custom_sample_rate a custom sample rate only used for this request (OBOE_SETTINGS_UNSET won't override)
- * @param custom_tracing_mode a custom tracing mode only used for this request (OBOE_SETTINGS_UNSET won't override)
- * @param sample_rate_out The sample rate used to check if this request should be sampled
- *          (output - may be zero if not used).
- * @param sample_source_out The OBOE_SAMPLE_RATE_SOURCE used to check if this request
- *          should be sampled (output - may be zero if not used).
- * @param flags_out The flags used to check if this request should be sampled
- */
-int oboe_sample_layer_custom(
-    const char *service_name,
-    const char *in_xtrace,
-    int custom_sample_rate,
-    int custom_tracing_mode,
-    int *sampling_decision_out,
-    int *sample_rate_out,
-    int *sample_source_out,
-    uint16_t *flags_out
-);
-
-/**
- * wrapper for calling oboe_sample_layer_custom() with input/output structs instead of individual params
+ * This is designed to be called once per request.
  *
  * @param in Struct containing all params to help making a tracing decision
  * @param out Struct containing all params that get set during decision making

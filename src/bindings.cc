@@ -14,18 +14,37 @@
 Napi::Value oboeInit(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 
-    if (info.Length() != 1 || !info[0].IsObject()) {
+    if (info.Length() < 1 || !info[0].IsObject()) {
         Napi::TypeError::New(env, "invalid calling signature").ThrowAsJavaScriptException();
         return env.Null();
     }
-
-    // get the options object
+    // get the options settings object
     Napi::Object o = info[0].ToObject();
+
+    // if there is a second argument and it's an object store information about what was
+    // processed in it. it can also cause the actual oboe_init() call to be skipped.
+    bool skipInit = false;
+    Napi::Object oo;
+    Napi::Object processed = Napi::Object::New(env);
+    Napi::Object valid = Napi::Object::New(env);
+    if (info.Length() == 2 && info[1].IsObject()) {
+      oo = info[1].ToObject();
+      oo.Set("processed", processed);
+      oo.Set("valid", valid);
+      if (oo.Has("skipInit")) {
+        skipInit = oo.Get("skipInit").ToBoolean().Value();
+      }
+    }
 
     // setup oboe's options structure
     oboe_init_options_t options;
-    options.version = 5;
-    oboe_init_options_set_defaults(&options);
+    options.version = 7;
+
+    int setDefaultsStatus = oboe_init_options_set_defaults(&options);
+    if (setDefaultsStatus > 0) {
+      Napi::RangeError::New(env, "setting init option defaults failed").ThrowAsJavaScriptException();
+      return env.Null();
+    }
 
     // a place to save the strings so they won't go out of scope. using the
     // number of properties is more than will ever be needed because neither
@@ -35,76 +54,72 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
     std::vector<std::string> holdKeys(keys.Length(), fill);
     int kix = -1;
 
-    bool debug = o.Get("debug").ToBoolean().Value();
-    // make an output object. it's only filled in when debugging.
-    Napi::Object oo = Napi::Object::New(env);
-
     //
-    // for each possible field see if a value was provided.
+    // for each valid field see if a value was provided.
     //
     if (o.Has("hostnameAlias")) {
       Napi::Value hostnameAlias = o.Get("hostnameAlias");
+      processed.Set("hostnameAlias", hostnameAlias);
       if (hostnameAlias.IsString()) {
-        if (debug)
-          oo.Set("hostnameAlias", hostnameAlias);
+        valid.Set("hostnameAlias", hostnameAlias);
         holdKeys[++kix] = hostnameAlias.ToString();
         options.hostname_alias = holdKeys[kix].c_str();
       }
     }
     if (o.Has("logLevel")) {
       Napi::Value logLevel = o.Get("logLevel");
+      processed.Set("logLevel", logLevel);
       if (logLevel.IsNumber()) {
-        if (debug)
-          oo.Set("logLevel", logLevel);
+        valid.Set("logLevel", logLevel);
         options.log_level = logLevel.ToNumber().Int64Value();
       }
     }
-    if (o.Has("logFilePath")) {
-      Napi::Value logFilePath = o.Get("logFilePath");
-      if (logFilePath.IsString()) {
-        if (debug)
-          oo.Set("logFilePath", logFilePath);
-        holdKeys[++kix] = logFilePath.ToString();
-        options.log_file_path = holdKeys[kix].c_str();
-      }
-    }
+    //if (o.Has("logFilePath")) {
+    //  Napi::Value logFilePath = o.Get("logFilePath");
+    //  processed.Set("logFilePath", logFilePath);
+    //  if (logFilePath.IsString()) {
+    //    valid.Set("logFilePath", logFilePath);
+    //    holdKeys[++kix] = logFilePath.ToString();
+    //    options.log_file_path = holdKeys[kix].c_str();
+    //  }
+    //}
     if (o.Has("maxTransactions")) {
       Napi::Value maxTransactions = o.Get("maxTransactions");
+      processed.Set("maxTransactions", maxTransactions);
       if (maxTransactions.IsNumber()) {
-        if (debug)
-          oo.Set("maxTransactions", maxTransactions);
+        valid.Set("maxTransactions", maxTransactions);
         options.max_transactions = maxTransactions.ToNumber().Int64Value();
       }
     }
     if (o.Has("maxFlushWaitTime")) {
       Napi::Value maxFlushWaitTime = o.Get("maxFlushWaitTime");
+      processed.Set("maxFlushWaitTime", maxFlushWaitTime);
       if (maxFlushWaitTime.IsNumber()) {
-        if (debug)
-          oo.Set("maxFlushWaitTime", maxFlushWaitTime);
+        valid.Set("maxFlushWaitTime", maxFlushWaitTime);
         options.max_flush_wait_time = maxFlushWaitTime.ToNumber().Int64Value();
       }
     }
     if (o.Has("eventsFlushInterval")) {
       Napi::Value eventsFlushInterval = o.Get("eventsFlushInterval");
+      processed.Set("eventsFlushInterval", eventsFlushInterval);
       if (eventsFlushInterval.IsNumber()) {
-        if (debug)
-          oo.Set("eventsFlushInterval", eventsFlushInterval);
+        valid.Set("eventsFlushInterval", eventsFlushInterval);
         options.events_flush_interval = eventsFlushInterval.ToNumber().Int64Value();
       }
     }
     if (o.Has("eventsFlushBatchSize")) {
       Napi::Value eventsFlushBatchSize = o.Get("eventsFlushBatchSize");
+      processed.Set("eventsFlushBatchSize", eventsFlushBatchSize);
       if (eventsFlushBatchSize.IsNumber()) {
-        if (debug)
-          oo.Set("eventsFlushBatchSize", eventsFlushBatchSize);
+        valid.Set("eventsFlushBatchSize", eventsFlushBatchSize);
         options.events_flush_batch_size = eventsFlushBatchSize.ToNumber().Int64Value();
       }
     }
     if (o.Has("reporter")) {
       Napi::Value reporter = o.Get("reporter");
+      processed.Set("reporter", reporter);
       if (reporter.IsString()) {
-        if (debug)
-          oo.Set("reporter", reporter);
+        valid.Set("reporter", reporter);
         holdKeys[++kix] = reporter.ToString();
         options.reporter = holdKeys[kix].c_str();
       }
@@ -112,9 +127,9 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
     // endpoint maps to "host" field.
     if (o.Has("endpoint")) {
       Napi::Value endpoint = o.Get("endpoint");
+      processed.Set("endpoint", endpoint);
       if (endpoint.IsString()) {
-        if (debug)
-          oo.Set("endpoint", endpoint);
+        valid.Set("endpoint", endpoint);
         holdKeys[++kix] = endpoint.ToString();
         options.host = holdKeys[kix].c_str();
       }
@@ -122,70 +137,78 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
     // is the service key
     if (o.Has("serviceKey")) {
       Napi::Value serviceKey = o.Get("serviceKey");
+      processed.Set("serviceKey", serviceKey);
       if (serviceKey.IsString()) {
-        if (debug)
-          oo.Set("serviceKey", serviceKey);
+        valid.Set("serviceKey", serviceKey);
         holdKeys[++kix] = serviceKey.ToString();
         options.service_key = holdKeys[kix].c_str();
       }
     }
     if (o.Has("trustedPath")) {
       Napi::Value trustedPath = o.Get("trustedPath");
+      processed.Set("trustedPath", trustedPath);
       if (trustedPath.IsString()) {
-        if (debug)
-          oo.Set("trustedPath", trustedPath);
+        valid.Set("trustedPath", trustedPath);
         holdKeys[++kix] = trustedPath.ToString();
         options.trusted_path = holdKeys[kix].c_str();
       }
     }
     if (o.Has("bufferSize")) {
       Napi::Value bufferSize = o.Get("bufferSize");
+      processed.Set("bufferSize", bufferSize);
       if (bufferSize.IsNumber()) {
-        if (debug)
-          oo.Set("bufferSize", bufferSize);
+        valid.Set("bufferSize", bufferSize);
         options.buffer_size = bufferSize.ToNumber().Int64Value();
       }
     }
     if (o.Has("traceMetrics")) {
       Napi::Value traceMetrics = o.Get("traceMetrics");
+      processed.Set("traceMetrics", traceMetrics);
+      valid.Set("traceMetrics", traceMetrics);
       options.trace_metrics = traceMetrics.ToBoolean().Value();
-      if (debug)
-        oo.Set("traceMetrics", traceMetrics.ToBoolean().Value());
     }
     if (o.Has("histogramPrecision")) {
       Napi::Value histogramPrecision = o.Get("histogramPrecision");
+      processed.Set("histogramPrecision", histogramPrecision);
       if (histogramPrecision.IsNumber()) {
-        if (debug)
-          oo.Set("histogramPrecision", histogramPrecision);
+        valid.Set("histogramPrecision", histogramPrecision);
         options.histogram_precision = histogramPrecision.ToNumber().Int64Value();
       }
     }
     if (o.Has("tokenBucketCapacity")) {
       Napi::Value tokenBucketCapacity = o.Get("tokenBucketCapacity");
+      processed.Set("tokenBucketCapacity", tokenBucketCapacity);
       if (tokenBucketCapacity.IsNumber()) {
-        if (debug)
-          oo.Set("tokenBucketCapacity", tokenBucketCapacity);
+        valid.Set("tokenBucketCapacity", tokenBucketCapacity);
         options.token_bucket_capacity = tokenBucketCapacity.ToNumber().Int64Value();
       }
     }
     if (o.Has("tokenBucketRate")) {
       Napi::Value tokenBucketRate = o.Get("tokenBucketRate");
+      processed.Set("tokenBucketRate", tokenBucketRate);
       if (tokenBucketRate.IsNumber()) {
-        if (debug)
-          oo.Set("tokenBucketRate", tokenBucketRate);
+        valid.Set("tokenBucketRate", tokenBucketRate);
         options.token_bucket_rate = tokenBucketRate.ToNumber().Int64Value();
       }
     }
     // oneFilePerEvent maps to "file_single" field.
-    if (o.Has("oneFilePerEvent")) {
-      Napi::Value oneFilePerEvent = o.Get("oneFilePerEvent");
-      options.file_single = oneFilePerEvent.ToBoolean().Value();
-      if (debug)
-        oo.Set("oneFilePerEvent", oneFilePerEvent.ToBoolean().Value());;
+    //if (o.Has("oneFilePerEvent")) {
+    //  Napi::Value oneFilePerEvent = o.Get("oneFilePerEvent");
+    //  processed.Set("oneFilePerEvent", oneFilePerEvent);
+    //  valid.Set("oneFilePerEvent", oneFilePerEvent);
+    //  options.file_single = oneFilePerEvent.ToBoolean().Value();
+    //}
+    if (o.Has("ec2MetadataTimeout")) {
+      Napi::Value ec2MetadataTimeout = o.Get("ec2MetadataTimeout");
+      processed.Set("ec2MetadataTimeout", ec2MetadataTimeout);
+      if (ec2MetadataTimeout.IsNumber()) {
+        valid.Set("ec2MetadataTimeout", ec2MetadataTimeout);
+        options.ec2_metadata_timeout =  ec2MetadataTimeout.ToNumber().Int32Value();
+      }
     }
 
-    if (debug) {
-      return oo;
+    if (skipInit) {
+      return env.Null();
     }
 
     // initialize oboe
