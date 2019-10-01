@@ -137,7 +137,7 @@ typedef struct oboe_metadata {
 
 typedef struct oboe_event {
     oboe_metadata_t metadata;
-    bson_buffer     bbuf;
+    oboe_bson_buffer     bbuf;
     char *          bb_str;
 #ifdef _FUTURE_PLANS_
     /* Can't add this without breaking the ABI, but someday... */
@@ -275,7 +275,7 @@ int oboe_event_add_info_binary (oboe_event_t *, const char *, const char *, size
 int oboe_event_add_info_int64 (oboe_event_t *, const char *, const int64_t);
 int oboe_event_add_info_double (oboe_event_t *, const char *, const double);
 int oboe_event_add_info_bool (oboe_event_t *, const char *, const int);
-int oboe_event_add_info_bson (oboe_event_t *, const char *key, const bson *val);
+int oboe_event_add_info_bson (oboe_event_t *, const char *key, const oboe_bson *val);
 int oboe_event_add_edge (oboe_event_t *, const oboe_metadata_t *);
 int oboe_event_add_edge_fromstr(oboe_event_t *, const char *, size_t);
 

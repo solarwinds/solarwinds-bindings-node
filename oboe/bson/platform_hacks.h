@@ -49,20 +49,20 @@ typedef long long int int64_t;
 
 /* big endian is only used for OID generation. little is used everywhere else */
 #ifdef MONGO_BIG_ENDIAN
-#define bson_little_endian64(out, in) ( bson_swap_endian64(out, in) )
-#define bson_little_endian32(out, in) ( bson_swap_endian32(out, in) )
-#define bson_big_endian64(out, in) ( memmove(out, in, 8) )
-#define bson_big_endian32(out, in) ( memmove(out, in, 4) )
+#define oboe_bson_little_endian64(out, in) ( oboe_bson_swap_endian64(out, in) )
+#define oboe_bson_little_endian32(out, in) ( oboe_bson_swap_endian32(out, in) )
+#define oboe_bson_big_endian64(out, in) ( memmove(out, in, 8) )
+#define oboe_bson_big_endian32(out, in) ( memmove(out, in, 4) )
 #else
-#define bson_little_endian64(out, in) ( memmove(out, in, 8) )
-#define bson_little_endian32(out, in) ( memmove(out, in, 4) )
-#define bson_big_endian64(out, in) ( bson_swap_endian64(out, in) )
-#define bson_big_endian32(out, in) ( bson_swap_endian32(out, in) )
+#define oboe_bson_little_endian64(out, in) ( memmove(out, in, 8) )
+#define oboe_bson_little_endian32(out, in) ( memmove(out, in, 4) )
+#define oboe_bson_big_endian64(out, in) ( oboe_bson_swap_endian64(out, in) )
+#define oboe_bson_big_endian32(out, in) ( oboe_bson_swap_endian32(out, in) )
 #endif
 
 MONGO_EXTERN_C_START
 
-MONGO_INLINE void bson_swap_endian64(void* outp, const void* inp){
+MONGO_INLINE void oboe_bson_swap_endian64(void* outp, const void* inp){
     const char *in = (const char*)inp;
     char *out = (char*)outp;
 
@@ -76,7 +76,7 @@ MONGO_INLINE void bson_swap_endian64(void* outp, const void* inp){
     out[7] = in[0];
 
 }
-MONGO_INLINE void bson_swap_endian32(void* outp, const void* inp){
+MONGO_INLINE void oboe_bson_swap_endian32(void* outp, const void* inp){
     const char *in = (const char*)inp;
     char *out = (char*)outp;
 
