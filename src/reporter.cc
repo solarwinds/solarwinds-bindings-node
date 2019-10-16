@@ -146,9 +146,9 @@ Napi::Value send_span(const Napi::CallbackInfo& info, send_generic_span_t send_f
   delete method;
   delete service;
 
-  // if an error code return an empty string
+  // if an error return the code.
   if (length < 0) {
-      final_txname[0] = '\0';
+    return Napi::Number::New(env, length);
   }
 
   // return the transaction name used so it can be used by the agent.
