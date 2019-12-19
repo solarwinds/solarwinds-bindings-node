@@ -12,7 +12,7 @@
         'VCCLCompilerTool': { 'ExceptionHandling': 1 },
       },
     'include_dirs': [
-      '<!@(node -p "require(\'node-addon-api\').include")',
+      '<!@(node --no-warnings -p "require(\'node-addon-api\').include")',
     ],
     # preprocessor only (in bindings.o for some reason)
     #'cflags': ['-E'],
@@ -25,7 +25,7 @@
         ['OS in "linux"', {
         # includes reference oboe/oboe.h, so
         'include_dirs': [
-          '<!@(node -p "require(\'node-addon-api\').include")',
+          '<!@(node --no-warnings -p "require(\'node-addon-api\').include")',
             '<(module_root_dir)/'
         ],
         'libraries': [

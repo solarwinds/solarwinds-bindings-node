@@ -22,8 +22,8 @@
   },
   "scripts": {
     "test": "mocha test/*.test.js",
-    "install": "node setup-liboboe && node-gyp rebuild",
-    "rebuild": "node setup-liboboe && node-gyp rebuild"
+    "install": "node setup-liboboe.js && node-gyp rebuild",
+    "rebuild": "node setup-liboboe.js && node-gyp rebuild"
   },
   "dependencies": {
     "bindings": "~1.2.1",
