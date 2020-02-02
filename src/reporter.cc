@@ -156,65 +156,26 @@ Napi::Value send_span(const Napi::CallbackInfo& info, send_generic_span_t send_f
 
 }
 
+enum SMFlags {
+  kSMFlagsTesting = 1 << 0,
+  kSMFlagsNoop = 1 << 1
+};
 //
-// proposed function to send bulk metrics
+// internal function used by sendMetric() (deprecated) and sendMetrics().
 //
-//
-// javascript
-//
-// sendMetrics(globalOptions, metrics) returns {status, errorMetrics[]}
-//
-// globalOptions - object
-// globalOptions.addHostTag - boolean - add {host: hostname} to tags
-// globalOptions.tags - tags which are sent with each metric, individual tags override
-//                like:
-//                  tags = Object.assign({}, globalTags, individualMetricTags);
-//
-// metrics - array of metrics to send
-// metric - each element of metrics is an object:
-// metric.name - name of the metric
-// metric.count - number of observations being reported
-// metric.value - if present this is a "summary" metric. if not it is an
-//                "increment" metric. contains the value, or sum of the
-//                values if count is greater than 1.
-// metric.addHostTag - boolean (overrides options.addHostTag if present)
-// metric.tags - object of {tag: value} pairs.
-//
-//
-// c++ - process an array of metrics each with a fully specified set of tags
-//
-// aob.reporter.sendMetrics(increments, summaries)
-Napi::Value sendMetrics(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-
+Napi::Value send_metrics_core (Napi::Env env, Napi::Array metrics, uint64_t flags) {
   int64_t goodCount = 0;
   const char* service_name = "";
+  bool testing = flags & kSMFlagsTesting;
+  bool noop = flags & kSMFlagsNoop;
 
   Napi::Array errors = Napi::Array::New(env);
-
-  // check args
-  if (info.Length() < 1 || !info[0].IsArray()) {
-    Napi::TypeError::New(env, "invalid signature for sendMetrics()")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-
-  // allow some testing
-  bool testing = false;
   Napi::Array echo;
   Napi::Object echoTags;
-  if (info.Length() == 2 && info[1].IsObject()) {
-    Napi::Object options = info[1].As<Napi::Object>();
-    if (options.Has("testing")) {
-      testing = options.Get("testing").ToBoolean();
-    }
-    if (testing) {
-      echo = Napi::Array::New(env);
-      //echoTags = Napi::Object::New(env);
-    }
+  if (testing) {
+    echo = Napi::Array::New(env);
+    // echoTags = Napi::Object::New(env);
   }
-
-  Napi::Array metrics = info[0].As<Napi::Array>();
 
   //
   // loop through each metric and send if valid else
@@ -336,7 +297,7 @@ Napi::Value sendMetrics(const Napi::CallbackInfo& info) {
     }
 
     int status;
-    if (testing) {
+    if (noop) {
       status = 1;
     } else {
       if (is_summary) {
@@ -384,6 +345,57 @@ Napi::Value sendMetrics(const Napi::CallbackInfo& info) {
 
   return result;
 
+}
+
+//
+// javascript
+//
+// sendMetrics(globalOptions, metrics) returns {status, errorMetrics[]}
+//
+// globalOptions - object
+// globalOptions.addHostTag - boolean - add {host: hostname} to tags
+// globalOptions.tags - tags which are sent with each metric, individual tags
+// override
+//                like:
+//                  tags = Object.assign({}, globalTags, individualMetricTags);
+//
+// metrics - array of metrics to send
+// metric - each element of metrics is an object:
+// metric.name - name of the metric
+// metric.count - number of observations being reported
+// metric.value - if present this is a "summary" metric. if not it is an
+//                "increment" metric. contains the value, or sum of the
+//                values if count is greater than 1.
+// metric.addHostTag - boolean (overrides options.addHostTag if present)
+// metric.tags - object of {tag: value} pairs.
+//
+//
+// c++ - process an array of metrics each with a fully specified set of tags
+//
+// aob.reporter.sendMetrics(increments, summaries)
+//
+Napi::Value sendMetrics(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  // check args
+  if (info.Length() < 1 || !info[0].IsArray()) {
+    Napi::TypeError::New(env, "invalid signature for sendMetrics()")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  // allow some testing
+  uint64_t flags = 0;
+
+  if (info.Length() == 2 && info[1].IsObject()) {
+    Napi::Object options = info[1].As<Napi::Object>();
+    if (options.Get("testing").ToBoolean()) flags |= kSMFlagsTesting;
+    if (options.Get("noop").ToBoolean()) flags |= kSMFlagsNoop;
+  }
+
+  Napi::Array metrics = info[0].As<Napi::Array>();
+
+  return send_metrics_core(env, metrics, flags);
 }
 
 //
@@ -446,8 +458,9 @@ Napi::Value sendMetric (const Napi::CallbackInfo& info) {
     return env.Null();
   }
 
+  Napi::Object metric = Napi::Object::New(env);
   // name
-  std::string name(info[0].As<Napi::String>());
+  metric.Set("name", info[0]);
 
   // count
   int count = 1;
@@ -455,11 +468,9 @@ Napi::Value sendMetric (const Napi::CallbackInfo& info) {
   if (v.IsNumber()) {
     count = v.As<Napi::Number>().Int64Value();
   }
+  metric.Set("count", count);
 
   // value
-  // the presence of "value" indicates that this is a summary metric (values)
-  // and not an increment metric (count of occurrences).
-  bool is_summary = false;
   double value = 0;
   if (o.Has("value")) {
     v = o.Get("value");
@@ -469,91 +480,53 @@ Napi::Value sendMetric (const Napi::CallbackInfo& info) {
       return env.Null();
     }
     value = v.As<Napi::Number>().DoubleValue();
-    is_summary = true;
+    metric.Set("value", value);
   }
-
 
   // host_tag
-  bool host_tag = false;
   if (o.Has("addHostTag")) {
-    host_tag = o.Get("addHostTag").ToBoolean().Value();
+    metric.Set("addHostTag", o.Get("addHostTag"));
   }
 
-  // noop - don't call oboe if set.
-  v = o.Get("noop");
-  bool noop = v.ToBoolean().Value();
-
-  // service_name. unused but required by oboe.
-  const char* service_name = "";
-
-  // now look at a tags object if it's present.
-  Napi::Object tagsObj;
-  size_t tags_count = 0;
-  Napi::Array keys;
-
-  // if tags is present and is an object that's not an array then fetch the
-  // keys so we know how many there are.
+  // tags
   if (o.Has("tags")) {
     v = o.Get("tags");
     if (!v.IsObject() || v.IsArray()) {
-      Napi::TypeError::New(env, "sendMetric() tags must be a plain object").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "sendMetric() tags must be a plain object")
+          .ThrowAsJavaScriptException();
       return env.Null();
     }
-
-    // get the keys of the tags object.
-    tagsObj = v.As<Napi::Object>();
-    keys = tagsObj.GetPropertyNames();
-    tags_count = keys.Length();
+    metric.Set("tags", v);
   }
 
-  // use the tag count, possibly zero, to allocate the structures needed
-  // to store each tag's key and value.
+  int64_t flags = 0;
+  // noop - don't call oboe if set.
+  if (o.Get("noop").ToBoolean().Value()) flags |= kSMFlagsNoop;
 
-  // oboe's key-value pair structure
-  oboe_metric_tag_t otags[tags_count];
+  Napi::Array metrics_array = Napi::Array::New(env, 1);
+  metrics_array[(uint32_t)0] = metric;
 
-  // a place to save the strings so they won't go out of scope at
-  // the end of each iteration of the loop.
-  std::vector<std::string> holdKeys(tags_count);
-  std::vector<std::string> holdValues(tags_count);
+  Napi::Value result = send_metrics_core(env, metrics_array, flags);
 
-  if (tags_count) {
-    // coerce the keys and values to strings. they might
-    // fail oboe's checks but this makes sure they are strings.
-    for (size_t i = 0; i < tags_count; i++) {
-      Napi::Value key = keys[i];
-      holdKeys[i] = key.ToString();
+  // if unexpected results don't know what to do.
+  if (!result.IsObject()) {
+    return Napi::Number::New(env, 0);
+  }
 
-      Napi::Value value = tagsObj.Get(keys[i]);
-      holdValues[i] = value.ToString();
+  Napi::Object robj = result.As<Napi::Object>();
 
-      otags[i].key = (char*) holdKeys[i].c_str();
-      otags[i].value = (char*) holdValues[i].c_str();
+  int error = 0;
+  if (robj.Has("errors")) {
+    Napi::Value errors = robj.Get("errors");
+    if (errors.IsArray()) {
+      Napi::Array error_array = errors.As<Napi::Array>();
+      if (error_array.Length()) {
+        error = -1;
+      }
     }
   }
 
-  // noop allows checking for memory leaks in this code, verifying
-  // internal argument handling, etc.
-  if (noop) {
-    return info.Env().Undefined();
-  }
-
-  // having two separate calls is less optimal than just passing the is_summary
-  // flag but that's the way it is.
-  int status;
-  if (is_summary) {
-    status = oboe_custom_metric_summary(
-      name.c_str(), value, count, host_tag, service_name, otags, tags_count
-    );
-  } else {
-    status = oboe_custom_metric_increment(
-      name.c_str(), count, host_tag, service_name, otags, tags_count
-    );
-  }
-
-  // returns negative number on success else error (currently oboe returns
-  // only 0 or 1).
-  return Napi::Number::New(env, -status);
+  return Napi::Number::New(env, -error);
 }
 
 //
