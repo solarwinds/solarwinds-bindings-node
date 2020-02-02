@@ -14,12 +14,6 @@ describe('addon.reporter', function () {
   }
   const serviceKey = `${env.AO_TOKEN_PROD}:node-bindings-test`;
 
-  beforeEach(function () {
-    if (this.currentTest.title === 'should execute without losing memory') {
-
-    }
-  })
-
 
   it('should initialize oboe with only a service key', function () {
     const status = bindings.oboeInit({serviceKey});
