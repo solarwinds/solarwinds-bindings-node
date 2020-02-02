@@ -1,10 +1,12 @@
-var bindings = require('../')
-const expect = require('chai').expect
+'use strict';
+
+const bindings = require('../');
+const expect = require('chai').expect;
 
 const env = process.env;
 
 describe('addon.reporter', function () {
-  let r
+  let r;
   if (typeof bindings.Reporter === 'function') {
     r = new bindings.Reporter()
   } else {
@@ -20,7 +22,7 @@ describe('addon.reporter', function () {
 
 
   it('should initialize oboe with only a service key', function () {
-    const status = bindings.oboeInit({serviceKey})
+    const status = bindings.oboeInit({serviceKey});
     // kind of funky but -1 is already initialized, 0 is ok. mocha runs
     // multiple tests in one process so the result is 0 if run standalone
     // but -1 on all but the first if run as a suite.
@@ -36,19 +38,19 @@ describe('addon.reporter', function () {
   it('should check if ready to sample', function () {
     // wait 5 seconds max. This will fail if not using
     // a real collector (collector or collector-stg).appoptics.com
-    var ready = r.isReadyToSample(5000)
+    const ready = r.isReadyToSample(5000);
     expect(ready).be.a('number')
 
     expect(ready).equal(1, `${env.APPOPTICS_COLLECTOR} should be ready`)
   })
 
   it('should send a generic span', function () {
-    var customName = 'this-is-a-name'
-    var domain = 'bruce.com'
+    const customName = 'this-is-a-name';
+    const domain = 'bruce.com';
 
-    var finalTxName = r.sendNonHttpSpan({
+    let finalTxName = r.sendNonHttpSpan({
       duration: 1001
-    })
+    });
     expect(finalTxName).equal('unknown')
 
     finalTxName = r.sendNonHttpSpan({
@@ -71,18 +73,18 @@ describe('addon.reporter', function () {
   })
 
   it('should send an HTTP span', function () {
-    var customName = 'this-is-a-name'
-    var domain = 'bruce.com'
-    var url = '/api/todo'
-    var status = 200
-    var method = 'GET'
+    const customName = 'this-is-a-name';
+    const domain = 'bruce.com';
+    const url = '/api/todo';
+    const status = 200;
+    const method = 'GET';
 
-    var finalTxName = r.sendHttpSpan({
+    let finalTxName = r.sendHttpSpan({
       url: url,
       status: status,
       method: method,
       duration: 1111
-    })
+    });
     expect(finalTxName).equal(url)
 
     finalTxName = r.sendHttpSpan({
@@ -108,7 +110,8 @@ describe('addon.reporter', function () {
   })
 
   it('should not crash node getting the prototype of a reporter instance', function () {
-    var p = Object.getPrototypeOf(r)
+    // eslint-disable-next-line no-unused-vars
+    const p = Object.getPrototypeOf(r);
   })
 
   it('should throw errors for bad arguments to sendMetric', function () {
@@ -124,12 +127,10 @@ describe('addon.reporter', function () {
       {args: ['name', {tags: 11}], text: 'non-object tags'},
     ];
 
-    for (let t of tests) {
-      const options = Object.assign({}, defaultOptions, t.options)
+    for (const t of tests) {
       const fn = () => r.sendMetric(...t.args);
       expect(fn, `${t.text} should throw`).throws(TypeError);
     }
-
   })
 
   it('should send metrics without losing memory', function (done) {
@@ -164,8 +165,6 @@ describe('addon.reporter', function () {
       done()
     }, 250)
 
-    if (typeof global.gc === 'function') {
-      global.gc();
-    }
+    gc();
   })
 })

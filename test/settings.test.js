@@ -1,3 +1,5 @@
+'use strict'
+
 const bindings = require('..')
 const expect = require('chai').expect
 
@@ -48,7 +50,7 @@ describe('addon.settings', function () {
   })
 
   it('should not throw when setting invalid sample rate', function () {
-    var threw = false
+    let threw = false;
     try {
       bindings.Settings.setDefaultSampleRate(-1)
       bindings.Settings.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE + 1)
@@ -60,7 +62,7 @@ describe('addon.settings', function () {
   })
 
   it('should handle bad sample rates correctly', function () {
-    var rateUsed
+    let rateUsed;
     rateUsed = bindings.Settings.setDefaultSampleRate(-1)
     expect(rateUsed).equal(0)
     rateUsed = bindings.Settings.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE + 1)
@@ -76,8 +78,8 @@ describe('addon.settings', function () {
   })
 
   it('should tell us that a non-traced xtrace doesn\'t need to be sampled', function () {
-    var md = bindings.Metadata.makeRandom(0)
-    var settings = bindings.Settings.getTraceSettings({xtrace: md.toString()})
+    const md = bindings.Metadata.makeRandom(0);
+    const settings = bindings.Settings.getTraceSettings({xtrace: md.toString()});
 
     expect(settings).property('status', -1)       // -1 means non-sampled xtrace
   })
@@ -85,15 +87,15 @@ describe('addon.settings', function () {
   it('should get verification that a request should be sampled', function (done) {
     bindings.Settings.setTracingMode(bindings.TRACE_ALWAYS)
     bindings.Settings.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE)
-    var event = new bindings.Event(bindings.Metadata.makeRandom(1));
-    var metadata = event.getMetadata()
+    const event = new bindings.Event(bindings.Metadata.makeRandom(1));
+    const metadata = event.getMetadata();
     metadata.setSampleFlagTo(1)
-    var xid = metadata.toString();
-    var counter = 20
+    const xid = metadata.toString();
+    let counter = 20
     // poll to give time for the SSL connection to complete. it should have
     // been waited on in before() but it's possible for the connection to break.
-    var id = setInterval(function() {
-      var settings = bindings.Settings.getTraceSettings({xtrace: xid})
+    const id = setInterval(function () {
+      const settings = bindings.Settings.getTraceSettings({xtrace: xid})
       if (--counter <= 0 || typeof settings === 'object' && settings.source !== 2) {
         clearInterval(id)
         expect(settings).property('status', 0);
