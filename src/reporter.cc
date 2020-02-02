@@ -216,6 +216,10 @@ Napi::Value sendMetrics(const Napi::CallbackInfo& info) {
 
   Napi::Array metrics = info[0].As<Napi::Array>();
 
+  //
+  // loop through each metric and send if valid else
+  // report back in errors array.
+  //
   for (size_t i = 0; i < metrics.Length(); i++) {
     bool is_summary = false;
     std::string name;
@@ -226,38 +230,34 @@ Napi::Value sendMetrics(const Napi::CallbackInfo& info) {
     Napi::Value element = metrics[i];
 
     // little lambda for errors.
-    auto set_error = [&](int code) {
+    auto set_error = [&](const char* code) {
       Napi::Object err = Napi::Object::New(env);
       err.Set("code", code);
       err.Set("metric", element);
       errors[errors.Length()] = err;
     };
 
-    if (!element.IsObject()) {
-      set_error(1);
-      //errors[errors.Length()] = element;
+    if (!element.IsObject() || element.IsArray()) {
+      set_error("metric must be plain object");
       continue;
     }
     Napi::Object metric = element.As<Napi::Object>();
 
     // make sure there is a string name
     if (!metric.Has("name") || !metric.Get("name").IsString()) {
-      set_error(2);
-      //errors[errors.Length()] = element;
+      set_error("must have string name");
       continue;
     }
     name = metric.Get("name").As<Napi::String>();
 
     // and a numeric count
     if (!metric.Has("count") || !metric.Get("count").IsNumber()) {
-      set_error(3);
-      //errors[errors.Length()] = element;
+      set_error("must have numeric count");
       continue;
     }
     count = metric.Get("count").As<Napi::Number>().DoubleValue();
     if (count <= 0) {
-      set_error(4);
-      //errors[errors.Length()] = element;
+      set_error("count must be greater than 0");
       continue;
     }
 
@@ -265,8 +265,7 @@ Napi::Value sendMetrics(const Napi::CallbackInfo& info) {
     if (metric.Has("value")) {
       Napi::Value v = metric.Get("value");
       if (!v.IsNumber()) {
-        set_error(5);
-        //errors[errors.Length()] = element;
+        set_error("summary value must be numeric");
         continue;
       }
       is_summary = true;
@@ -286,9 +285,8 @@ Napi::Value sendMetrics(const Napi::CallbackInfo& info) {
 
     if (metric.Has("tags")) {
       Napi::Value v = metric.Get("tags");
-      if (!v.IsObject()) {
-        set_error(6);
-        //errors[errors.Length()] = element;
+      if (!v.IsObject() || v.IsArray()) {
+        set_error("tags must be plain object");
         continue;
       }
       tags = v.As<Napi::Object>();
@@ -333,13 +331,9 @@ Napi::Value sendMetrics(const Napi::CallbackInfo& info) {
     }
 
     if (had_error) {
-      set_error(6);
-      //errors[errors.Length()] = element;
+      set_error("string conversion of value failed");
       continue;
     }
-
-    // everything is set at this point
-    goodCount += 1;
 
     int status;
     if (testing) {
@@ -358,11 +352,14 @@ Napi::Value sendMetrics(const Napi::CallbackInfo& info) {
 
     // oboe returns only 0 for failure else 1 for success;
     if (!status) {
-      set_error(7);
-      //errors[errors.Length()] = element;
+      set_error("metric send failed");
       continue;
     }
 
+    // everything is set at this point
+    goodCount += 1;
+
+    // if testing also return metrics that were sent.
     if (testing) {
       Napi::Object m = Napi::Object::New(env);
       m.Set("name", Napi::String::New(env, name));

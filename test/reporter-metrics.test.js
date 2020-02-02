@@ -19,12 +19,7 @@ describe('aob.Reporter.sendMetrics()', function () {
 
     const ready = aob.Reporter.isReadyToSample(5000);
     expect(ready).equal(1, `should connected to ${env.APPOPTICS_COLLECTOR} and ready`);
-  })
-
-  it('should handle an array of zero length', function () {
-    const status = aob.Reporter.sendMetrics([]);
-    expect(status).deep.equal({errors: []});
-  })
+  });
 
   it('should require an array argument', function () {
     const args = [
@@ -41,27 +36,41 @@ describe('aob.Reporter.sendMetrics()', function () {
       }
       expect(test).throws('invalid signature for sendMetrics()');
     }
-  })
+  });
 
-  it('should return bad metrics', function () {
+  it('should handle an array of zero length', function () {
+    const status = aob.Reporter.sendMetrics([]);
+    expect(status).deep.equal({errors: []});
+  });
+
+  it('should recognize and return bad metrics', function () {
     const x = Symbol('expected-error');
     const metrics = [
-      {count: 1, [x]: 2},
-      {name: 'gc.count', count: 'x', [x]: 3},
-      {name: 'gc.count', count: -1, [x]: 4},
-      {name: 'gc.count', count: 1, value: 'x', [x]: 5},
-      {name: 'gc.count', count: 1, value: 3.141592654, tags: 'i am not an object', [x]: 6},
+      'not an object',
+      [],
+      {count: 1, [x]: 'must have string name'},
+      {name: 'gc.count', count: 'x', [x]: 'must have numeric count'},
+      {name: 'gc.count', count: -1, [x]: 'count must be greater than 0'},
+      {name: 'gc.count', count: 1, value: 'x', [x]: 'summary value must be numeric'},
+      {name: 'gc.count', count: 1, value: 3.141592654, tags: 'i am not an object', [x]: 'tags must be plain object'},
+      {name: 'gc.count', count: 1, value: 11235813, tags: ['i am not a plain object'], [x]: 'tags must be plain object'},
     ];
 
     const results = aob.Reporter.sendMetrics(metrics);
     expect(results).not.property('correct');
     expect(results).property('errors').an('array');
-    expect(results.errors.length).equal(metrics.length);
+    expect(results.errors.length).equal(metrics.length, 'all metrics should be errors');
 
     for (let i = 0; i < metrics.length; i++) {
       const error = results.errors[i];
-      const expectedError = error.metric[x];
-      delete error.metric[x];
+      let expectedError;
+      if (typeof metrics[i] !== 'object' || Array.isArray(metrics[i])) {
+        expectedError = 'metric must be plain object';
+      } else {
+        expectedError = error.metric[x];
+        delete error.metric[x];
+      }
+
       expect(error.code).equal(expectedError);
       expect(error.metric).deep.equal(metrics[i]);
     }
