@@ -49,7 +49,7 @@ describe('reporter-metrics', function () {
       'not an object',
       [],
       {count: 1, [x]: 'must have string name'},
-      {name: 'gc.count', count: 'x', [x]: 'must have numeric count'},
+      {name: 'gc.count', count: 'x', [x]: 'count must be a number'},
       {name: 'gc.count', count: -1, [x]: 'count must be greater than 0'},
       {name: 'gc.count', count: 1, value: 'x', [x]: 'summary value must be numeric'},
       {name: 'gc.count', count: 1, value: 3.141592654, tags: 'i am not an object', [x]: 'tags must be plain object'},
@@ -78,6 +78,7 @@ describe('reporter-metrics', function () {
 
   it('should handle correct metrics', function () {
     const metrics = [
+      {name: 'testing.node.123'},
       {name: 'testing.node.abc', count: 1},
       {name: 'testing.node.def', count: 1, value: 42},
       {name: 'testing.node.xyz', count: 1, value: 84, addHostTag: true},
@@ -94,7 +95,9 @@ describe('reporter-metrics', function () {
 
     for (let i = 0; i < results.correct.length; i++) {
       const metric = results.correct[i];
-      const expected = Object.assign({}, metrics[i], {addHostTag: !!metrics[i].addHostTag});
+      const defaults = {count: 1};
+      const addedOptions = {addHostTag: !!metrics[i].addHostTag};
+      const expected = Object.assign(defaults, metrics[i], addedOptions);
       expect(metric).deep.equal(expected);
     }
   });

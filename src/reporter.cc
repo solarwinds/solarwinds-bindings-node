@@ -174,7 +174,6 @@ Napi::Value send_metrics_core (Napi::Env env, Napi::Array metrics, uint64_t flag
   Napi::Object echoTags;
   if (testing) {
     echo = Napi::Array::New(env);
-    // echoTags = Napi::Object::New(env);
   }
 
   //
@@ -204,7 +203,8 @@ Napi::Value send_metrics_core (Napi::Env env, Napi::Array metrics, uint64_t flag
     }
     Napi::Object metric = element.As<Napi::Object>();
 
-    // make sure there is a string name
+    // make sure there is a string name. valid characters if
+    // choosing to add in the future: ‘A-Za-z0-9.:-_’.
     if (!metric.Has("name") || !metric.Get("name").IsString()) {
       set_error("must have string name");
       continue;
@@ -212,14 +212,19 @@ Napi::Value send_metrics_core (Napi::Env env, Napi::Array metrics, uint64_t flag
     name = metric.Get("name").As<Napi::String>();
 
     // and a numeric count
-    if (!metric.Has("count") || !metric.Get("count").IsNumber()) {
-      set_error("must have numeric count");
-      continue;
-    }
-    count = metric.Get("count").As<Napi::Number>().DoubleValue();
-    if (count <= 0) {
-      set_error("count must be greater than 0");
-      continue;
+    if (!metric.Has("count")) {
+      count = 1;
+    } else {
+      Napi::Value c = metric.Get("count");
+      if (!c.IsNumber()) {
+        set_error("count must be a number");
+        continue;
+      }
+      count = c.As<Napi::Number>().DoubleValue();
+      if (count <= 0) {
+        set_error("count must be greater than 0");
+        continue;
+      }
     }
 
     // if there is a value it's a summary metric
