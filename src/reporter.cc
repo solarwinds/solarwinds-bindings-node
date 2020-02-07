@@ -184,7 +184,7 @@ Napi::Value send_metrics_core (Napi::Env env, Napi::Array metrics, uint64_t flag
     bool is_summary = false;
     std::string name;
     int64_t count;
-    double value;
+    double value = 0;
     bool add_host_tag = false;
 
     Napi::Value element = metrics[i];
