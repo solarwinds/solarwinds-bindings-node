@@ -69,7 +69,7 @@ describe('reporter-metrics-memory', function () {
       .then(function () {
         finish1 = process.memoryUsage().rss;
         //console.log(start1, done1, start2, done2, finish1);
-        expect(finish1).lte(start2, `should execute ${checkCount} metrics with limited memory growth`);
+        expect(finish1).lte(start2, `should execute ${checkCount} metrics with limited rss growth`);
         gc(true);
       })
       .then(wait)
@@ -83,7 +83,7 @@ describe('reporter-metrics-memory', function () {
       .then(function () {
         const finish = process.memoryUsage().rss;
         //console.log(start1, done1, start2, done2, finish);
-        expect(finish).equal(finish1, 'should not change after first iteration');
+        expect(finish).equal(finish1, 'rss should not change after first iteration');
       })
   })
 
@@ -120,7 +120,6 @@ describe('reporter-metrics-memory', function () {
         start2 = process.memoryUsage().rss + checkCount;
         for (let i = checkCount; i > 0; i -= batchSize) {
           r.sendMetrics(metrics);
-          r.sendMetric('nothing.really', {value: i, testing: true});
         }
         done2 = process.memoryUsage().rss;
         gc(true);
@@ -129,7 +128,7 @@ describe('reporter-metrics-memory', function () {
       .then(function () {
         finish1 = process.memoryUsage().rss;
         //console.log(start1, done1, start2, done2, finish1);
-        expect(finish1).lte(start2, `should execute ${checkCount} metrics with limited memory growth`);
+        expect(finish1).lte(start2, `should execute ${checkCount} metrics with limited rss growth`);
         gc(true);
       })
       .then(wait)
@@ -143,7 +142,7 @@ describe('reporter-metrics-memory', function () {
       .then(function () {
         const finish = process.memoryUsage().rss;
         //console.log(start1, done1, start2, done2, finish);
-        expect(finish).equal(finish1, 'should not change after first iteration');
+        expect(finish).equal(finish1, 'rss should not change after first iteration');
       })
   })
 })

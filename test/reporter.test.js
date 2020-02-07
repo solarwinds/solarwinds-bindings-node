@@ -107,21 +107,4 @@ describe('addon.reporter', function () {
     // eslint-disable-next-line no-unused-vars
     const p = Object.getPrototypeOf(r);
   })
-
-  it('should throw errors for bad arguments to sendMetric', function () {
-    const tests = [
-      {args: [], text: 'no args'},
-      {args: [1], text: 'non-string metric name'},
-      {args: ['name', 'a'], text: 'non-object options'},
-      {args: ['name', []], text: 'array-object options'},
-      {args: ['name', {value: 'x'}], text: 'non-numeric value'},
-      {args: ['name', {tags: []}], text: 'array-object tags'},
-      {args: ['name', {tags: 11}], text: 'non-object tags'},
-    ];
-
-    for (const t of tests) {
-      const fn = () => r.sendMetric(...t.args);
-      expect(fn, `${t.text} should throw`).throws(TypeError);
-    }
-  })
 })
