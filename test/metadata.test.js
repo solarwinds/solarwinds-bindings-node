@@ -1,9 +1,11 @@
-var bindings = require('../')
-const expect = require('chai').expect
+'use strict';
+
+const bindings = require('../');
+const expect = require('chai').expect;
 
 describe('addon.metadata', function () {
-  var metadata
-  var string
+  let metadata;
+  let string;
   const serviceKey = `${process.env.AO_TOKEN_PROD}:node-bindings-test`;
 
   it('should initialize oboe with only a service key', function () {
@@ -35,7 +37,7 @@ describe('addon.metadata', function () {
   })
 
   it('should set the sample flag', function () {
-    var md = metadata.toString()
+    const md = metadata.toString();
     metadata.setSampleFlagTo(1)
 
     // it shouldn't modify anything but the sample flag
@@ -45,7 +47,7 @@ describe('addon.metadata', function () {
   })
 
   it('should clear the sample flag', function () {
-    var md = metadata.toString()
+    const md = metadata.toString();
     metadata.setSampleFlagTo(0)
 
     expect(metadata.toString().slice(0, -2)).equal(md.slice(0, -2))
@@ -54,9 +56,9 @@ describe('addon.metadata', function () {
   })
 
   it('should set, clear, and return previous sample flag', function () {
-    var md = metadata.toString()
-    var onEntry = metadata.getSampleFlag()
-    var previous
+    const md = metadata.toString();
+    const onEntry = metadata.getSampleFlag();
+    let previous;
 
     previous = metadata.setSampleFlagTo(0)
     expect(metadata.toString().slice(0, -2)).equal(md.slice(0, -2))
@@ -73,13 +75,13 @@ describe('addon.metadata', function () {
   })
 
   it('should construct using metadata', function () {
-    var md = new bindings.Metadata(metadata)
+    const md = new bindings.Metadata(metadata);
     expect(md.toString()).equal(metadata.toString())
   })
 
   it('should construct using an event', function () {
-    var e = new bindings.Event(metadata)
-    var md = new bindings.Metadata(e)
+    const e = new bindings.Event(metadata);
+    const md = new bindings.Metadata(e);
     expect(md.toString()).equal(e.toString())
   })
 
@@ -94,9 +96,9 @@ describe('addon.metadata', function () {
   })
 
   it('should not construct from invalid metadata', function () {
-    var results = {}
-    var xtrace = string.slice()
-    var md = bindings.Metadata.fromString('0' + xtrace)
+    const results = {};
+    const xtrace = string.slice();
+    let md = bindings.Metadata.fromString('0' + xtrace);
     results['xtrace too long'] = md
     md = bindings.Metadata.fromString('1' + xtrace.slice(1))
     results['invalid version'] = md
@@ -106,19 +108,19 @@ describe('addon.metadata', function () {
     results['lowercase hex'] = md
 
     Object.keys(results).forEach(function (k) {
-      var correct = results[k] === undefined
+      const correct = results[k] === undefined;
       expect(correct).equal(true, k)
     })
 
   })
 
   it('should correctly test for the sample flag', function () {
-    var mdNoSample = bindings.Metadata.makeRandom()
-    var mdSample = bindings.Metadata.makeRandom(1)
+    const mdNoSample = bindings.Metadata.makeRandom();
+    const mdSample = bindings.Metadata.makeRandom(1);
     expect(bindings.Metadata.sampleFlagIsSet(mdNoSample)).equal(false)
     expect(bindings.Metadata.sampleFlagIsSet(mdSample)).equal(true)
 
-    var e = new bindings.Event(mdNoSample)
+    let e = new bindings.Event(mdNoSample);
     expect(bindings.Metadata.sampleFlagIsSet(e)).equal(false)
     expect(bindings.Metadata.sampleFlagIsSet(e.toString())).equal(false)
 
@@ -127,7 +129,7 @@ describe('addon.metadata', function () {
     expect(bindings.Metadata.sampleFlagIsSet(e.toString())).equal(true)
 
     // if there is an error it should return undefined.
-    var result = typeof bindings.Metadata.sampleFlagIsSet('')
+    const result = typeof bindings.Metadata.sampleFlagIsSet('');
     expect(result).equal('undefined')
   })
 
@@ -178,6 +180,6 @@ describe('addon.metadata', function () {
   })
 
   it('should not crash node when getting the prototype of an metadata instance', function () {
-    var p = Object.getPrototypeOf(bindings.Metadata.makeRandom())
+    Object.getPrototypeOf(bindings.Metadata.makeRandom())
   })
 })
