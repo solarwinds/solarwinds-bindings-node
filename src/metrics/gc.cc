@@ -1,10 +1,8 @@
 #include <nan.h>
-#include <math.h>
-#include <iostream>
 #include <map>
-#include "hdr_histogram.h"
 
-using namespace v8;
+#include "hdr_histogram.h"
+#include "gc.h"
 
 /* https://v8docs.nodesource.com/node-8.16/d4/da0/v8_8h_source.html#l06365
  enum GCType {
@@ -27,6 +25,9 @@ using namespace v8;
  };
  */
 
+namespace ao::metrics::gc {
+using namespace v8;
+
 const int maxTypeCount = kGCTypeAll + 1;
 typedef struct GCData {
 	uint64_t gcTime;
@@ -37,8 +38,8 @@ typedef struct GCData {
 struct hdr_histogram* histogram;
 
 GCData_t raw;
-GCData_t cumulative_base;
-GCData_t cumulative;
+GCData_t interval_base;
+GCData_t interval;
 
 std::map<std::string, double> PERCENTILES = {
   {"p50", 50.0}, {"p75", 75.0}, {"p90", 90.0}, {"p95", 95.0}, {"p99", 99.0}
@@ -65,137 +66,107 @@ NAN_GC_CALLBACK(afterGC) {
 
   const int index = type & kGCTypeAll;
   raw.typeCounts[index] += 1;
-  cumulative.typeCounts[index] += 1;
+  interval.typeCounts[index] += 1;
 
   // keep cumulative up-to-date
-  cumulative.gcCount += 1;
-  cumulative.gcTime += et;
+  interval.gcCount += 1;
+  interval.gcTime += et;
+}
+
+
+bool initialize() {
+  return true;
 }
 
 //
 // start recording GC events
 //
-static NAN_METHOD(start) {
+bool start() {
   if (enabled) {
-      Nan::ThrowError("already started");
-      return;
+    return false;
   }
   enabled = true;
 
-  // cumulative base is data at last fetch of cumulative information so
+  // interval base is data at last fetch of interval information so
   // the first fetch is everything before.
-  memset(&cumulative_base, 0, sizeof(cumulative_base));
-  memset(&cumulative, 0, sizeof(cumulative));
+  memset(&interval_base, 0, sizeof(interval_base));
+  memset(&interval, 0, sizeof(interval));
 
   hdr_init(1, INT64_C(3600000000), 3, &histogram);
 
   Nan::AddGCPrologueCallback(recordBeforeGC);
   Nan::AddGCEpilogueCallback(afterGC);
 
-  info.GetReturnValue().Set(Nan::New<Number>(1));
+  return true;
 }
 
-static NAN_METHOD(stop) {
-    int status = enabled ? 1 : 0;
+bool stop () {
+  int status = enabled ? true : false;
 
-    if (enabled) {
-        enabled = false;
-        memset(&raw, 0, sizeof(raw));
-        memset(&cumulative_base, 0, sizeof(cumulative_base));
-        memset(&cumulative, 0, sizeof(cumulative));
-        Nan::RemoveGCPrologueCallback(recordBeforeGC);
-        Nan::RemoveGCEpilogueCallback(afterGC);
-        hdr_close(histogram);
-        histogram = nullptr;
+  if (enabled) {
+    enabled = false;
+    memset(&raw, 0, sizeof(raw));
+    memset(&interval_base, 0, sizeof(interval_base));
+    memset(&interval, 0, sizeof(interval));
+    Nan::RemoveGCPrologueCallback(recordBeforeGC);
+    Nan::RemoveGCEpilogueCallback(afterGC);
+    hdr_close(histogram);
+    histogram = nullptr;
+  }
+
+  return status;
+}
+
+bool getInterval(const v8::Local<v8::Object> obj) {
+
+  if (!enabled) {
+    return false;
+  }
+
+  uint64_t count = raw.gcCount - interval_base.gcCount;
+  Nan::Set(obj, Nan::New("gcCount").ToLocalChecked(), Nan::New<Number>(count));
+
+  uint64_t time = raw.gcTime - interval_base.gcTime;
+  Nan::Set(obj, Nan::New("gcTime").ToLocalChecked(), Nan::New<Number>(time));
+
+  // int64_t value = hdr_value_at_percentile(h, double percentile);
+  // percentile is 99.0, 100.0, etc.
+  // double mean = hdr_mean(h); double stddev = hdr_stddev(h);
+  // int64_t min = hdr_min(h); int64_t max = hdr_max(h);
+  std::map<std::string, double>::iterator it;
+  for (it = PERCENTILES.begin(); it != PERCENTILES.end(); it++) {
+    const int64_t p = hdr_value_at_percentile(histogram, it->second);
+    Nan::Set(obj, Nan::New(it->first).ToLocalChecked(), Nan::New<Number>(p));
+  }
+  Nan::Set(obj, Nan::New("min").ToLocalChecked(), Nan::New<Number>(hdr_min(histogram)));
+  Nan::Set(obj, Nan::New("max").ToLocalChecked(), Nan::New<Number>(hdr_max(histogram)));
+
+  // the next two values are NaN if no GCs so default them to 0.
+  const double mean = count ? hdr_mean(histogram) : 0;
+  Nan::Set(obj, Nan::New("mean").ToLocalChecked(), Nan::New<Number>(mean));
+  const double stddev = count ? hdr_stddev(histogram) : 0;
+  Nan::Set(obj, Nan::New("stddev").ToLocalChecked(), Nan::New<Number>(stddev));
+
+  Local<Object> counts = Nan::New<Object>();
+  for (int i = 0; i < maxTypeCount; i++) {
+    uint64_t count = raw.typeCounts[i] - interval_base.typeCounts[i];
+    if (count != 0) {
+      Nan::Set(counts, i, Nan::New<Number>(count));
     }
+    // reset the base
+    interval_base.typeCounts[i] = raw.typeCounts[i];
+  }
+  Nan::Set(obj, Nan::New("gcTypeCounts").ToLocalChecked(), counts);
 
-    info.GetReturnValue().Set(Nan::New<Number>(status));
+  // reset the interval base values
+  interval_base.gcCount = raw.gcCount;
+  interval_base.gcTime = raw.gcTime;
+
+  // reset the histogram
+  hdr_reset(histogram);
+
+  return true;
 }
 
-void getCumulative(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-    v8::Local<v8::Context> context = info.GetIsolate()->GetCurrentContext();
 
-    v8::Local<v8::Object> obj = Nan::New<v8::Object>();
-
-    // assign to b to avoid unused result warnings. if Set() fails there are
-    // big problems.
-    uint64_t count = raw.gcCount - cumulative_base.gcCount;
-    v8::Maybe<bool> b = obj->Set(context, Nan::New("gcCount").ToLocalChecked(),
-        Nan::New<Number>(count));
-
-    uint64_t time = raw.gcTime - cumulative_base.gcTime;
-    b = obj->Set(context, Nan::New("gcTime").ToLocalChecked(),
-        Nan::New<Number>(time));
-
-    // int64_t value = hdr_value_at_percentile(h, double percentile);
-    // percentile is 99.0, 100.0, etc.
-    // double mean = hdr_mean(h); double stddev = hdr_stddev(h);
-    // int64_t min = hdr_min(h); int64_t max = hdr_max(h);
-    std::map<std::string, double>::iterator it;
-    for (it = PERCENTILES.begin(); it != PERCENTILES.end(); it++) {
-      const int64_t p = hdr_value_at_percentile(histogram, it->second);
-      b = obj->Set(context, Nan::New(it->first).ToLocalChecked(),
-          Nan::New<Number>(p));
-    }
-    b = obj->Set(context, Nan::New("min").ToLocalChecked(),
-        Nan::New<Number>(hdr_min(histogram)));
-    b = obj->Set(context, Nan::New("max").ToLocalChecked(),
-        Nan::New<Number>(hdr_max(histogram)));
-    // the next two values are NaN if no GCs so default them to 0.
-    const double mean = count ? hdr_mean(histogram) : 0;
-    b = obj->Set(context, Nan::New("mean").ToLocalChecked(), Nan::New<Number>(mean));
-    const double stddev = count ? hdr_stddev(histogram) : 0;
-    b = obj->Set(context, Nan::New("stddev").ToLocalChecked(), Nan::New<Number>(stddev));
-
-    Local<Object> counts = Nan::New<v8::Object>();
-    for (int i = 0; i < maxTypeCount; i++) {
-      uint64_t count = raw.typeCounts[i] - cumulative_base.typeCounts[i];
-      if (count != 0) {
-        Nan::Set(counts, i, Nan::New<Number>(count));
-      }
-      // reset the base
-      cumulative_base.typeCounts[i] = raw.typeCounts[i];
-    }
-    Nan::Set(obj, Nan::New("gcTypeCounts").ToLocalChecked(), counts);
-
-    // reset the cumulative base values
-    cumulative_base.gcCount = raw.gcCount;
-    cumulative_base.gcTime = raw.gcTime;
-
-    // reset the histogram
-    hdr_reset(histogram);
-
-    info.GetReturnValue().Set(obj);
-}
-
-NAN_MODULE_INIT(init) {
-	Nan::HandleScope scope;
-
-	Nan::Set(target, Nan::New("start").ToLocalChecked(),
-      Nan::GetFunction(Nan::New<FunctionTemplate>(start)).ToLocalChecked());
-	Nan::Set(target, Nan::New("stop").ToLocalChecked(),
-      Nan::GetFunction(Nan::New<FunctionTemplate>(stop)).ToLocalChecked());
-
-    Nan::Set(target, Nan::New("getCumulative").ToLocalChecked(),
-      Nan::GetFunction(Nan::New<FunctionTemplate>(getCumulative)).ToLocalChecked());
-}
-
-NODE_MODULE(metrics, init)
-
-//********************************************************************************************
-//********************************************************************************************
-// #include "hdr_histogram.h"
-//
-// struct hdr_histogram* h;
-// hdr_init(1, INT64_C(3600000000), 3, &h);
-//
-// hdr_record_values(h, value, 1);
-// hdr_record_value() just calls hdr_record_values() with a 1
-//
-// int64_t value = hdr_value_at_percentile(h, double percentile); // percentile
-// is 99.0, 100.0, etc. double mean = hdr_mean(h); double stddev =
-// hdr_stddev(h); int64_t min = hdr_min(h); int64_t max = hdr_max(h);
-//
-// hdr_reset(h); // reuse histogram.
-// hdr_close(h); // if not null.
-//
+} // namespace ao::metrics::gc

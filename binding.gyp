@@ -54,7 +54,10 @@
     # suppress warnings
     #'cflags': ['-w'],
     'sources': [
-        'src/metrics/gc.cc'
+        'src/metrics/metrics.cc',
+        'src/metrics/gc.cc',
+        'src/metrics/eventloop.cc',
+        'src/metrics/process.cc'
     ],
     'conditions': [
         ['OS in "linux"', {
