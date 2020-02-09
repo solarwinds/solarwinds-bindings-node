@@ -42,7 +42,6 @@ namespace ao::metrics {
       Nan::Set(metrics, Nan::New("process").ToLocalChecked(), obj);
     }
 
-
     info.GetReturnValue().Set(metrics);
   }
 

@@ -14,6 +14,13 @@ module.exports.init = function (sk) {
 
 try {
   module.exports.metrics = require('bindings')('ao-metrics');
-} catch (e) {}
+} catch (e) {
+  // return an dummy metrics if this can't be loaded
+  module.exports.metrics = {
+    start () {return true},
+    stop () {return true},
+    getMetrics () {return {}}
+  }
+}
 
 
