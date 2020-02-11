@@ -28,7 +28,7 @@
 namespace ao::metrics::gc {
 using namespace v8;
 
-void set_histogram_values(hdr_histogram*, Local<Object>, uint64_t);
+void set_histogram_values(hdr_histogram*, Local<Object>);
 
 typedef struct GCData {
 	uint64_t gcTime;
@@ -153,8 +153,8 @@ bool getInterval(const v8::Local<v8::Object> obj) {
   Local<Object> major = Nan::New<Object>();
   Local<Object> minor = Nan::New<Object>();
 
-  set_histogram_values(h_major, major, count);
-  set_histogram_values(h_minor, minor, count);
+  set_histogram_values(h_major, major);
+  set_histogram_values(h_minor, minor);
 
   Nan::Set(obj, Nan::New("major").ToLocalChecked(), major);
   Nan::Set(obj, Nan::New("minor").ToLocalChecked(), minor);
@@ -175,20 +175,26 @@ bool getInterval(const v8::Local<v8::Object> obj) {
   return true;
 }
 
-void set_histogram_values(hdr_histogram* h, Local<Object> obj, uint64_t count) {
+void set_histogram_values(hdr_histogram* h, Local<Object> obj) {
   std::map<std::string, double>::iterator it;
   for (it = PERCENTILES.begin(); it != PERCENTILES.end(); it++) {
     const int64_t p = hdr_value_at_percentile(h, it->second);
     Nan::Set(obj, Nan::New(it->first).ToLocalChecked(), Nan::New<Number>(p));
   }
 
-  Nan::Set(obj, Nan::New("min").ToLocalChecked(), Nan::New<Number>(hdr_min(h)));
+  const int64_t min = hdr_min(h);
+  Nan::Set(obj, Nan::New("min").ToLocalChecked(), Nan::New<Number>(min));
   Nan::Set(obj, Nan::New("max").ToLocalChecked(), Nan::New<Number>(hdr_max(h)));
 
-  // the next two values are NaN if no GCs so default them to 0.
-  const double mean = count ? hdr_mean(h) : 0;
+  // the next two values are NaN if no GCs so default them to 0. It's cheating
+  // a little bit but min is set to INT64_MAX during histogram initialization.
+  double mean = 0;
+  double stddev = 0;
+  if (min != INT64_MAX) {
+    mean = hdr_mean(h);
+    stddev = hdr_stddev(h);
+  }
   Nan::Set(obj, Nan::New("mean").ToLocalChecked(), Nan::New<Number>(mean));
-  const double stddev = count ? hdr_stddev(h) : 0;
   Nan::Set(obj, Nan::New("stddev").ToLocalChecked(), Nan::New<Number>(stddev));
 }
 
