@@ -4,7 +4,7 @@
 #include "hdr_histogram.h"
 #include "process.h"
 
-namespace ao { namespace metrics { namespace gc {
+namespace ao { namespace metrics { namespace process {
 using namespace v8;
 
 bool enabled = true;

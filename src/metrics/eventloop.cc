@@ -4,7 +4,7 @@
 #include "hdr_histogram.h"
 #include "eventloop.h"
 
-namespace ao { namespace metrics { namespace gc {
+namespace ao { namespace metrics { namespace eventloop {
 using namespace v8;
 
 // state = 0 not initialized
