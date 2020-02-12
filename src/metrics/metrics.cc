@@ -3,7 +3,7 @@
 #include "eventloop.h"
 #include "process.h"
 
-namespace ao::metrics {
+namespace ao { namespace metrics {
   using namespace v8;
 
   NAN_METHOD(start) {
@@ -57,4 +57,4 @@ namespace ao::metrics {
   }
 
   NODE_MODULE(metrics, init)
-}
+}} // namespace ao::metrics

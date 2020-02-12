@@ -25,7 +25,7 @@
  };
  */
 
-namespace ao::metrics::gc {
+namespace ao { namespace metrics { namespace gc {
 using namespace v8;
 
 void set_histogram_values(hdr_histogram*, Local<Object>);
@@ -198,4 +198,4 @@ void set_histogram_values(hdr_histogram* h, Local<Object> obj) {
   Nan::Set(obj, Nan::New("stddev").ToLocalChecked(), Nan::New<Number>(stddev));
 }
 
-} // namespace ao::metrics::gc
+}}} // namespace ao::metrics::gc

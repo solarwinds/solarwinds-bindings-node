@@ -4,7 +4,7 @@
 #include "hdr_histogram.h"
 #include "process.h"
 
-namespace ao::metrics::process {
+namespace ao { namespace metrics { namespace gc {
 using namespace v8;
 
 bool enabled = true;
@@ -48,6 +48,4 @@ bool getInterval(const v8::Local<v8::Object> obj) {
 }
 
 
-} // ao::metrics::eventloop
-
-
+}}} // ao::metrics::eventloop
