@@ -5,24 +5,24 @@
 #include "gc.h"
 
 /* https://v8docs.nodesource.com/node-8.16/d4/da0/v8_8h_source.html#l06365
-   enum GCType {
-     kGCTypeScavenge = 1 << 0,
-     kGCTypeMarkSweepCompact = 1 << 1,
-     kGCTypeIncrementalMarking = 1 << 2,
-     kGCTypeProcessWeakCallbacks = 1 << 3,
-     kGCTypeAll = kGCTypeScavenge | kGCTypeMarkSweepCompact |
-                  kGCTypeIncrementalMarking | kGCTypeProcessWeakCallbacks
-   };
+  enum GCType {
+    kGCTypeScavenge = 1 << 0,
+    kGCTypeMarkSweepCompact = 1 << 1,
+    kGCTypeIncrementalMarking = 1 << 2,
+    kGCTypeProcessWeakCallbacks = 1 << 3,
+    kGCTypeAll = kGCTypeScavenge | kGCTypeMarkSweepCompact |
+                 kGCTypeIncrementalMarking | kGCTypeProcessWeakCallbacks
+  };
 
- enum GCCallbackFlags {
-   kNoGCCallbackFlags = 0,
-   kGCCallbackFlagConstructRetainedObjectInfos = 1 << 1,
-   kGCCallbackFlagForced = 1 << 2,
-   kGCCallbackFlagSynchronousPhantomCallbackProcessing = 1 << 3,
-   kGCCallbackFlagCollectAllAvailableGarbage = 1 << 4,
-   kGCCallbackFlagCollectAllExternalMemory = 1 << 5,
-   kGCCallbackScheduleIdleGarbageCollection = 1 << 6,
- };
+  enum GCCallbackFlags {
+    kNoGCCallbackFlags = 0,
+    kGCCallbackFlagConstructRetainedObjectInfos = 1 << 1,
+    kGCCallbackFlagForced = 1 << 2,
+    kGCCallbackFlagSynchronousPhantomCallbackProcessing = 1 << 3,
+    kGCCallbackFlagCollectAllAvailableGarbage = 1 << 4,
+    kGCCallbackFlagCollectAllExternalMemory = 1 << 5,
+    kGCCallbackScheduleIdleGarbageCollection = 1 << 6,
+  };
  */
 
 namespace ao { namespace metrics { namespace gc {
@@ -32,9 +32,9 @@ void set_histogram_values(hdr_histogram*, Local<Object>);
 
 typedef struct GCData {
 	uint64_t gcTime;
-    uint64_t gcCount;
-    uint64_t majorCount;
-    uint64_t minorCount;
+  uint64_t gcCount;
+  uint64_t majorCount;
+  uint64_t minorCount;
 } GCData_t;
 
 struct hdr_histogram* h_major;
@@ -53,7 +53,7 @@ bool enabled = false;
 uint64_t gcStartTime;
 
 static NAN_GC_CALLBACK(recordBeforeGC) {
-	gcStartTime = uv_hrtime();
+  gcStartTime = uv_hrtime();
 }
 
 NAN_GC_CALLBACK(afterGC) {
@@ -117,7 +117,7 @@ bool start() {
 }
 
 bool stop () {
-  int status = enabled ? true : false;
+  int status = enabled;
 
   if (enabled) {
     enabled = false;
@@ -132,6 +132,7 @@ bool stop () {
     h_minor = nullptr;
   }
 
+  // if it wasn't enabled return false indicating so, else true.
   return status;
 }
 
