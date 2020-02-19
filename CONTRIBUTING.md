@@ -136,3 +136,7 @@ Find the versions of GLIBCXX required by a file
 
 `readelf -sV build/Release/appoptics-bindings.node | sed -n 's/^.*\(@GLIBCXX_[^ ]*\).*$/\1/p' | sort -u -V`
 `objdump -T /lib/x86_64-linux-gnu/libc.so.6 | sed -n 's/^.*\(GLIBCXX_[^ ]*\).*$/\1/p' | sort -u -V`
+
+Dump a `.node` file as asm (build debug for better symbols):
+
+`objdump -CRrS build/Release/ao-metrics.node  > ao-metrics.s`
