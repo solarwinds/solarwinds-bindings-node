@@ -87,7 +87,9 @@ describe('reporter-metrics', function () {
       {name: 'testing.node.bool', count: 1, addHostTag: 1},
       {name: 'testing.node.bool', count: 1, addHostTag: ''},
     ];
-    const results = aob.Reporter.sendMetrics(metrics, {testing: true});
+    // make this a noop so that if run following the memory tests that it won't fail
+    // due to the memory tests having overloaded oboe.
+    const results = aob.Reporter.sendMetrics(metrics, {testing: true, noop: true});
     expect(results).property('correct').an('array');
     expect(results.correct.length).equal(metrics.length);
     expect(results).property('errors').an('array');
