@@ -114,6 +114,7 @@ bool getInterval(const v8::Local<v8::Object> obj) {
 
   int64_t min = hdr_min(hist);
 
+  // this checks to see if this histogram is empty.
   if (min < INT64_MAX) {
     max = hdr_max(hist);
     mean = hdr_mean(hist);

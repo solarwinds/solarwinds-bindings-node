@@ -192,6 +192,7 @@ void set_histogram_values(hdr_histogram* h, Local<Object> obj) {
 
   int64_t min = hdr_min(h);
 
+  // this checks to see if the histogram is empty.
   if (min < INT64_MAX) {
     max = hdr_max(h);
     mean = hdr_mean(h);
