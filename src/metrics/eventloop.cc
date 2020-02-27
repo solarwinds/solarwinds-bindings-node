@@ -104,22 +104,28 @@ bool getInterval(const v8::Local<v8::Object> obj) {
     const int64_t p = hdr_value_at_percentile(hist, it->second);
     Nan::Set(obj, Nan::New(it->first).ToLocalChecked(), Nan::New<Number>(p));
   }
+
+  // the next two values are NaN if no eventloops executed so default them to 0.
+  // It's cheating a little bit by looking into hists code but min is set to
+  // INT64_MAX during histogram initialization.
+  double mean = 0;
+  double stddev = 0;
+  int64_t max = 0;
+
   int64_t min = hdr_min(hist);
+
+  if (min < INT64_MAX) {
+    max = hdr_max(hist);
+    mean = hdr_mean(hist);
+    stddev = hdr_stddev(hist);
+    // reset the histogram if it received any data.
+    hdr_reset(hist);
+  }
+
   Nan::Set(obj, Nan::New("min").ToLocalChecked(), Nan::New<Number>(min));
-  Nan::Set(obj, Nan::New("max").ToLocalChecked(), Nan::New<Number>(hdr_max(hist)));
-
-  // use min < INT64_MAX as indication that at least one value was added
-  // to the histogram.
-  bool value_added = min < INT64_MAX;
-
-  // the next two values are NaN if no values added so default them to 0.
-  const double mean = value_added ? hdr_mean(hist) : 0;
+  Nan::Set(obj, Nan::New("max").ToLocalChecked(), Nan::New<Number>(max));
   Nan::Set(obj, Nan::New("mean").ToLocalChecked(), Nan::New<Number>(mean));
-  const double stddev = value_added ? hdr_stddev(hist) : 0;
   Nan::Set(obj, Nan::New("stddev").ToLocalChecked(), Nan::New<Number>(stddev));
-
-  // reset the histogram
-  hdr_reset(hist);
 
   return true;
 }

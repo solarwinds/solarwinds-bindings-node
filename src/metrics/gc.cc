@@ -183,18 +183,25 @@ void set_histogram_values(hdr_histogram* h, Local<Object> obj) {
     Nan::Set(obj, Nan::New(it->first).ToLocalChecked(), Nan::New<Number>(p));
   }
 
-  const int64_t min = hdr_min(h);
-  Nan::Set(obj, Nan::New("min").ToLocalChecked(), Nan::New<Number>(min));
-  Nan::Set(obj, Nan::New("max").ToLocalChecked(), Nan::New<Number>(hdr_max(h)));
-
-  // the next two values are NaN if no GCs so default them to 0. It's cheating
-  // a little bit but min is set to INT64_MAX during histogram initialization.
+  // the next two values are NaN if no GCs executed so default them to 0.
+  // It's cheating a little bit by looking into hists code but min is set to
+  // INT64_MAX during histogram initialization.
   double mean = 0;
   double stddev = 0;
-  if (min != INT64_MAX) {
+  int64_t max = 0;
+
+  int64_t min = hdr_min(h);
+
+  if (min < INT64_MAX) {
+    max = hdr_max(h);
     mean = hdr_mean(h);
     stddev = hdr_stddev(h);
+    // reset the histogram if it received any data.
+    hdr_reset(h);
   }
+
+  Nan::Set(obj, Nan::New("min").ToLocalChecked(), Nan::New<Number>(min));
+  Nan::Set(obj, Nan::New("max").ToLocalChecked(), Nan::New<Number>(max));
   Nan::Set(obj, Nan::New("mean").ToLocalChecked(), Nan::New<Number>(mean));
   Nan::Set(obj, Nan::New("stddev").ToLocalChecked(), Nan::New<Number>(stddev));
 }
