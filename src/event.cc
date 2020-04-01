@@ -26,36 +26,31 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
 
     oboe_metadata_t omd;
 
-    // indicate that the construction failed so the destructor won't ask oboe to free it.
+    // indicate that the construction failed so the destructor won't ask oboe
+    // to destroy the event.
     init_status = -1;
 
-    if (info.Length() < 1) {
+    // no argument constructor just makes an empty event. used only by
+    // Event::makeRandom() and Event::makeFromString().
+    if (info.Length() == 0) {
+      return;
+    }
+
+    // make sure there is metadata
+    if (!info[0].IsObject()) {
       Napi::TypeError::New(env, "invalid signature").ThrowAsJavaScriptException();
       return;
     }
 
-    //Napi::Object o = info[0].As<Napi::Object>();
-    Napi::Object o = info[0].ToObject();
+    Napi::Object o = info[0].As<Napi::Object>();
 
-    if (Metadata::isMetadata(o)) {
-      Metadata* md = Napi::ObjectWrap<Metadata>::Unwrap(o);
-      omd = md->metadata;
-    } else if (Event::isEvent(o)) {
-      Event* ev = Napi::ObjectWrap<Event>::Unwrap(o);
-      omd = ev->event.metadata;
-    } else if (info[0].IsExternal()) {
-      omd = *info[0].As<Napi::External<oboe_metadata_t>>().Data();
-    } else if (info[0].IsString()) {
-      std::string xtrace = info[0].As<Napi::String>();
-      int status = oboe_metadata_fromstr(&omd, xtrace.c_str(), xtrace.length());
-      if (status != 0) {
-        Napi::TypeError::New(env, "Event::New - invalid X-Trace ID string").ThrowAsJavaScriptException();
-        return;
-      }
-    } else {
-      Napi::TypeError::New(env, "no metadata found").ThrowAsJavaScriptException();
+    if (!o.InstanceOf(constructor.Value())) {
+      Napi::TypeError::New(env, "argument must be an Event")
+          .ThrowAsJavaScriptException();
       return;
     }
+
+    omd = Napi::ObjectWrap<Event>::Unwrap(o)->event.metadata;
 
     // here there is metadata in omd and that's all the information needed in order
     // to create an event. add an edge if the caller requests.
@@ -66,7 +61,7 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
 
     // supply the metadata for the event. oboe_event_init() will create a new
     // random op ID for the event. (The op ID can be specified using the 3rd
-    // argument but there is no benefit to doing so.)
+    // argument but there is no benefit to doing so here.)
     init_status = oboe_event_init(&this->event, &omd, NULL);
     if (init_status != 0) {
       Napi::Error::New(env, "oboe.event_init: " + std::to_string(init_status)).ThrowAsJavaScriptException();
@@ -83,14 +78,84 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
 }
 
 //
-// C++ callable function to create a JavaScript Event object.
+// C++ callable function to create an empty JavaScript Event object.
 //
 Napi::Object Event::NewInstance(Napi::Env env) {
-    Napi::EscapableHandleScope scope(env);
+  Napi::EscapableHandleScope scope(env);
 
-    Napi::Object o = constructor.New({});
+  Napi::Object o = constructor.New({});
 
-    return scope.Escape(napi_value(o)).ToObject();
+  return scope.Escape(Napi::Value(o)).ToObject();
+  //return scope.Escape(napi_value(o)).ToObject();
+}
+
+//
+// Event factory for empty event with random metadata.
+//
+Napi::Value Event::makeRandom(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  // make a JavaScript event and get the underlying C++ class.
+  Napi::Object event = Event::NewInstance(env);
+  oboe_event_t* oe = &Napi::ObjectWrap<Event>::Unwrap(event)->event;
+
+  // fill it with random data
+  oboe_metadata_init(&oe->metadata);
+  oboe_metadata_random(&oe->metadata);
+
+  // set or clear the sample flag appropriately if an argument specified.
+  if (info.Length() == 1) {
+    if (info[0].ToBoolean().Value()) {
+      oe->metadata.flags |= XTR_FLAGS_SAMPLED;
+    } else {
+      oe->metadata.flags &= ~XTR_FLAGS_SAMPLED;
+    }
+  }
+
+  return event;
+}
+
+//
+// Event factory for empty event with metadata from the supplied
+// buffer. This undocumented function requires that a valid xtrace
+// id occupies a buffer with a length of 30 bytes.
+//
+Napi::Value Event::makeFromBuffer(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (!info[0].IsBuffer()) {
+    Napi::TypeError::New(env, "argument must be a buffer")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  Napi::Buffer<uint8_t> b = info[0].As<Napi::Buffer<uint8_t>>();
+  if (b.Length() != 30) {
+    Napi::TypeError::New(env, "buffer must be length 30")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  // make a JavaScript event and get the underlying C++ class.
+  Napi::Object event = Event::NewInstance(env);
+  oboe_event_t* oe = &Napi::ObjectWrap<Event>::Unwrap(event)->event;
+
+  const uint kHeaderBytes = 1;
+  const uint kTaskIdOffset = kHeaderBytes;
+  const uint kOpIdOffset = kTaskIdOffset + OBOE_MAX_TASK_ID_LEN;
+  const uint kFlagsOffset = kOpIdOffset + OBOE_MAX_OP_ID_LEN;
+
+  // copy the bytes from the buffer to the oboe metadata portion
+  // of the event.
+  oboe_metadata_init(&oe->metadata);
+  for (uint i = 0; i < OBOE_MAX_TASK_ID_LEN; i++) {
+    oe->metadata.ids.task_id[i] = b[kTaskIdOffset + i];
+  }
+  for (uint i = 0; i < OBOE_MAX_OP_ID_LEN; i++) {
+    oe->metadata.ids.op_id[i] = b[kOpIdOffset + i];
+  }
+  oe->metadata.flags = b[kFlagsOffset];
+
+  return event;
 }
 
 //
@@ -99,7 +164,9 @@ Napi::Object Event::NewInstance(Napi::Env env) {
 // This signature includes an optional boolean for whether an edge
 // should be set or not. It defaults to true.
 //
-Napi::Object Event::NewInstance(Napi::Env env, oboe_metadata_t* omd, bool edge) {
+Napi::Object Event::NewInstance(Napi::Env env,
+                                oboe_metadata_t* omd,
+                                bool edge) {
   Napi::EscapableHandleScope scope(env);
 
   Napi::Value v0 = Napi::External<oboe_metadata_t>::New(env, omd);
@@ -109,7 +176,6 @@ Napi::Object Event::NewInstance(Napi::Env env, oboe_metadata_t* omd, bool edge) 
 
   return scope.Escape(napi_value(o)).ToObject();
 }
-
 //
 // JavaScript callable method to format the event as a string.
 //
@@ -313,7 +379,10 @@ Napi::Object Event::Init(Napi::Env env, Napi::Object exports) {
     InstanceMethod("getMetadata", &Event::getMetadata),
     InstanceMethod("toString", &Event::toString),
     InstanceMethod("getSampleFlag", &Event::getSampleFlag),
-    InstanceMethod("setSampleFlagTo", &Event::setSampleFlagTo)
+    InstanceMethod("setSampleFlagTo", &Event::setSampleFlagTo),
+
+    StaticMethod("makeRandom", &Event::makeRandom),
+    StaticMethod("makeFromBuffer", &Event::makeFromBuffer)
   });
 
   constructor = Napi::Persistent(ctor);

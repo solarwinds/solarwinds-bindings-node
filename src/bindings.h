@@ -93,6 +93,9 @@ public:
   Napi::Value setSampleFlagTo(const Napi::CallbackInfo& info);
   Napi::Value getSampleFlag(const Napi::CallbackInfo& info);
 
+  static Napi::Value makeRandom(const Napi::CallbackInfo& info);
+  static Napi::Value makeFromBuffer(const Napi::CallbackInfo& info);
+
   // C++ instanceof equivalent
   static bool isEvent(Napi::Object);
 
