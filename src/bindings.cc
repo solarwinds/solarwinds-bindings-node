@@ -1,13 +1,5 @@
 #include "bindings.h"
 
-// Components
-#include "sanitizer.cc"
-#include "notifier.cc"
-#include "settings.cc"
-#include "config.cc"
-#include "event.cc"
-#include "reporter.cc"
-
 //
 // Initialize oboe
 //
@@ -217,6 +209,29 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
 }
 
 //
+// Check to see if oboe is ready to issue sampling decisions.
+//
+// returns coded status as below
+//
+Napi::Value isReadyToSample(const Napi::CallbackInfo& info) {
+  int ms = 0;  // milliseconds to wait
+  if (info[0].IsNumber()) {
+    ms = info[0].As<Napi::Number>().Int64Value();
+  }
+
+  int status;
+  status = oboe_is_ready(ms);
+
+  // UNKNOWN 0
+  // OK 1
+  // TRY_LATER 2
+  // LIMIT_EXCEEDED 3
+  // INVALID_API_KEY 4
+  // CONNECT_ERROR 5
+  return Napi::Number::New(info.Env(), status);
+}
+
+//
 // simple utility to output using C++. Sometimes node doesn't
 // manage to output console.log() calls before there is a problem.
 //
@@ -249,6 +264,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 
   // functions directly on the bindings object
   exports.Set("oboeInit", Napi::Function::New(env, oboeInit));
+  exports.Set("isReadyToSample", Napi::Function::New(env, isReadyToSample));
   exports.Set("o", Napi::Function::New(env, o));
 
   // classes and objects supplying different namespaces

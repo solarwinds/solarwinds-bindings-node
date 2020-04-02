@@ -9,29 +9,6 @@ int send_event_x(const Napi::CallbackInfo&, int);
 Napi::Value send_span(const Napi::CallbackInfo&, send_generic_span_t send_function);
 
 //
-// Check to see if oboe is ready to issue sampling decisions.
-//
-// returns coded status as below
-//
-Napi::Value isReadyToSample(const Napi::CallbackInfo& info) {
-  int ms = 0;          // milliseconds to wait
-  if (info[0].IsNumber()) {
-    ms = info[0].As<Napi::Number>().Int64Value();
-  }
-
-  int status;
-  status = oboe_is_ready(ms);
-
-  // UNKNOWN 0
-  // OK 1
-  // TRY_LATER 2
-  // LIMIT_EXCEEDED 3
-  // INVALID_API_KEY 4
-  // CONNECT_ERROR 5
-  return Napi::Number::New(info.Env(), status);
-}
-
-//
 // Send an event to the reporter
 //
 //Napi::Value sendReport(const Napi::CallbackInfo& info) {
@@ -543,10 +520,6 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 
   Napi::Object module = Napi::Object::New(env);
-
-  module.Set("isReadyToSample", Napi::Function::New(env, isReadyToSample));
-  //module.Set("sendReport", Napi::Function::New(env, sendReport));
-  //module.Set("sendStatus", Napi::Function::New(env, sendStatus));
 
   module.Set("sendHttpSpan", Napi::Function::New(env, sendHttpSpan));
   module.Set("sendNonHttpSpan", Napi::Function::New(env, sendNonHttpSpan));
