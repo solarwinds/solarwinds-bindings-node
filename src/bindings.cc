@@ -2,7 +2,7 @@
 
 // Components
 #include "sanitizer.cc"
-#include "metadata.cc"
+#include "notifier.cc"
 #include "settings.cc"
 #include "config.cc"
 #include "event.cc"
@@ -38,7 +38,7 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
 
     // setup oboe's options structure
     oboe_init_options_t options;
-    options.version = 7;
+    options.version = 9;
 
     int setDefaultsStatus = oboe_init_options_set_defaults(&options);
     if (setDefaultsStatus > 0) {
@@ -112,7 +112,7 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
       processed.Set("eventsFlushBatchSize", eventsFlushBatchSize);
       if (eventsFlushBatchSize.IsNumber()) {
         valid.Set("eventsFlushBatchSize", eventsFlushBatchSize);
-        options.events_flush_batch_size = eventsFlushBatchSize.ToNumber().Int64Value();
+        options.max_request_size_bytes = eventsFlushBatchSize.ToNumber().Int64Value();
       }
     }
     if (o.Has("reporter")) {
@@ -255,7 +255,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   exports = Reporter::Init(env, exports);
   exports = Settings::Init(env, exports);
   exports = Sanitizer::Init(env, exports);
-  exports = Metadata::Init(env, exports);
+  exports = Notifier::Init(env, exports);
   exports = Event::Init(env, exports);
   exports = Config::Init(env, exports);
 

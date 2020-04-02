@@ -79,29 +79,56 @@ public:
   Event(const Napi::CallbackInfo& info);
   ~Event();
 
+private:
+  // C++ callable constructor.
+  static Napi::Object NewInstance(Napi::Env);
+
   // the oboe event this instance manages
   oboe_event_t event;
   // oboe status returned by constructor rather than throwing a JavaScript
   // error. allows C++ code to do cleanup if necessary.
   int init_status;
 
+public:
   // methods that manipulate the instance's oboe_event_t
   Napi::Value addInfo(const Napi::CallbackInfo& info);
   Napi::Value addEdge(const Napi::CallbackInfo& info);
-  Napi::Value getMetadata(const Napi::CallbackInfo& info);
-  Napi::Value toString(const Napi::CallbackInfo& info);
   Napi::Value setSampleFlagTo(const Napi::CallbackInfo& info);
   Napi::Value getSampleFlag(const Napi::CallbackInfo& info);
 
+  // formatting the strings
+  Napi::Value toString(const Napi::CallbackInfo& info);
+  static int format(oboe_metadata_t* md, size_t len, char* buffer, uint flags);
+  const static int ff_header = 1;
+  const static int ff_task = 2;
+  const static int ff_op = 4;
+  const static int ff_flags = 8;
+  const static int ff_sample = 16;
+  const static int ff_separators = 32;
+  const static int ff_lowercase = 64;
+
+  // predefined formats
+  const static int fmtHuman =
+      ff_header | ff_task | ff_op | ff_flags | ff_separators | ff_lowercase;
+  const static int fmtLog = ff_task | ff_sample | ff_separators;
+
+  // size needed to format is the size needed + 3 for delimiters to split the
+  // parts.
+  const static size_t fmtBufferSize = OBOE_MAX_METADATA_PACK_LEN + 3;
+
+  Napi::Value sendStatus(const Napi::CallbackInfo& info);
+  Napi::Value sendReport(const Napi::CallbackInfo& info);
+
+private:
+  int send_event_x(int channel);
+
+public:
+  // methods that create an invalid event that contains only metadata.
   static Napi::Value makeRandom(const Napi::CallbackInfo& info);
   static Napi::Value makeFromBuffer(const Napi::CallbackInfo& info);
 
   // C++ instanceof equivalent
   static bool isEvent(Napi::Object);
-
-  // C++ callable constructors.
-  static Napi::Object NewInstance(Napi::Env);
-  static Napi::Object NewInstance(Napi::Env, oboe_metadata_t*, bool = true);
 
 private:
   static Napi::FunctionReference constructor;
