@@ -20,6 +20,11 @@ Napi::Value Event::sendStatus(const Napi::CallbackInfo& info) {
 // Common code for sendReport and sendStatus.
 //
 int Event::send_event_x(int channel) {
+  // validate the oboe event. if it's the non-functional, metadata-only
+  // event return an error status.
+  if (init_status) {
+    return -2000;
+  }
   // fake up metadata so oboe can check it. change the op_id so it doesn't
   // match the event's in oboe's check.
   oboe_metadata_t omd = this->event.metadata;

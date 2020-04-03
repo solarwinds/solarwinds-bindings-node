@@ -196,7 +196,7 @@ describe('addon.Notifier functions', function () {
     }, 500);
   });
 
-  it('oboeNotifierInit() should work as expected a second time', function (done) {
+  it('oboeNotifierInit() should work as expected when re-initialized', function (done) {
     messageConsumer = defaultMessageConsumer;
     messages.length = 0;
     const status = aob.Notifier.Init(notiSocket);

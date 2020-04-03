@@ -171,78 +171,8 @@ Napi::Object Event::makeFromOboeMetadata(const Napi::Env env, oboe_metadata_t &o
 }
 
 //
-// C++ callable function to create a JavaScript Event object.
-//
-// This signature includes an optional boolean for whether an edge
-// should be set or not. It defaults to true.
-//
-//Napi::Object Event::NewInstance(Napi::Env env,
-//                                oboe_metadata_t* omd,
-//                                bool edge) {
-//  Napi::EscapableHandleScope scope(env);
-//
-//  Napi::Value v0 = Napi::External<oboe_metadata_t>::New(env, omd);
-//  Napi::Value v1 = Napi::Boolean::New(env, edge);
-//
-//  Napi::Object o = constructor.New({v0, v1});
-//
-//  return scope.Escape(napi_value(o)).ToObject();
-//}
-
-//
-// JavaScript callable method to format the event as a string.
-//
-// The string representation of an event is the string representation of
-// the metadata part of the event.
-//
-//Napi::Value Event::toString(const Napi::CallbackInfo& info) {
-//    oboe_metadata_t* md = &this->event.metadata;
-//    char buf[Metadata::fmtBufferSize];
-//
-//    int rc;
-//
-//    if (info.Length() == 1 && info[0].IsNumber()) {
-//      int fmt = info[0].As<Napi::Number>().Int64Value();
-//      // default 1 to a human readable form for historical reasons.
-//      if (fmt == 1) {
-//        fmt = Metadata::fmtHuman;
-//      }
-//      rc = Metadata::format(md, sizeof(buf), buf, fmt) ? 0 : -1;
-//    } else {
-//      rc = oboe_metadata_tostr(md, buf, sizeof(buf) - 1);
-//    }
-//
-//    return Napi::String::New(info.Env(), rc == 0 ? buf : "");
-//}
-
-//
-// JavaScript callable method to set the event's sample flag to the boolean
-// sense of the argument.
-//
-// returns the previous value of the flag.
-//
-//Napi::Value Event::setSampleFlagTo(const Napi::CallbackInfo& info) {
-//    Napi::Env env = info.Env();
-//
-//    if (info.Length() != 1) {
-//        Napi::Error::New(env, "setSampleFlagTo requires one argument").//ThrowAsJavaScriptException();
-//        return env.Null();
-//    }
-//
-//    bool previous = this->event.metadata.flags & XTR_FLAGS_SAMPLED;
-//
-//    // truthy to set it, falsey to clear it
-//    if (info[0].ToBoolean().Value()) {
-//        this->event.metadata.flags |= XTR_FLAGS_SAMPLED;
-//    } else {
-//        this->event.metadata.flags &= ~XTR_FLAGS_SAMPLED;
-//    }
-//    return Napi::Boolean::New(env, previous);
-//}
-
-//
 // JavaScript callable method to get the sample flag from
-// the event metadata.
+// the oboe event metadata.
 //
 // returns boolean
 //
@@ -250,23 +180,6 @@ Napi::Value Event::getSampleFlag(const Napi::CallbackInfo& info) {
   const bool sampleFlag = this->event.metadata.flags & XTR_FLAGS_SAMPLED;
   return Napi::Boolean::New(info.Env(), sampleFlag);
 }
-
-//
-// JavaScript callable method to get a new metadata object with
-// the same metadata as this event.
-//
-// Event.getMetadata()
-//
-// Return a Metadata object with the metadata from this event.
-//
-//Napi::Value Event::getMetadata(const Napi::CallbackInfo& info) {
-//    Napi::Env env = info.Env();
-//
-//    oboe_metadata_t* omd = &this->event.metadata;
-//
-//    Napi::Value v = Napi::External<oboe_metadata_t>::New(env, omd);
-//    return Metadata::NewInstance(env, v);
-//}
 
 //
 // JavaScript callable method to add an edge to the event.
@@ -278,8 +191,9 @@ Napi::Value Event::getSampleFlag(const Napi::CallbackInfo& info) {
 Napi::Value Event::addEdge(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 
-    // Validate arguments
-    if (info.Length() != 1) {
+    // Validate arguments. If init status is not 0 then this is a
+    // non-functional, metadata-only event.
+    if (info.Length() != 1 || init_status) {
         Napi::TypeError::New(env, "invalid signature").ThrowAsJavaScriptException();
         return env.Undefined();
     }
@@ -290,14 +204,11 @@ Napi::Value Event::addEdge(const Napi::CallbackInfo& info) {
     if (Event::isEvent(o)) {
       Event* e = Napi::ObjectWrap<Event>::Unwrap(o);
       status = oboe_event_add_edge(&this->event, &e->event.metadata);
-      //    } else if (Metadata::isMetadata(o)) {
-      //        Metadata* md = Napi::ObjectWrap<Metadata>::Unwrap(o);
-      //        status = oboe_event_add_edge(&this->event, &md->metadata);
     } else if (info[0].IsString()) {
         std::string str = info[0].As<Napi::String>();
         status = oboe_event_add_edge_fromstr(&this->event, str.c_str(), str.length());
     } else {
-        Napi::TypeError::New(env, "invalid metadata").ThrowAsJavaScriptException();
+        Napi::TypeError::New(env, "invalid edge").ThrowAsJavaScriptException();
         return env.Undefined();
     }
 
@@ -320,7 +231,7 @@ Napi::Value Event::addInfo(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 
     // Validate arguments
-    if (info.Length() != 2 || !info[0].IsString()) {
+    if (info.Length() != 2 || !info[0].IsString() || init_status) {
         Napi::TypeError::New(env, "Invalid signature").ThrowAsJavaScriptException();
         return env.Undefined();
     }

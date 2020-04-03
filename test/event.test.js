@@ -45,6 +45,7 @@ describe('addon.event', function () {
   })
 
   it('should construct an event using an event', function () {
+    // eslint-disable-next-line space-infix-ops
     const fmt = 1|2|8;        // header, task, flags
     const eventTemplate = aob.Event.makeRandom();
     const event = new bindings.Event(eventTemplate);
@@ -52,6 +53,7 @@ describe('addon.event', function () {
   })
 
   it('should construct an event with or without an edge', function () {
+    // eslint-disable-next-line space-infix-ops
     const fmt = 1|2|8;        // just compare the header, task, and flags.
     const event = new aob.Event.makeRandom();
 
@@ -84,6 +86,7 @@ describe('addon.event', function () {
     expect(ev2.toString().slice(-2)).equal('01');
     expect(ev1.getSampleFlag()).equal(true);
     expect(ev2.getSampleFlag()).equal(true);
+    // eslint-disable-next-line space-infix-ops
     expect(ev2.toString(1|2|8)).equal(ev1.toString(1|2|8));
 
   })
