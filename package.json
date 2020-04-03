@@ -18,7 +18,7 @@
     "url": "https://github.com/appoptics/appoptics-bindings-node/issues"
   },
   "scripts": {
-    "test": "mocha test/*.test.js",
+    "test": "./test.sh",
     "install": "node setup-liboboe.js && node-gyp rebuild",
     "rebuild": "node setup-liboboe.js && node-gyp rebuild"
   },
