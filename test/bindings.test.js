@@ -1,9 +1,12 @@
+'use strict';
+
 const bindings = require('../')
 const expect = require('chai').expect;
-const util = require('util');
 
 const EnvVarOptions = require('./lib/env-var-options');
 const keyMap = require('./lib/env-var-key-map');
+
+const env = process.env;
 
 //
 // goodOptions are used in multiple tests so they're declared here
@@ -32,11 +35,6 @@ const goodOptions = {
 describe('addon.oboeInit()', function () {
 
   it('should handle good options values', function () {
-    const booleanOptions = {
-      traceMetrics: true,
-      //oneFilePerEvent: true
-    }
-
     const details = {};
     const options = Object.assign({}, goodOptions);
     const expected = options;
@@ -83,7 +81,7 @@ describe('addon.oboeInit()', function () {
     const options = Object.assign({}, badOptions);
 
     // it's already init'd so expect a -1 result.
-    var result = bindings.oboeInit(options, details);
+    const result = bindings.oboeInit(options, details);
     expect(result).equal(-1, 'oboe should already be initialized');
     expect(details.valid).deep.equal(booleans);
   })
@@ -114,6 +112,15 @@ describe('addon.oboeInit()', function () {
 
   it('should throw if not passed an object', function () {
     expect(bindings.oboeInit).throw(TypeError, 'invalid calling signature');
+  });
+
+  it('should check if ready to sample', function () {
+    // wait 5 seconds max. This will fail if not using
+    // a real collector (collector or collector-stg).appoptics.com
+    const ready = bindings.isReadyToSample(5000);
+    expect(ready).be.a('number')
+
+    expect(ready).equal(1, `${env.APPOPTICS_COLLECTOR} should be ready`)
   })
 
   it('should init without losing memory', function (done) {
@@ -128,7 +135,7 @@ describe('addon.oboeInit()', function () {
 
     // allow the system to come to a steady state. garbage collection makes it
     // hard to isolate memory losses.
-    const start1 = process.memoryUsage().rss;
+    const start1 = process.memoryUsage().rss; // eslint-disable-line no-unused-vars
     for (let i = warmup; i > 0; i--) {
       bindings.oboeInit(options);
     }

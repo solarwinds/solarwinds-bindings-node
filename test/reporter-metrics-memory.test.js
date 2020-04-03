@@ -20,7 +20,7 @@ describe('reporter-metrics-memory', function () {
       throw new Error('oboeInit() failed');
     }
 
-    const ready = aob.Reporter.isReadyToSample(5000);
+    const ready = aob.isReadyToSample(5000);
     expect(ready).equal(1, `should connected to ${env.APPOPTICS_COLLECTOR} and ready`);
 
     for (let i = 0; i < batchSize; i++) {
