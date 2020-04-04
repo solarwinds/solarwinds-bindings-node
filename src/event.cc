@@ -289,17 +289,20 @@ inline bool Event::isEvent(Napi::Object o) {
 Napi::Object Event::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 
-  Napi::Function ctor = DefineClass(env, "Event", {
-    InstanceMethod("addInfo", &Event::addInfo),
-    InstanceMethod("addEdge", &Event::addEdge),
-    InstanceMethod("toString", &Event::toString),
-    InstanceMethod("getSampleFlag", &Event::getSampleFlag),
-    InstanceMethod("sendReport", &Event::sendReport),
-    InstanceMethod("sendStatus", &Event::sendStatus),
+  Napi::Function ctor = DefineClass(
+      env, "Event",
+      {InstanceMethod("addInfo", &Event::addInfo),
+       InstanceMethod("addEdge", &Event::addEdge),
+       InstanceMethod("toString", &Event::toString),
+       InstanceMethod("getSampleFlag", &Event::getSampleFlag),
+       InstanceMethod("sendReport", &Event::sendReport),
+       InstanceMethod("sendStatus", &Event::sendStatus),
 
-    StaticMethod("makeRandom", &Event::makeRandom),
-    StaticMethod("makeFromBuffer", &Event::makeFromBuffer)
-  });
+       StaticValue("fmtHuman", Napi::Number::New(env, Event::fmtHuman)),
+       StaticValue("fmtLog", Napi::Number::New(env, Event::fmtLog)),
+
+       StaticMethod("makeRandom", &Event::makeRandom),
+       StaticMethod("makeFromBuffer", &Event::makeFromBuffer)});
 
   constructor = Napi::Persistent(ctor);
   constructor.SuppressDestruct();
