@@ -32,7 +32,8 @@ Event.makeFromString = function (string) {
   if (b.length !== 30 || b[0] !== 0x2b || b[29] & 0xFE) {
     return undefined;
   }
-  if (string.indexOf('0'.repeat(16), 42) === 42) {
+  // an all zero op id is not valid.
+  if (string.startsWith('0'.repeat(16), 42)) {
     return undefined;
   }
 
