@@ -69,7 +69,7 @@ describe('addon.Notifier functions', function () {
   });
 
   it('oboeNotifierInit() should work as expected', function (done) {
-    const status = aob.Notifier.Init(notiSocket);
+    const status = aob.Notifier.init(notiSocket);
     expect(status).oneOf([0, -2], 'status must be OK or INITIALIZING');
 
     setTimeout(function () {
@@ -181,11 +181,11 @@ describe('addon.Notifier functions', function () {
       throw new Error(`unexpected message arrived: ${util.format(msg)}`);
     }
 
-    aob.Notifier.Stop();
-    expect(aob.Notifier.Status()).equal(-3, 'status should be shutting-down');
+    aob.Notifier.stop();
+    expect(aob.Notifier.status()).equal(-3, 'status should be shutting-down');
 
     setTimeout(function () {
-      expect(aob.Notifier.Status()).equal(-1, 'status should be disabled');
+      expect(aob.Notifier.status()).equal(-1, 'status should be disabled');
       notiServer.getConnections((e, count) => {
         if (e) {
           throw e;
@@ -199,7 +199,7 @@ describe('addon.Notifier functions', function () {
   it('oboeNotifierInit() should work as expected when re-initialized', function (done) {
     messageConsumer = defaultMessageConsumer;
     messages.length = 0;
-    const status = aob.Notifier.Init(notiSocket);
+    const status = aob.Notifier.init(notiSocket);
     expect(status).oneOf([0, -2], 'status must be OK or INITIALIZING');
 
     setTimeout(function () {
@@ -220,11 +220,11 @@ describe('addon.Notifier functions', function () {
       throw new Error(`unexpected message arrived: ${util.format(msg)}`);
     }
 
-    aob.Notifier.Stop();
-    expect(aob.Notifier.Status()).equal(-3, 'status should be shutting-down');
+    aob.Notifier.stop();
+    expect(aob.Notifier.status()).equal(-3, 'status should be shutting-down');
 
     setTimeout(function () {
-      expect(aob.Notifier.Status()).equal(-1, 'status should be disabled');
+      expect(aob.Notifier.status()).equal(-1, 'status should be disabled');
       notiServer.getConnections((e, count) => {
         if (e) {
           throw e;
