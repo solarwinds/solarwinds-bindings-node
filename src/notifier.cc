@@ -1,7 +1,7 @@
 #include "bindings.h"
 
 //
-// initialize a client connection to a named pipe.
+// initialize a client connection to a unix-domain socket.
 //
 Napi::Value oboeNotifierInit(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -68,9 +68,9 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 
   Napi::Object module = Napi::Object::New(env);
 
-  module.Set("Init", Napi::Function::New(env, oboeNotifierInit));
-  module.Set("Status", Napi::Function::New(env, oboeNotifierStatus));
-  module.Set("Stop", Napi::Function::New(env, oboeNotifierStop));
+  module.Set("init", Napi::Function::New(env, oboeNotifierInit));
+  module.Set("status", Napi::Function::New(env, oboeNotifierStatus));
+  module.Set("stop", Napi::Function::New(env, oboeNotifierStop));
 
   exports.Set("Notifier", module);
 
