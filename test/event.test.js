@@ -68,7 +68,7 @@ describe('addon.event', function () {
     }
   })
 
-  it('should construct an event using metadata', function () {
+  it('should construct an event using a random template', function () {
     const random = aob.Event.makeRandom();
     const headerAndTaskId = random.toString().slice(0, 42);
     const event = new aob.Event(random);
@@ -91,12 +91,12 @@ describe('addon.event', function () {
 
   })
 
-  it('should add a KV using addInfo', function () {
+  it('shouldn\'t throw when adding a valid KV using addInfo', function () {
     const event = new aob.Event(aob.Event.makeRandom());
     event.addInfo('key', 'val')
   })
 
-  it('should add edge from an event', function () {
+  it('shouldn\'t throw when adding an edge from an event', function () {
     const event = new aob.Event(aob.Event.makeRandom());
     const edge = new aob.Event(event);
     event.addEdge(edge);
