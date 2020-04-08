@@ -30,6 +30,7 @@ const goodOptions = {
   eventsFlushBatchSize: 100,
   //oneFilePerEvent: 1,             // not supported by the node agent
   ec2MetadataTimeout: 3000,
+  proxy: 'http://proxy-host:10101',
 }
 
 describe('addon.oboeInit()', function () {
@@ -69,10 +70,11 @@ describe('addon.oboeInit()', function () {
       eventsFlushBatchSize: 'a',
       //oneFilePerEvent: undefined,
       ec2MetadataTimeout: 'x',
+      proxy: 17,
     }
 
     // any value can be interpreted as a boolean so they should come
-    // back as valid.
+    // back as valid. but all others should be invalid.
     const booleans = {
       traceMetrics: 0,
       //oneFilePerEvent: undefined

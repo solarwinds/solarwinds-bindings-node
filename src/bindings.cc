@@ -198,6 +198,15 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
         options.ec2_metadata_timeout =  ec2MetadataTimeout.ToNumber().Int32Value();
       }
     }
+    if (o.Has("proxy")) {
+      Napi::Value proxy = o.Get("proxy");
+      processed.Set("proxy", proxy);
+      if (proxy.IsString()) {
+        valid.Set("proxy", proxy);
+        holdKeys[++kix] = proxy.ToString();
+        options.proxy = holdKeys[kix].c_str();
+      }
+    }
 
     if (skipInit) {
       return env.Null();
@@ -226,7 +235,7 @@ Napi::Value isReadyToSample(const Napi::CallbackInfo& info) {
   // OK 1
   // TRY_LATER 2
   // LIMIT_EXCEEDED 3
-  // INVALID_API_KEY 4
+  // unused 4 (was INVALID_API_KEY)
   // CONNECT_ERROR 5
   return Napi::Number::New(info.Env(), status);
 }
