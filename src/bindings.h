@@ -40,7 +40,6 @@ public:
 
   // formatting the strings
   Napi::Value toString(const Napi::CallbackInfo& info);
-  static int format(oboe_metadata_t* md, size_t len, char* buffer, uint flags);
   const static int ff_header = 1;
   const static int ff_task = 2;
   const static int ff_op = 4;

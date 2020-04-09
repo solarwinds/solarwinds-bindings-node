@@ -1,5 +1,8 @@
 #include "bindings.h"
 
+// local function definition.
+static int format(oboe_metadata_t* md, size_t len, char* buffer, uint flags);
+
 //
 // Convert an event's metadata to a string representation.
 //
@@ -37,7 +40,7 @@ Napi::Value Event::toString(const Napi::CallbackInfo& info) {
 //
 // function to format an x-trace with components split by sep.
 //
-int Event::format(oboe_metadata_t* md, size_t len, char* buffer, uint flags) {
+int format(oboe_metadata_t* md, size_t len, char* buffer, uint flags) {
   char* b = buffer;
   char base = (flags & Event::ff_lowercase ? 'a' : 'A') - 10;
   const char sep = '-';
