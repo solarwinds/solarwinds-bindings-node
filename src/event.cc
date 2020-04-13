@@ -1,6 +1,8 @@
 #include "bindings.h"
 #include <cmath>
 
+#define MAX_SAFE_INTEGER (pow(2, 53) - 1)
+
 Napi::FunctionReference Event::constructor;
 
 Event::~Event() {
@@ -9,7 +11,6 @@ Event::~Event() {
     oboe_event_destroy(&event);
   }
 }
-
 
 //
 // JavaScript constructor
@@ -26,36 +27,31 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
 
     oboe_metadata_t omd;
 
-    // indicate that the construction failed so the destructor won't ask oboe to free it.
+    // indicate that the construction failed so the destructor won't ask oboe
+    // to destroy the event.
     init_status = -1;
 
-    if (info.Length() < 1) {
+    // no argument constructor just makes an empty event. used only by
+    // Event::makeRandom() and Event::makeFromString().
+    if (info.Length() == 0) {
+      return;
+    }
+
+    // make sure there is metadata
+    if (!info[0].IsObject()) {
       Napi::TypeError::New(env, "invalid signature").ThrowAsJavaScriptException();
       return;
     }
 
-    //Napi::Object o = info[0].As<Napi::Object>();
-    Napi::Object o = info[0].ToObject();
+    Napi::Object o = info[0].As<Napi::Object>();
 
-    if (Metadata::isMetadata(o)) {
-      Metadata* md = Napi::ObjectWrap<Metadata>::Unwrap(o);
-      omd = md->metadata;
-    } else if (Event::isEvent(o)) {
-      Event* ev = Napi::ObjectWrap<Event>::Unwrap(o);
-      omd = ev->event.metadata;
-    } else if (info[0].IsExternal()) {
-      omd = *info[0].As<Napi::External<oboe_metadata_t>>().Data();
-    } else if (info[0].IsString()) {
-      std::string xtrace = info[0].As<Napi::String>();
-      int status = oboe_metadata_fromstr(&omd, xtrace.c_str(), xtrace.length());
-      if (status != 0) {
-        Napi::TypeError::New(env, "Event::New - invalid X-Trace ID string").ThrowAsJavaScriptException();
-        return;
-      }
-    } else {
-      Napi::TypeError::New(env, "no metadata found").ThrowAsJavaScriptException();
+    if (!Event::isEvent(o)) {
+      Napi::TypeError::New(env, "argument must be an Event")
+          .ThrowAsJavaScriptException();
       return;
     }
+
+    omd = Napi::ObjectWrap<Event>::Unwrap(o)->event.metadata;
 
     // here there is metadata in omd and that's all the information needed in order
     // to create an event. add an edge if the caller requests.
@@ -66,7 +62,7 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
 
     // supply the metadata for the event. oboe_event_init() will create a new
     // random op ID for the event. (The op ID can be specified using the 3rd
-    // argument but there is no benefit to doing so.)
+    // argument but there is no benefit to doing so here.)
     init_status = oboe_event_init(&this->event, &omd, NULL);
     if (init_status != 0) {
       Napi::Error::New(env, "oboe.event_init: " + std::to_string(init_status)).ThrowAsJavaScriptException();
@@ -83,109 +79,106 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
 }
 
 //
-// C++ callable function to create a JavaScript Event object.
+// C++ callable function to create a non-functional JavaScript Event object. It
+// only contains valid metadata; the event structure has not been initialized.
 //
-Napi::Object Event::NewInstance(Napi::Env env) {
-    Napi::EscapableHandleScope scope(env);
-
-    Napi::Object o = constructor.New({});
-
-    return scope.Escape(napi_value(o)).ToObject();
-}
-
-//
-// C++ callable function to create a JavaScript Event object.
-//
-// This signature includes an optional boolean for whether an edge
-// should be set or not. It defaults to true.
-//
-Napi::Object Event::NewInstance(Napi::Env env, oboe_metadata_t* omd, bool edge) {
+Napi::Object Event::NewInstance(const Napi::Env env) {
   Napi::EscapableHandleScope scope(env);
 
-  Napi::Value v0 = Napi::External<oboe_metadata_t>::New(env, omd);
-  Napi::Value v1 = Napi::Boolean::New(env, edge);
+  Napi::Object o = constructor.New({});
 
-  Napi::Object o = constructor.New({v0, v1});
-
-  return scope.Escape(napi_value(o)).ToObject();
+  return scope.Escape(Napi::Value(o)).ToObject();
 }
 
 //
-// JavaScript callable method to format the event as a string.
+// Event factory for non-functional event with random metadata.
 //
-// The string representation of an event is the string representation of
-// the metadata part of the event.
-//
-Napi::Value Event::toString(const Napi::CallbackInfo& info) {
-    oboe_metadata_t* md = &this->event.metadata;
-    char buf[Metadata::fmtBufferSize];
+Napi::Value Event::makeRandom(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
 
-    int rc;
+  // make a JavaScript event and get the underlying C++ class.
+  Napi::Object event = Event::NewInstance(env);
+  oboe_event_t* oe = &Napi::ObjectWrap<Event>::Unwrap(event)->event;
 
-    if (info.Length() == 1 && info[0].IsNumber()) {
-      int fmt = info[0].As<Napi::Number>().Int64Value();
-      // default 1 to a human readable form for historical reasons.
-      if (fmt == 1) {
-        fmt = Metadata::fmtHuman;
-      }
-      rc = Metadata::format(md, sizeof(buf), buf, fmt) ? 0 : -1;
-    } else {
-      rc = oboe_metadata_tostr(md, buf, sizeof(buf) - 1);
-    }
+  // fill it with random data
+  oboe_metadata_init(&oe->metadata);
+  oboe_metadata_random(&oe->metadata);
 
-    return Napi::String::New(info.Env(), rc == 0 ? buf : "");
-}
-
-//
-// JavaScript callable method to set the event's sample flag to the boolean
-// sense of the argument.
-//
-// returns the previous value of the flag.
-//
-Napi::Value Event::setSampleFlagTo(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-
-    if (info.Length() != 1) {
-        Napi::Error::New(env, "setSampleFlagTo requires one argument").ThrowAsJavaScriptException();
-        return env.Null();
-    }
-
-    bool previous = this->event.metadata.flags & XTR_FLAGS_SAMPLED;
-
-    // truthy to set it, falsey to clear it
+  // set or clear the sample flag appropriately if an argument specified.
+  if (info.Length() == 1) {
     if (info[0].ToBoolean().Value()) {
-        this->event.metadata.flags |= XTR_FLAGS_SAMPLED;
+      oe->metadata.flags |= XTR_FLAGS_SAMPLED;
     } else {
-        this->event.metadata.flags &= ~XTR_FLAGS_SAMPLED;
+      oe->metadata.flags &= ~XTR_FLAGS_SAMPLED;
     }
-    return Napi::Boolean::New(env, previous);
+  }
+
+  return event;
+}
+
+//
+// Event factory for non-functional event with metadata from the supplied
+// buffer. This undocumented function requires that a valid xtrace id
+// occupies a buffer with a length of 30 bytes.
+//
+Napi::Value Event::makeFromBuffer(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (!info[0].IsBuffer()) {
+    Napi::TypeError::New(env, "argument must be a buffer")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  Napi::Buffer<uint8_t> b = info[0].As<Napi::Buffer<uint8_t>>();
+  if (b.Length() != 30) {
+    Napi::TypeError::New(env, "buffer must be length 30")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  // make a JavaScript event and get the underlying C++ class.
+  Napi::Object event = Event::NewInstance(env);
+  oboe_event_t* oe = &Napi::ObjectWrap<Event>::Unwrap(event)->event;
+
+  const uint kHeaderBytes = 1;
+  const uint kTaskIdOffset = kHeaderBytes;
+  const uint kOpIdOffset = kTaskIdOffset + OBOE_MAX_TASK_ID_LEN;
+  const uint kFlagsOffset = kOpIdOffset + OBOE_MAX_OP_ID_LEN;
+
+  // copy the bytes from the buffer to the oboe metadata portion
+  // of the event.
+  oboe_metadata_init(&oe->metadata);
+  for (uint i = 0; i < OBOE_MAX_TASK_ID_LEN; i++) {
+    oe->metadata.ids.task_id[i] = b[kTaskIdOffset + i];
+  }
+  for (uint i = 0; i < OBOE_MAX_OP_ID_LEN; i++) {
+    oe->metadata.ids.op_id[i] = b[kOpIdOffset + i];
+  }
+  oe->metadata.flags = b[kFlagsOffset];
+
+  return event;
+}
+
+//
+// C++ callable function to create an event with specific metadata
+//
+Napi::Object Event::makeFromOboeMetadata(const Napi::Env env, oboe_metadata_t &omd) {
+  // make a JavaScript event and get the underlying C++ class.
+  Napi::Object event = Event::NewInstance(env);
+  oboe_event_t* oe = &Napi::ObjectWrap<Event>::Unwrap(event)->event;
+  oe->metadata = omd;
+  return event;
 }
 
 //
 // JavaScript callable method to get the sample flag from
-// the event metadata.
+// the oboe event metadata.
 //
 // returns boolean
 //
 Napi::Value Event::getSampleFlag(const Napi::CallbackInfo& info) {
-    return Napi::Boolean::New(info.Env(), this->event.metadata.flags & XTR_FLAGS_SAMPLED);
-}
-
-//
-// JavaScript callable method to get a new metadata object with
-// the same metadata as this event.
-//
-// Event.getMetadata()
-//
-// Return a Metadata object with the metadata from this event.
-//
-Napi::Value Event::getMetadata(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-
-    oboe_metadata_t* omd = &this->event.metadata;
-
-    Napi::Value v = Napi::External<oboe_metadata_t>::New(env, omd);
-    return Metadata::NewInstance(env, v);
+  const bool sampleFlag = this->event.metadata.flags & XTR_FLAGS_SAMPLED;
+  return Napi::Boolean::New(info.Env(), sampleFlag);
 }
 
 //
@@ -193,36 +186,35 @@ Napi::Value Event::getMetadata(const Napi::CallbackInfo& info) {
 //
 // event.addEdge(edge)
 //
-// @param {Event | Metadata | string} X-Trace ID to edge back to
+// @param {Event | string} X-Trace ID to edge back to
 //
 Napi::Value Event::addEdge(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 
-    // Validate arguments
-    if (info.Length() != 1) {
-        Napi::TypeError::New(env, "invalid arguments").ThrowAsJavaScriptException();
-        return env.Null();
+    // Validate arguments. If init status is not 0 then this is a
+    // non-functional, metadata-only event.
+    if (info.Length() != 1 || init_status) {
+        Napi::TypeError::New(env, "invalid signature").ThrowAsJavaScriptException();
+        return env.Undefined();
     }
 
     int status;
     Napi::Object o = info[0].ToObject();
+    // is it an Event?
     if (Event::isEvent(o)) {
-        Event* e = Napi::ObjectWrap<Event>::Unwrap(o);
-        status = oboe_event_add_edge(&this->event, &e->event.metadata);
-    } else if (Metadata::isMetadata(o)) {
-        Metadata* md = Napi::ObjectWrap<Metadata>::Unwrap(o);
-        status = oboe_event_add_edge(&this->event, &md->metadata);
+      Event* e = Napi::ObjectWrap<Event>::Unwrap(o);
+      status = oboe_event_add_edge(&this->event, &e->event.metadata);
     } else if (info[0].IsString()) {
         std::string str = info[0].As<Napi::String>();
         status = oboe_event_add_edge_fromstr(&this->event, str.c_str(), str.length());
     } else {
-        Napi::TypeError::New(env, "invalid metadata").ThrowAsJavaScriptException();
-        return env.Null();
+        Napi::TypeError::New(env, "invalid edge").ThrowAsJavaScriptException();
+        return env.Undefined();
     }
 
     if (status < 0) {
         Napi::Error::New(env, "Failed to add edge").ThrowAsJavaScriptException();
-        return env.Null();
+        return env.Undefined();
     }
     return Napi::Boolean::New(env, true);
 }
@@ -239,13 +231,9 @@ Napi::Value Event::addInfo(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 
     // Validate arguments
-    if (info.Length() != 2 || !info[0].IsString()) {
-        Napi::TypeError::New(env, "Invalid arguments").ThrowAsJavaScriptException();
-        return env.Null();
-    }
-    if (!info[1].IsString() && !info[1].IsNumber() && !info[1].IsBoolean()) {
-        Napi::TypeError::New(env, "Value must be a boolean, string or number").ThrowAsJavaScriptException();
-        return env.Null();
+    if (info.Length() != 2 || !info[0].IsString() || init_status) {
+        Napi::TypeError::New(env, "Invalid signature").ThrowAsJavaScriptException();
+        return env.Undefined();
     }
 
     oboe_event_t* event = &this->event;
@@ -256,34 +244,28 @@ Napi::Value Event::addInfo(const Napi::CallbackInfo& info) {
     std::string key = info[0].As<Napi::String>();
 
 
-    // Handle boolean values
     if (info[1].IsBoolean()) {
         bool v = info[1].As<Napi::Boolean>().Value();
         status = oboe_event_add_info_bool(event, key.c_str(), v);
-
-    // Handle integer values
     } else if (info[1].IsNumber()) {
-        const double v = info[1].As<Napi::Number>();
-
-        // if it is outside IEEE 754 integer range add a double
-        if (v > pow(2, 53) - 1 || v < -(pow(2, 53) - 1)) {
-          status = oboe_event_add_info_double(event, key.c_str(), v);
-        } else {
-          status = oboe_event_add_info_int64(event, key.c_str(), v);
-        }
-
-    // Handle string values
+      const double v = info[1].As<Napi::Number>();
+      double v_int;
+      // if it has a fractional part or is outside the range of integer values
+      // it's a double.
+      double v_frac = std::modf(v, &v_int);
+      if (v_frac != 0 || v > MAX_SAFE_INTEGER || v < -MAX_SAFE_INTEGER) {
+        status = oboe_event_add_info_double(event, key.c_str(), v);
+      } else {
+        status = oboe_event_add_info_int64(event, key.c_str(), v);
+      }
+    } else if (info[1].IsString()) {
+      std::string str = info[1].As<Napi::String>();
+      // binary is not really binary, it's utf8.
+      status = oboe_event_add_info_binary(event, key.c_str(), str.c_str(), str.length());
     } else {
-        // Get value string from arguments
-        std::string str = info[1].As<Napi::String>();
-
-        // Detect if we should add as binary or a string
-        // TODO evaluate using buffers for binary data...
-        if (memchr(str.c_str(), '\0', str.length())) {
-            status = oboe_event_add_info_binary(event, key.c_str(), str.c_str(), str.length());
-        } else {
-            status = oboe_event_add_info(event, key.c_str(), str.c_str());
-        }
+      Napi::TypeError::New(env, "Value must be a boolean, string or number")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
     }
 
     if (status < 0) {
@@ -297,8 +279,8 @@ Napi::Value Event::addInfo(const Napi::CallbackInfo& info) {
 // C++ callable method to determine if object is a JavaScript Event
 // instance.
 //
-bool Event::isEvent(Napi::Object o) {
-  return o.IsObject() && o.InstanceOf(constructor.Value());
+inline bool Event::isEvent(Napi::Object o) {
+  return o.InstanceOf(constructor.Value());
 }
 
 //
@@ -307,14 +289,20 @@ bool Event::isEvent(Napi::Object o) {
 Napi::Object Event::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 
-  Napi::Function ctor = DefineClass(env, "Event", {
-    InstanceMethod("addInfo", &Event::addInfo),
-    InstanceMethod("addEdge", &Event::addEdge),
-    InstanceMethod("getMetadata", &Event::getMetadata),
-    InstanceMethod("toString", &Event::toString),
-    InstanceMethod("getSampleFlag", &Event::getSampleFlag),
-    InstanceMethod("setSampleFlagTo", &Event::setSampleFlagTo)
-  });
+  Napi::Function ctor = DefineClass(
+      env, "Event",
+      {InstanceMethod("addInfo", &Event::addInfo),
+       InstanceMethod("addEdge", &Event::addEdge),
+       InstanceMethod("toString", &Event::toString),
+       InstanceMethod("getSampleFlag", &Event::getSampleFlag),
+       InstanceMethod("sendReport", &Event::sendReport),
+       InstanceMethod("sendStatus", &Event::sendStatus),
+
+       StaticValue("fmtHuman", Napi::Number::New(env, Event::fmtHuman)),
+       StaticValue("fmtLog", Napi::Number::New(env, Event::fmtLog)),
+
+       StaticMethod("makeRandom", &Event::makeRandom),
+       StaticMethod("makeFromBuffer", &Event::makeFromBuffer)});
 
   constructor = Napi::Persistent(ctor);
   constructor.SuppressDestruct();

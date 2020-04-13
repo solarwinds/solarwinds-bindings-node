@@ -11,7 +11,7 @@ describe('addon.settings', function () {
     const result = bindings.oboeInit({serviceKey});
     // either already init'd or success.
     expect(result).oneOf([-1, 0]);
-    bindings.Reporter.isReadyToSample(2000)
+    bindings.isReadyToSample(2000)
   })
 
   it('should set tracing mode to never', function () {
@@ -78,31 +78,33 @@ describe('addon.settings', function () {
   })
 
   it('should tell us that a non-traced xtrace doesn\'t need to be sampled', function () {
-    const md = bindings.Metadata.makeRandom(0);
-    const settings = bindings.Settings.getTraceSettings({xtrace: md.toString()});
+    const ev0 = bindings.Event.makeRandom(0);
+    const event = new bindings.Event(ev0);
+    const xtrace = event.toString();
+    const settings = bindings.Settings.getTraceSettings({xtrace});
 
     expect(settings).property('status', -1)       // -1 means non-sampled xtrace
+    expect(settings).property('doSample', false);
+    expect(settings.metadata.toString()).equal(xtrace);
   })
 
   it('should get verification that a request should be sampled', function (done) {
     bindings.Settings.setTracingMode(bindings.TRACE_ALWAYS)
     bindings.Settings.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE)
-    const event = new bindings.Event(bindings.Metadata.makeRandom(1));
-    const metadata = event.getMetadata();
-    metadata.setSampleFlagTo(1)
-    const xid = metadata.toString();
+    const event = new bindings.Event(bindings.Event.makeRandom(1));
+    const xtraceString = event.toString();
     let counter = 20
     // poll to give time for the SSL connection to complete. it should have
     // been waited on in before() but it's possible for the connection to break.
     const id = setInterval(function () {
-      const settings = bindings.Settings.getTraceSettings({xtrace: xid})
+      const settings = bindings.Settings.getTraceSettings({xtrace: xtraceString});
       if (--counter <= 0 || typeof settings === 'object' && settings.source !== 2) {
         clearInterval(id)
         expect(settings).property('status', 0);
         expect(settings).property('doSample', true)
         expect(settings).property('doMetrics', true)
         expect(settings).property('edge', true)
-        expect(settings.metadata).instanceof(bindings.Metadata)
+        expect(settings.metadata).instanceof(bindings.Event)
         expect(settings).property('rate', bindings.MAX_SAMPLE_RATE);
         // the following depends on whether this suite is run standalone or with other
         // test files.
@@ -118,8 +120,8 @@ describe('addon.settings', function () {
   })
 
   it('should not set sample bit unless specified', function () {
-    const md0 = bindings.Metadata.makeRandom(0)
-    const md1 = bindings.Metadata.makeRandom(1)
+    const md0 = bindings.Event.makeRandom(0)
+    const md1 = bindings.Event.makeRandom(1)
 
     let event = new bindings.Event(md0)
     expect(event.getSampleFlag()).equal(false)

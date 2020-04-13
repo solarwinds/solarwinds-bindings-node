@@ -22,5 +22,22 @@ try {
     getMetrics () {return {}}
   }
 }
+const Event = module.exports.Event;
+
+Event.makeFromString = function (string) {
+  if (string.length != 60) {
+    return undefined;
+  }
+  const b = Buffer.from(string, 'hex');
+  if (b.length !== 30 || b[0] !== 0x2b || b[29] & 0xFE) {
+    return undefined;
+  }
+  // an all zero op id is not valid.
+  if (string.startsWith('0'.repeat(16), 42)) {
+    return undefined;
+  }
+
+  return Event.makeFromBuffer(b);
+}
 
 

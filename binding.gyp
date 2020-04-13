@@ -18,14 +18,23 @@
     # suppress warnings
     #'cflags': ['-w'],
     'sources': [
-        'src/bindings.cc'
+        'src/bindings.cc',
+        'src/sanitizer.cc',
+        'src/notifier.cc',
+        'src/settings.cc',
+        'src/config.cc',
+        'src/event.cc',
+        'src/event/event-to-string.cc',
+        'src/event/event-send.cc',
+        'src/reporter.cc',
     ],
     'conditions': [
         ['OS in "linux"', {
         # includes reference oboe/oboe.h, so
         'include_dirs': [
           '<!@(node --no-warnings -p "require(\'node-addon-api\').include")',
-          '<(module_root_dir)/'
+          '<(module_root_dir)/',
+          '<(module_root_dir)/src',
         ],
         'libraries': [
             '-loboe',
