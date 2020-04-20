@@ -592,6 +592,13 @@ const char* oboe_get_tracing_decisions_auth_message (int code);
 #define OBOE_NOTIFIER_TEST_REMOTE_WARNING 2
 #define OBOE_NOTIFIER_TEST_REMOTE_CONFIG 3
 
+//
+// interval (in seconds) at which the notifier sends a keep-alive msg,
+// note that a keep-alive is only sent if no other message made it through
+// within the interval time
+//
+#define OBOE_NOTIFIER_KEEP_ALIVE_INTERVAL_SEC 10
+
 // token buckets
 enum TOKEN_BUCKETS {
   TOKEN_BUCKET_SAMPLING,    // for normal requests
