@@ -71,6 +71,8 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   module.Set("init", Napi::Function::New(env, oboeNotifierInit));
   module.Set("status", Napi::Function::New(env, oboeNotifierStatus));
   module.Set("stop", Napi::Function::New(env, oboeNotifierStop));
+  module.Set("kKeepAliveIntervalSeconds",
+    Napi::Number::New(env, OBOE_NOTIFIER_KEEP_ALIVE_INTERVAL_SEC));
 
   exports.Set("Notifier", module);
 
