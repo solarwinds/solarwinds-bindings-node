@@ -24,8 +24,12 @@ try {
 }
 const Event = module.exports.Event;
 
+//
+// augment the c++ event object with a string conversion
+// function.
+//
 Event.makeFromString = function (string) {
-  if (string.length != 60) {
+  if (!string || string.length != 60) {
     return undefined;
   }
   const b = Buffer.from(string, 'hex');
