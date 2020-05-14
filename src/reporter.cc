@@ -230,7 +230,7 @@ Napi::Value send_metrics_core (Napi::Env env, Napi::Array metrics, uint64_t flag
 
     int status;
     if (noop) {
-      status = 1;
+      status = 0;
     } else {
       if (is_summary) {
         status = oboe_custom_metric_summary(name.c_str(), value, count,
@@ -243,9 +243,10 @@ Napi::Value send_metrics_core (Napi::Env env, Napi::Array metrics, uint64_t flag
       }
     }
 
-    // oboe returns only 0 for failure else 1 for success;
-    if (!status) {
-      set_error("metric send failed");
+    // oboe returns 0 for success else a status code;
+    if (status != 0) {
+      std::string error_msg = "metric send failed: " + std::to_string(status);
+      set_error(error_msg.c_str());
       continue;
     }
 
