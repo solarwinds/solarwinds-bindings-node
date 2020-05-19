@@ -597,7 +597,17 @@ const char* oboe_get_tracing_decisions_auth_message (int code);
 // note that a keep-alive is only sent if no other message made it through
 // within the interval time
 //
-#define OBOE_NOTIFIER_KEEP_ALIVE_INTERVAL_SEC 10
+#define OBOE_NOTIFIER_KEEP_ALIVE_INTERVAL_SEC 86400
+
+//
+// these codes are returned by oboe_custom_metric_summary() and oboe_custom_metric_increment()
+//
+#define OBOE_CUSTOM_METRICS_OK 0
+#define OBOE_CUSTOM_METRICS_INVALID_COUNT 1
+#define OBOE_CUSTOM_METRICS_INVALID_REPORTER 2
+#define OBOE_CUSTOM_METRICS_TAG_LIMIT_EXCEEDED 3
+#define OBOE_CUSTOM_METRICS_STOPPING 4
+#define OBOE_CUSTOM_METRICS_QUEUE_LIMIT_EXCEEDED 5
 
 // token buckets
 enum TOKEN_BUCKETS {
@@ -1115,6 +1125,7 @@ int oboe_notifier_init(const char *socket_path);
 int oboe_notifier_stop(int blocking);
 int oboe_notifier_status();
 int oboe_notifier_test(int test_case, const char *test_str);
+int oboe_notifier_get(int what);
 
 #ifdef __cplusplus
 } // extern "C"

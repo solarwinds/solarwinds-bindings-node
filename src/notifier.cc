@@ -58,6 +58,14 @@ Napi::Value oboeNotifierStop(const Napi::CallbackInfo& info) {
   return Napi::Number::New(info.Env(), status);
 }
 
+Napi::Value oboeNotifierGet(const Napi::CallbackInfo& info) {
+  int code = 0;
+  if (info.Length() > 0 && info[0].IsNumber()) {
+    code = info[0].As<Napi::Number>();
+  }
+  return Napi::Number::New(info.Env(), oboe_notifier_get(code));
+}
+
 //
 // Initialize the module.
 //
@@ -71,6 +79,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   module.Set("init", Napi::Function::New(env, oboeNotifierInit));
   module.Set("status", Napi::Function::New(env, oboeNotifierStatus));
   module.Set("stop", Napi::Function::New(env, oboeNotifierStop));
+  module.Set("get", Napi::Function::New(env, oboeNotifierGet));
   module.Set("kKeepAliveIntervalSeconds",
     Napi::Number::New(env, OBOE_NOTIFIER_KEEP_ALIVE_INTERVAL_SEC));
 
