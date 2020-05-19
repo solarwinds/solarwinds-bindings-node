@@ -7,6 +7,7 @@ Napi::FunctionReference Event::constructor;
 
 Event::~Event() {
   // don't ask oboe to clean up unless the event was successfully created.
+  event_count -= 1;
   if (init_status == 0) {
     oboe_event_destroy(&event);
   }
@@ -24,6 +25,9 @@ Event::~Event() {
 //
 Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
     Napi::Env env = info.Env();
+
+    event_count += 1;
+    total_created += 1;
 
     oboe_metadata_t omd;
 
@@ -275,6 +279,16 @@ Napi::Value Event::addInfo(const Napi::CallbackInfo& info) {
     return Napi::Boolean::New(env, status == 0);
 }
 
+Napi::Value Event::getEventStats(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  Napi::Object o = Napi::Object::New(env);
+  o.Set("totalCount", Napi::Number::New(env, total_created));
+  o.Set("activeCount", Napi::Number::New(env, event_count));
+
+  return o;
+  //return Napi::Number::New(info.Env(), event_count);
+}
+
 //
 // C++ callable method to determine if object is a JavaScript Event
 // instance.
@@ -283,26 +297,34 @@ inline bool Event::isEvent(Napi::Object o) {
   return o.InstanceOf(constructor.Value());
 }
 
+size_t Event::event_count;
+size_t Event::total_created;
+
 //
 // initialize the module and expose the Event class.
 //
 Napi::Object Event::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
+  event_count = 0;
+  total_created = 0;
 
   Napi::Function ctor = DefineClass(
-      env, "Event",
-      {InstanceMethod("addInfo", &Event::addInfo),
-       InstanceMethod("addEdge", &Event::addEdge),
-       InstanceMethod("toString", &Event::toString),
-       InstanceMethod("getSampleFlag", &Event::getSampleFlag),
-       InstanceMethod("sendReport", &Event::sendReport),
-       InstanceMethod("sendStatus", &Event::sendStatus),
+      env, "Event", {
+        InstanceMethod("addInfo", &Event::addInfo),
+        InstanceMethod("addEdge", &Event::addEdge),
+        InstanceMethod("toString", &Event::toString),
+        InstanceMethod("getSampleFlag", &Event::getSampleFlag),
+        InstanceMethod("sendReport", &Event::sendReport),
+        InstanceMethod("sendStatus", &Event::sendStatus),
 
-       StaticValue("fmtHuman", Napi::Number::New(env, Event::fmtHuman)),
-       StaticValue("fmtLog", Napi::Number::New(env, Event::fmtLog)),
+        StaticValue("fmtHuman", Napi::Number::New(env, Event::fmtHuman)),
+        StaticValue("fmtLog", Napi::Number::New(env, Event::fmtLog)),
 
-       StaticMethod("makeRandom", &Event::makeRandom),
-       StaticMethod("makeFromBuffer", &Event::makeFromBuffer)});
+        StaticMethod("makeRandom", &Event::makeRandom),
+        StaticMethod("makeFromBuffer", &Event::makeFromBuffer),
+        StaticMethod("getEventStats", &Event::getEventStats),
+      }
+    );
 
   constructor = Napi::Persistent(ctor);
   constructor.SuppressDestruct();

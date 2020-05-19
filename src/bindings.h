@@ -9,13 +9,13 @@
 
 typedef int (*send_generic_span_t) (char*, uint16_t, oboe_span_params_t*);
 
-
-
-
 //
 // Event - work with oboe's oboe_event_t structure.
 //
 class Event : public Napi::ObjectWrap<Event> {
+
+static size_t event_count;    // the number not destructed
+static size_t total_created;    // the total number created
 
 public:
   Event(const Napi::CallbackInfo& info);
@@ -73,6 +73,8 @@ public:
 
   // C++ method to create an unitialized, invalid oboe event.
   static Napi::Object makeFromOboeMetadata(const Napi::Env env, oboe_metadata_t& omd);
+
+  static Napi::Value getEventStats(const Napi::CallbackInfo& info);
 
  private:
   static Napi::FunctionReference constructor;
