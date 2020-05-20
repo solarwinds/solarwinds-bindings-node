@@ -9,7 +9,10 @@ Event::~Event() {
   // don't ask oboe to clean up unless the event was successfully created.
   events_active -= 1;
   if (init_status == 0) {
+    full_active -= 1;
     oboe_event_destroy(&event);
+  } else {
+    small_active -= 1;
   }
 }
 
