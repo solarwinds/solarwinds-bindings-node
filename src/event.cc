@@ -7,7 +7,7 @@ Napi::FunctionReference Event::constructor;
 
 Event::~Event() {
   // don't ask oboe to clean up unless the event was successfully created.
-  event_count -= 1;
+  events_active -= 1;
   if (init_status == 0) {
     oboe_event_destroy(&event);
   }
@@ -26,7 +26,7 @@ Event::~Event() {
 Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
     Napi::Env env = info.Env();
 
-    event_count += 1;
+    events_active += 1;
     total_created += 1;
 
     oboe_metadata_t omd;
@@ -38,8 +38,10 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
     // no argument constructor just makes an empty event. used only by
     // Event::makeRandom() and Event::makeFromString().
     if (info.Length() == 0) {
+      small_active += 1;
       return;
     }
+    full_active += 1;
 
     // make sure there is metadata
     if (!info[0].IsObject()) {
@@ -282,11 +284,12 @@ Napi::Value Event::addInfo(const Napi::CallbackInfo& info) {
 Napi::Value Event::getEventStats(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::Object o = Napi::Object::New(env);
-  o.Set("totalCount", Napi::Number::New(env, total_created));
-  o.Set("activeCount", Napi::Number::New(env, event_count));
+  o.Set("totalCreated", Napi::Number::New(env, total_created));
+  o.Set("totalActive", Napi::Number::New(env, events_active));
+  o.Set("smallActive", Napi::Number::New(env, small_active));
+  o.Set("fullActive", Napi::Number::New(env, full_active));
 
   return o;
-  //return Napi::Number::New(info.Env(), event_count);
 }
 
 //
@@ -297,16 +300,20 @@ inline bool Event::isEvent(Napi::Object o) {
   return o.InstanceOf(constructor.Value());
 }
 
-size_t Event::event_count;
+size_t Event::events_active;
 size_t Event::total_created;
+size_t Event::small_active;
+size_t Event::full_active;
 
 //
 // initialize the module and expose the Event class.
 //
 Napi::Object Event::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
-  event_count = 0;
+  events_active = 0;
   total_created = 0;
+  small_active = 0;
+  full_active = 0;
 
   Napi::Function ctor = DefineClass(
       env, "Event", {

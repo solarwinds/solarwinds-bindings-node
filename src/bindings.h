@@ -14,8 +14,10 @@ typedef int (*send_generic_span_t) (char*, uint16_t, oboe_span_params_t*);
 //
 class Event : public Napi::ObjectWrap<Event> {
 
-static size_t event_count;    // the number not destructed
-static size_t total_created;    // the total number created
+static size_t events_active;  // the number not destructed
+static size_t total_created;  // the total number created
+static size_t small_active;   // small not yet destructed
+static size_t full_active;    // full events not yet destructed
 
 public:
   Event(const Napi::CallbackInfo& info);
