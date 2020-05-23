@@ -161,6 +161,42 @@ describe('addon.event', function () {
     const event = aob.Event.makeRandom();
     // eslint-disable-next-line no-unused-vars
     const p = Object.getPrototypeOf(event);
-
   })
+
+  it('should fetch event stats', function () {
+    const stats = aob.Event.getEventStats();
+    const expectedStats = [
+      'totalCreated',
+      'totalActive',
+      'smallActive',
+      'fullActive',
+      'bytesUsed',
+      'sentCount',
+    ];
+    expect(Object.keys(stats)).deep.equal(expectedStats);
+  });
+
+  it('makeRandom() should allocate a small event', function () {
+    const event = new aob.Event.makeRandom();
+    const bytes = event.getBytesAllocated();
+    expect(bytes).equal(224, 'sizeof(oboe_event_t) should be 224');
+  });
+
+  it('makeFromString() should allocate a small event', function () {
+    let event = new aob.Event.makeFromString(evUnsampled);
+    let bytes = event.getBytesAllocated();
+    expect(bytes).equal(224, 'sizeof(oboe_event_t) should be 224');
+
+    event = new aob.Event.makeFromString(evSampled);
+    bytes = event.getBytesAllocated();
+    expect(bytes).equal(224, 'sizeof(oboe_event_t) should be 224');
+  });
+
+  it('new Event() should allocate a full event', function () {
+    const xtraceData = new aob.Event.makeRandom();
+    const event = new aob.Event(xtraceData);
+    const bytes = event.getBytesAllocated();
+    expect(bytes).equal(224 + 1024, 'should include a 1024 byte buffer');
+  });
+
 })

@@ -18,6 +18,8 @@ static size_t events_active;  // the number not destructed
 static size_t total_created;  // the total number created
 static size_t small_active;   // small not yet destructed
 static size_t full_active;    // full events not yet destructed
+static size_t bytes_used;     // total number of event bytes @ send
+static size_t sent_count;     // total number of events sent
 
 public:
   Event(const Napi::CallbackInfo& info);
@@ -29,16 +31,22 @@ private:
 
   // the oboe event this instance manages
   oboe_event_t event;
-  // oboe status returned by constructor rather than throwing a JavaScript
-  // error. allows C++ code to do cleanup if necessary.
-  int init_status;
+  // keep track of whether oboe_event_init() has been called. if so
+  // then oboe_event_destroy() must be called to free the bson buffer.
+  int initialized;
+  // size of this event (including bson buffer) but exclusive of c++
+  // object overhead. it is usually bigger than the actual number of
+  // bytes used by the event.
+  size_t bytes_allocated;
 
-public:
+ public:
   // methods that manipulate the instance's oboe_event_t
   Napi::Value addInfo(const Napi::CallbackInfo& info);
   Napi::Value addEdge(const Napi::CallbackInfo& info);
   Napi::Value setSampleFlagTo(const Napi::CallbackInfo& info);
   Napi::Value getSampleFlag(const Napi::CallbackInfo& info);
+
+  Napi::Value getBytesAllocated(const Napi::CallbackInfo& info);
 
   // formatting the strings
   Napi::Value toString(const Napi::CallbackInfo& info);
