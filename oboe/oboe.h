@@ -597,7 +597,7 @@ const char* oboe_get_tracing_decisions_auth_message (int code);
 // note that a keep-alive is only sent if no other message made it through
 // within the interval time
 //
-#define OBOE_NOTIFIER_KEEP_ALIVE_INTERVAL_SEC 86400
+#define OBOE_NOTIFIER_KEEP_ALIVE_INTERVAL_SEC 10
 
 //
 // these codes are returned by oboe_custom_metric_summary() and oboe_custom_metric_increment()
@@ -1125,7 +1125,6 @@ int oboe_notifier_init(const char *socket_path);
 int oboe_notifier_stop(int blocking);
 int oboe_notifier_status();
 int oboe_notifier_test(int test_case, const char *test_str);
-int oboe_notifier_get(int what);
 
 #ifdef __cplusplus
 } // extern "C"

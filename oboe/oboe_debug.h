@@ -41,7 +41,7 @@ enum OBOE_DEBUG_MODULE {
     OBOE_MODULE_APACHE,             /*!< Apache webserver */
     OBOE_MODULE_NGINX,              /*!< Nginx webserver */
     OBOE_MODULE_PHP,                /*!< PHP interpreter */
-	OBOE_MODULE_DOTNET,             /*!< dotnet wrapper */
+    OBOE_MODULE_DOTNET,             /*!< dotnet wrapper */
 };
 
 /**
