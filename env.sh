@@ -36,8 +36,8 @@ fi
 # this function references the implicit parameters $PARAM and $PARAM2
 #
 get_new_oboe() {
-    # N.B. if installing a new version of oboe "npm run preinstall" must be
-    # run before building in order to set up symlinks.
+    # N.B. if installing a new version of oboe setup-liboboe.js must be
+    # run in order to set up symlinks.
     if [ -z "$PARAM" ]; then
         echo "Must supply a version (which will be used as the destination"
         echo "directory). N.B. the script is not bulletproof."
