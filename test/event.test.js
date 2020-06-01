@@ -167,13 +167,18 @@ describe('addon.event', function () {
     const stats = aob.Event.getEventStats();
     const expectedStats = [
       'totalCreated',
+      'totalDestroyed',
       'totalActive',
       'smallActive',
       'fullActive',
       'bytesUsed',
       'sentCount',
+      'lifetime',
+      'averageLifetime',
+      'bytesFreed',
+      'totalBytesAllocated',
     ];
-    expect(Object.keys(stats)).deep.equal(expectedStats);
+    expect(Object.keys(stats)).members(expectedStats);
   });
 
   it('makeRandom() should allocate a small event', function () {

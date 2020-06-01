@@ -14,12 +14,17 @@ typedef int (*send_generic_span_t) (char*, uint16_t, oboe_span_params_t*);
 //
 class Event : public Napi::ObjectWrap<Event> {
 
-static size_t events_active;  // the number not destructed
-static size_t total_created;  // the total number created
-static size_t small_active;   // small not yet destructed
-static size_t full_active;    // full events not yet destructed
-static size_t bytes_used;     // total number of event bytes @ send
-static size_t sent_count;     // total number of events sent
+static size_t total_created;      // the total number created
+static size_t total_destroyed;    // destructor has been called
+static size_t ptotal_destroyed;   // previous total destructed
+static size_t total_bytes_alloc;  // total allocated active events
+static size_t bytes_freed;        // allocated bytes freed
+static size_t small_active;       // small not yet destructed
+static size_t full_active;        // full events not yet destructed
+static uint64_t lifetime;         // cumulative microsecs lifetime
+static uint64_t plifetime;        // previous total lifetime
+static size_t actual_bytes_used;  // total number of event bytes @ send
+static size_t sent_count;         // total number of events sent
 
 public:
   Event(const Napi::CallbackInfo& info);
@@ -33,11 +38,16 @@ private:
   oboe_event_t event;
   // keep track of whether oboe_event_init() has been called. if so
   // then oboe_event_destroy() must be called to free the bson buffer.
-  int initialized;
+  bool initialized;
+
+  // stats
+
   // size of this event (including bson buffer) but exclusive of c++
   // object overhead. it is usually bigger than the actual number of
   // bytes used by the event.
   size_t bytes_allocated;
+  // time event was created
+  uint64_t creation_time;
 
  public:
   // methods that manipulate the instance's oboe_event_t

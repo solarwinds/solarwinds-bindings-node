@@ -1,4 +1,5 @@
 #include "bindings.h"
+#include "uv.h"
 #include <cmath>
 
 #define MAX_SAFE_INTEGER (pow(2, 53) - 1)
@@ -7,13 +8,22 @@ Napi::FunctionReference Event::constructor;
 
 Event::~Event() {
   // don't ask oboe to clean up unless the event was successfully created.
-  events_active -= 1;
+
   if (initialized) {
     full_active -= 1;
     oboe_event_destroy(&event);
   } else {
     small_active -= 1;
   }
+
+  total_destroyed += 1;
+
+  // get event lifetime in microseconds
+  uint64_t elifetime = (uv_hrtime() - creation_time + 500) / 1000;
+  // and accumulate it
+  lifetime += elifetime;
+  bytes_freed += bytes_allocated;
+  total_bytes_alloc -= bytes_allocated;
 }
 
 //
@@ -34,9 +44,10 @@ Event::~Event() {
 Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
     Napi::Env env = info.Env();
 
-    events_active += 1;
     total_created += 1;
     bytes_allocated = sizeof(oboe_event_t);
+    total_bytes_alloc += bytes_allocated;
+    creation_time = uv_hrtime();
 
     oboe_metadata_t omd;
 
@@ -85,6 +96,7 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
     }
     size_t bb_size = this->event.bbuf.bufSize;
     bytes_allocated += bb_size;
+    total_bytes_alloc += bb_size;
 
     if (add_edge) {
       int edge_status = oboe_event_add_edge(&this->event, &omd);
@@ -93,9 +105,6 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
         return;
       }
     }
-
-    // adjust the bytes allocated in case the buffer size changed.
-    bytes_allocated += this->event.bbuf.bufSize - bb_size;
 }
 
 //
@@ -235,7 +244,11 @@ Napi::Value Event::addEdge(const Napi::CallbackInfo& info) {
     }
 
     // adjust the bytes allocated in case the buffer size changed.
-    bytes_allocated += this->event.bbuf.bufSize - bb_size;
+    if ((unsigned)this->event.bbuf.bufSize != bb_size) {
+      size_t delta = this->event.bbuf.bufSize - bb_size;
+      bytes_allocated += delta;
+      total_bytes_alloc += delta;
+    }
 
     if (status < 0) {
         Napi::Error::New(env, "Failed to add edge").ThrowAsJavaScriptException();
@@ -296,7 +309,11 @@ Napi::Value Event::addInfo(const Napi::CallbackInfo& info) {
     }
 
     // adjust the bytes allocated in case the buffer size changed.
-    bytes_allocated += this->event.bbuf.bufSize - bb_size;
+    if ((unsigned)this->event.bbuf.bufSize != bb_size) {
+      size_t delta = this->event.bbuf.bufSize - bb_size;
+      bytes_allocated += delta;
+      total_bytes_alloc += delta;
+    }
 
     if (status < 0) {
         Napi::Error::New(env, "Failed to add info").ThrowAsJavaScriptException();
@@ -317,20 +334,45 @@ Napi::Value Event::getEventStats(const Napi::CallbackInfo& info) {
   if (info.Length() == 1 && info[0].IsNumber()) {
     flags = info[0].ToNumber();
   }
+
   Napi::Object o = Napi::Object::New(env);
+  // this metric rises but cannot be reset
   o.Set("totalCreated", Napi::Number::New(env, total_created));
-  o.Set("totalActive", Napi::Number::New(env, events_active));
+
+  // these metrics rise and fall
+  o.Set("totalDestroyed", Napi::Number::New(env, total_destroyed));
   o.Set("smallActive", Napi::Number::New(env, small_active));
   o.Set("fullActive", Napi::Number::New(env, full_active));
+  o.Set("totalBytesAllocated", Napi::Number::New(env, total_bytes_alloc));
+
+  // calculate some metrics on the fly
+  size_t events_active = total_created - total_destroyed;
+  o.Set("totalActive", Napi::Number::New(env, events_active));
+
+  size_t delta_destroyed = total_destroyed - ptotal_destroyed;
+  double average_lifetime = NAN;
+  if (delta_destroyed != 0) {
+    average_lifetime = (lifetime - plifetime) / delta_destroyed;
+    ptotal_destroyed = total_destroyed;
+  }
+  o.Set("averageLifetime", Napi::Number::New(env, average_lifetime));
+
+  // these metrics only rise if not reset
+  o.Set("bytesUsed", Napi::Number::New(env, actual_bytes_used));
+  o.Set("sentCount", Napi::Number::New(env, sent_count));
+  o.Set("lifetime", Napi::Number::New(env, lifetime));
+  o.Set("bytesFreed", Napi::Number::New(env, bytes_freed));
 
   // reset these if requested
-  o.Set("bytesUsed", Napi::Number::New(env, bytes_used));
-  o.Set("sentCount", Napi::Number::New(env, sent_count));
-
   if (flags & 0x01) {
-    bytes_used = 0;
+    actual_bytes_used = 0;
     sent_count = 0;
+    lifetime = 0;
+    bytes_freed = 0;
   }
+
+  // and remember the previous lifetime.
+  plifetime = lifetime;
 
   return o;
 }
@@ -343,24 +385,34 @@ inline bool Event::isEvent(Napi::Object o) {
   return o.InstanceOf(constructor.Value());
 }
 
-size_t Event::events_active;
 size_t Event::total_created;
+size_t Event::total_destroyed;
+size_t Event::ptotal_destroyed;
+size_t Event::bytes_freed;
+size_t Event::total_bytes_alloc;
 size_t Event::small_active;
 size_t Event::full_active;
-size_t Event::bytes_used;
+size_t Event::actual_bytes_used;
 size_t Event::sent_count;
+size_t Event::lifetime;
+size_t Event::plifetime;
 
 //
 // initialize the module and expose the Event class.
 //
 Napi::Object Event::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
-  events_active = 0;
   total_created = 0;
+  total_destroyed = 0;
+  ptotal_destroyed = 0;
+  bytes_freed = 0;
+  total_bytes_alloc = 0;
   small_active = 0;
   full_active = 0;
-  bytes_used = 0;
+  actual_bytes_used = 0;
   sent_count = 0;
+  lifetime = 0;
+  plifetime = 0;
 
   Napi::Function ctor = DefineClass(
       env, "Event", {

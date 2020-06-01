@@ -49,7 +49,11 @@ int Event::send_event_x(int channel) {
   // (it's possible that the buffer size could have changed due
   // to either of the previous event_add calls but if that is
   // common then there are bigger problems to worry about.)
-  bytes_allocated += this->event.bbuf.bufSize - bb_size;
+  if ((unsigned)this->event.bbuf.bufSize != bb_size) {
+    size_t delta = this->event.bbuf.bufSize - bb_size;
+    bytes_allocated += delta;
+    total_bytes_alloc += delta;
+  }
 
   if (!this->event.bb_str) {
     return -1002;
@@ -59,7 +63,7 @@ int Event::send_event_x(int channel) {
   // count them as bytes and sends regardless of whether the send
   // succeeds. the goal is to know actual sizes of the events, not
   // the size of the buffers allocated for them.
-  bytes_used += len;
+  actual_bytes_used += len;
   sent_count += 1;
 
   status = oboe_raw_send(channel, this->event.bb_str, len);
