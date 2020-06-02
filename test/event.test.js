@@ -177,6 +177,8 @@ describe('addon.event', function () {
       'averageLifetime',
       'bytesFreed',
       'totalBytesAllocated',
+      'sendtime',
+      'averageSendtime',
     ];
     expect(Object.keys(stats)).members(expectedStats);
   });

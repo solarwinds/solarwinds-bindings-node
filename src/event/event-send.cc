@@ -1,4 +1,5 @@
 #include "bindings.h"
+#include "uv.h"
 
 //
 // Send an event to the reporter
@@ -65,6 +66,7 @@ int Event::send_event_x(int channel) {
   // the size of the buffers allocated for them.
   actual_bytes_used += len;
   sent_count += 1;
+  send_time = uv_hrtime();
 
   status = oboe_raw_send(channel, this->event.bb_str, len);
 

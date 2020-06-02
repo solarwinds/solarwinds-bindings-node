@@ -12,6 +12,9 @@ Event::~Event() {
   if (initialized) {
     full_active -= 1;
     oboe_event_destroy(&event);
+    // send time is only calculated for events that can be sent. it could be calculated in the send function
+    // but doing it here keeps the logic together.
+    s_sendtime += (send_time - creation_time + 500) / 1000;
   } else {
     small_active -= 1;
   }
@@ -19,9 +22,12 @@ Event::~Event() {
   total_destroyed += 1;
 
   // get event lifetime in microseconds
-  uint64_t elifetime = (uv_hrtime() - creation_time + 500) / 1000;
+  uint64_t now = uv_hrtime();
+  uint64_t elifetime = (now - creation_time + 500) / 1000;
   // and accumulate it
   lifetime += elifetime;
+
+  // now keep track of memory
   bytes_freed += bytes_allocated;
   total_bytes_alloc -= bytes_allocated;
 }
@@ -349,18 +355,28 @@ Napi::Value Event::getEventStats(const Napi::CallbackInfo& info) {
   size_t events_active = total_created - total_destroyed;
   o.Set("totalActive", Napi::Number::New(env, events_active));
 
+  // these are only calculated when an event is destroyed so don't calculate
+  // them unless some events have been destroyed.
   size_t delta_destroyed = total_destroyed - ptotal_destroyed;
-  double average_lifetime = NAN;
+  double average_lifetime = 0;
   if (delta_destroyed != 0) {
     average_lifetime = (lifetime - plifetime) / delta_destroyed;
     ptotal_destroyed = total_destroyed;
   }
   o.Set("averageLifetime", Napi::Number::New(env, average_lifetime));
 
+  double average_sendtime = 0;
+  size_t delta_sent = sent_count - s_psent_count;
+  if (delta_sent != 0) {
+    average_sendtime = (s_sendtime - s_psendtime) / delta_destroyed;
+  }
+  o.Set("averageSendtime", Napi::Number::New(env, average_sendtime));
+
   // these metrics only rise if not reset
   o.Set("bytesUsed", Napi::Number::New(env, actual_bytes_used));
   o.Set("sentCount", Napi::Number::New(env, sent_count));
   o.Set("lifetime", Napi::Number::New(env, lifetime));
+  o.Set("sendtime", Napi::Number::New(env, s_sendtime));
   o.Set("bytesFreed", Napi::Number::New(env, bytes_freed));
 
   // reset these if requested
@@ -368,11 +384,14 @@ Napi::Value Event::getEventStats(const Napi::CallbackInfo& info) {
     actual_bytes_used = 0;
     sent_count = 0;
     lifetime = 0;
+    s_sendtime = 0;
     bytes_freed = 0;
   }
 
-  // and remember the previous lifetime.
+  // and remember the previous values used for averages.
   plifetime = lifetime;
+  s_psendtime = s_sendtime;
+  s_psent_count = sent_count;
 
   return o;
 }
@@ -394,8 +413,11 @@ size_t Event::small_active;
 size_t Event::full_active;
 size_t Event::actual_bytes_used;
 size_t Event::sent_count;
+size_t Event::s_psent_count;
 size_t Event::lifetime;
 size_t Event::plifetime;
+size_t Event::s_sendtime;
+size_t Event::s_psendtime;
 
 //
 // initialize the module and expose the Event class.
@@ -411,8 +433,11 @@ Napi::Object Event::Init(Napi::Env env, Napi::Object exports) {
   full_active = 0;
   actual_bytes_used = 0;
   sent_count = 0;
+  s_psent_count = 0;
   lifetime = 0;
   plifetime = 0;
+  s_sendtime = 0;
+  s_psendtime = 0;
 
   Napi::Function ctor = DefineClass(
       env, "Event", {

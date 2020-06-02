@@ -23,8 +23,11 @@ static size_t small_active;       // small not yet destructed
 static size_t full_active;        // full events not yet destructed
 static uint64_t lifetime;         // cumulative microsecs lifetime
 static uint64_t plifetime;        // previous total lifetime
-static size_t actual_bytes_used;  // total number of event bytes @ send
+static uint64_t s_sendtime;       // cumulative microsecs time until sent
+static uint64_t s_psendtime;      // previous sendtime
+static size_t actual_bytes_used;  // total number of event bytes @ send (event + used bson buffer)
 static size_t sent_count;         // total number of events sent
+static size_t s_psent_count;      // previous count of events sent
 
 public:
   Event(const Napi::CallbackInfo& info);
@@ -46,8 +49,9 @@ private:
   // object overhead. it is usually bigger than the actual number of
   // bytes used by the event.
   size_t bytes_allocated;
-  // time event was created
-  uint64_t creation_time;
+
+  uint64_t creation_time;   // time event was created
+  uint64_t send_time;       // time event was sent
 
  public:
   // methods that manipulate the instance's oboe_event_t
