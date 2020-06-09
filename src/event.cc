@@ -14,7 +14,9 @@ Event::~Event() {
     oboe_event_destroy(&event);
     // send time is only calculated for events that can be sent. it could be calculated in the send function
     // but doing it here keeps the logic together.
-    s_sendtime += (send_time - creation_time + 500) / 1000;
+    if (send_time) {
+      s_sendtime += (send_time - creation_time + 500) / 1000;
+    }
   } else {
     small_active -= 1;
   }
@@ -54,6 +56,7 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
     bytes_allocated = sizeof(oboe_event_t);
     total_bytes_alloc += bytes_allocated;
     creation_time = uv_hrtime();
+    send_time = 0;
 
     oboe_metadata_t omd;
 
@@ -368,7 +371,7 @@ Napi::Value Event::getEventStats(const Napi::CallbackInfo& info) {
   double average_sendtime = 0;
   size_t delta_sent = sent_count - s_psent_count;
   if (delta_sent != 0) {
-    average_sendtime = (s_sendtime - s_psendtime) / delta_destroyed;
+    average_sendtime = (s_sendtime - s_psendtime) / delta_sent;
   }
   o.Set("averageSendtime", Napi::Number::New(env, average_sendtime));
 
