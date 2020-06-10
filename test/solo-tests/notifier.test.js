@@ -156,6 +156,14 @@ describe('addon.Notifier functions', function () {
   });
 
   it('should receive an oboe keep-alive message', function (done) {
+    const version = aob.Config.getVersionString();
+    // if this is a custom build of oboe don't check this. x.x.1
+    // sets a giant timeout so no keepalive messages will be sent.
+    if ('0123456789'.indexOf(version[0]) < 0) {
+      done();
+      return
+    }
+
     this.timeout(65000);
     let counter = 0;
     const id = setInterval(function () {

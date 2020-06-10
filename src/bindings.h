@@ -9,13 +9,25 @@
 
 typedef int (*send_generic_span_t) (char*, uint16_t, oboe_span_params_t*);
 
-
-
-
 //
 // Event - work with oboe's oboe_event_t structure.
 //
 class Event : public Napi::ObjectWrap<Event> {
+
+static size_t total_created;      // the total number created
+static size_t total_destroyed;    // destructor has been called
+static size_t ptotal_destroyed;   // previous total destructed
+static size_t total_bytes_alloc;  // total allocated active events
+static size_t bytes_freed;        // allocated bytes freed
+static size_t small_active;       // small not yet destructed
+static size_t full_active;        // full events not yet destructed
+static uint64_t lifetime;         // cumulative microsecs lifetime
+static uint64_t plifetime;        // previous total lifetime
+static uint64_t s_sendtime;       // cumulative microsecs time until sent
+static uint64_t s_psendtime;      // previous sendtime
+static size_t actual_bytes_used;  // total number of event bytes @ send (event + used bson buffer)
+static size_t sent_count;         // total number of events sent
+static size_t s_psent_count;      // previous count of events sent
 
 public:
   Event(const Napi::CallbackInfo& info);
@@ -27,16 +39,28 @@ private:
 
   // the oboe event this instance manages
   oboe_event_t event;
-  // oboe status returned by constructor rather than throwing a JavaScript
-  // error. allows C++ code to do cleanup if necessary.
-  int init_status;
+  // keep track of whether oboe_event_init() has been called. if so
+  // then oboe_event_destroy() must be called to free the bson buffer.
+  bool initialized;
 
-public:
+  // stats
+
+  // size of this event (including bson buffer) but exclusive of c++
+  // object overhead. it is usually bigger than the actual number of
+  // bytes used by the event.
+  size_t bytes_allocated;
+
+  uint64_t creation_time;   // time event was created
+  uint64_t send_time;       // time event was sent
+
+ public:
   // methods that manipulate the instance's oboe_event_t
   Napi::Value addInfo(const Napi::CallbackInfo& info);
   Napi::Value addEdge(const Napi::CallbackInfo& info);
   Napi::Value setSampleFlagTo(const Napi::CallbackInfo& info);
   Napi::Value getSampleFlag(const Napi::CallbackInfo& info);
+
+  Napi::Value getBytesAllocated(const Napi::CallbackInfo& info);
 
   // formatting the strings
   Napi::Value toString(const Napi::CallbackInfo& info);
@@ -73,6 +97,8 @@ public:
 
   // C++ method to create an unitialized, invalid oboe event.
   static Napi::Object makeFromOboeMetadata(const Napi::Env env, oboe_metadata_t& omd);
+
+  static Napi::Value getEventStats(const Napi::CallbackInfo& info);
 
  private:
   static Napi::FunctionReference constructor;

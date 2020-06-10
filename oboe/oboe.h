@@ -599,6 +599,16 @@ const char* oboe_get_tracing_decisions_auth_message (int code);
 //
 #define OBOE_NOTIFIER_KEEP_ALIVE_INTERVAL_SEC 10
 
+//
+// these codes are returned by oboe_custom_metric_summary() and oboe_custom_metric_increment()
+//
+#define OBOE_CUSTOM_METRICS_OK 0
+#define OBOE_CUSTOM_METRICS_INVALID_COUNT 1
+#define OBOE_CUSTOM_METRICS_INVALID_REPORTER 2
+#define OBOE_CUSTOM_METRICS_TAG_LIMIT_EXCEEDED 3
+#define OBOE_CUSTOM_METRICS_STOPPING 4
+#define OBOE_CUSTOM_METRICS_QUEUE_LIMIT_EXCEEDED 5
+
 // token buckets
 enum TOKEN_BUCKETS {
   TOKEN_BUCKET_SAMPLING,    // for normal requests
