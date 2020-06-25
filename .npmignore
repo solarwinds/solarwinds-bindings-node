@@ -9,6 +9,7 @@ oboe/liboboe-1.0.so.0
 oboe/liboboe.so
 # development focused
 .vscode/
+.nyc_output/
 .npmignore
 .travis.yml
 CONTRIBUTING.md

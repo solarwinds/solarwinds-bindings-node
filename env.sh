@@ -36,8 +36,8 @@ fi
 # this function references the implicit parameters $PARAM and $PARAM2
 #
 get_new_oboe() {
-    # N.B. if installing a new version of oboe "npm run preinstall" must be
-    # run before building in order to set up symlinks.
+    # N.B. if installing a new version of oboe setup-liboboe.js must be
+    # run in order to set up symlinks.
     if [ -z "$PARAM" ]; then
         echo "Must supply a version (which will be used as the destination"
         echo "directory). N.B. the script is not bulletproof."
@@ -60,8 +60,9 @@ get_new_oboe() {
     # pretend to download for testing by adding any extra parameter
     PRETEND=$PARAM2
     PAIRS="liboboe-1.0-x86_64.so.0.0.0  liboboe-1.0-alpine-x86_64.so.0.0.0 liboboe-1.0-alpine-libressl-x86_64.so.0.0.0"
-    # earlier versions of oboe don't have multiple versions for alpine.
-    OKMISSING="liboboe-1.0-alpine-libressl-x86_64.so.0.0.0 liboboe-1.0-alpine-libressl-x86_64.so.0.0.0.sha256"
+    # a short window of oboe versions don't have multiple versions for alpine.
+    # OKMISSING needs a leading blank due to the concatenation to ERRORFILES.
+    OKMISSING=" liboboe-1.0-alpine-libressl-x86_64.so.0.0.0"
     # add the static files if using them.
     #PAIRS="$PAIRS  liboboe-static-alpine-x86_64.gz  liboboe-static-x86_64.gz"
     ERRORS=0

@@ -5,3 +5,4 @@ node_modules
 oboe-*
 oboe/liboboe-1.0.so.0
 oboe/liboboe.so
+.nyc_output/

@@ -29,15 +29,6 @@ describe('addon.reporter', function () {
     expect(status).equal(-1);
   })
 
-  it('should check if ready to sample', function () {
-    // wait 5 seconds max. This will fail if not using
-    // a real collector (collector or collector-stg).appoptics.com
-    const ready = r.isReadyToSample(5000);
-    expect(ready).be.a('number')
-
-    expect(ready).equal(1, `${env.APPOPTICS_COLLECTOR} should be ready`)
-  })
-
   it('should send a generic span', function () {
     const customName = 'this-is-a-name';
     const domain = 'bruce.com';

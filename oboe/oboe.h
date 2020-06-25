@@ -78,9 +78,9 @@ extern "C" {
  */
 #define OBOE_DEFAULT_EVENTS_FLUSH_INTERVAL 2
 /**
- * Default events flush batch size in KB.
+ * Default max request size in bytes.
  */
-#define OBOE_DEFAULT_EVENTS_FLUSH_BATCH_SIZE 2000
+#define OBOE_DEFAULT_MAX_REQUEST_SIZE_BYTES 3000000
 /**
  * Default EC2 metadata timeout in milliseconds
  */
@@ -115,6 +115,15 @@ extern "C" {
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 256
 #endif
+
+#if !defined(AO_GETPID)
+     #if defined(_WIN32)
+        #define AO_GETPID GetCurrentProcessId
+     #else
+        #define AO_GETPID getpid
+     #endif
+#endif
+
 
 // structs
 
@@ -159,7 +168,7 @@ typedef struct oboe_init_options {
     int max_transactions;                   // maximum number of transaction names to track
     int max_flush_wait_time;                // maximum wait time for flushing data before terminating in milli seconds
     int events_flush_interval;              // events flush timeout in seconds (threshold for batching messages before sending off)
-    int events_flush_batch_size;            // events flush batch size in KB (threshold for batching messages before sending off)
+    int max_request_size_bytes;             // limit max RPC request size
 
     const char *reporter;                   // the reporter to be used (ssl, upd, file, null)
     const char *host;                       // collector endpoint (reporter=ssl), udp address (reporter=udp), or file path (reporter=file)
@@ -173,6 +182,7 @@ typedef struct oboe_init_options {
     int file_single;                        // use single files in file reporter for each event
 
     int ec2_metadata_timeout;               // EC2 metadata timeout in milliseconds
+    const char *proxy;                      // HTTP proxy address and port to be used for the gRPC connection
 } oboe_init_options_t;
 
 typedef struct oboe_span_params {
@@ -280,6 +290,7 @@ int oboe_event_add_edge (oboe_event_t *, const oboe_metadata_t *);
 int oboe_event_add_edge_fromstr(oboe_event_t *, const char *, size_t);
 
 int oboe_event_add_timestamp(oboe_event_t *evt);
+int oboe_event_add_hostname(oboe_event_t *evt);
 
 /**
  * Send event message using the default reporter.
@@ -317,6 +328,7 @@ typedef int (*reporter_send_http_span)(void *, const char *, const char *, const
 typedef int (*reporter_add_custom_metric)(void *, const char *, const double, const int, const int, const char *, const int, const oboe_metric_tag_t*, const size_t);
 typedef int (*reporter_destroy)(void *);
 typedef int (*reporter_server_response)(void *);
+typedef const char* (*reporter_server_warning)(void *);
 typedef int (*reporter_profiling_interval)(void *);
 typedef struct oboe_reporter {
     void *              descriptor;     /*!< Reporter's context. */
@@ -333,6 +345,7 @@ typedef struct oboe_reporter {
     reporter_destroy    destroy;        /*!< Destroy the reporter - release all resources. */
     reporter_server_response getServerResponse;
     reporter_profiling_interval profilingInterval;
+    reporter_server_warning getServerWarning;
 } oboe_reporter_t;
 
 /**
@@ -442,14 +455,12 @@ void oboe_shutdown();
 
 #define OBOE_SETTINGS_VERSION 1
 #define OBOE_SETTINGS_MAGIC_NUMBER 0x6f626f65
-#define OBOE_SETTINGS_TYPE_SKIP 0
-#define OBOE_SETTINGS_TYPE_STOP 1
-#define OBOE_SETTINGS_TYPE_DEFAULT_SAMPLE_RATE 2
-#define OBOE_SETTINGS_TYPE_LAYER_SAMPLE_RATE 3
-#define OBOE_SETTINGS_TYPE_LAYER_APP_SAMPLE_RATE 4
-#define OBOE_SETTINGS_TYPE_LAYER_HTTPHOST_SAMPLE_RATE 5
-#define OBOE_SETTINGS_TYPE_CONFIG_STRING 6
-#define OBOE_SETTINGS_TYPE_CONFIG_INT 7
+#define OBOE_SETTINGS_TYPE_DEFAULT_SAMPLE_RATE 0
+#define OBOE_SETTINGS_TYPE_LAYER_SAMPLE_RATE 1
+#define OBOE_SETTINGS_TYPE_LAYER_APP_SAMPLE_RATE 2
+#define OBOE_SETTINGS_TYPE_LAYER_HTTPHOST_SAMPLE_RATE 3
+#define OBOE_SETTINGS_TYPE_CONFIG_STRING 4
+#define OBOE_SETTINGS_TYPE_CONFIG_INT 5
 #define OBOE_SETTINGS_FLAG_OK             0x0
 #define OBOE_SETTINGS_FLAG_INVALID        0x1
 #define OBOE_SETTINGS_FLAG_OVERRIDE       0x2
@@ -492,7 +503,7 @@ void oboe_shutdown();
 #define OBOE_SERVER_RESPONSE_OK 1
 #define OBOE_SERVER_RESPONSE_TRY_LATER 2
 #define OBOE_SERVER_RESPONSE_LIMIT_EXCEEDED 3
-#define OBOE_SERVER_RESPONSE_INVALID_API_KEY 4
+#define OBOE_SERVER_RESPONSE_INVALID_API_KEY 4    // deprecated
 #define OBOE_SERVER_RESPONSE_CONNECT_ERROR 5
 
 // these codes are used by oboe_span() and oboe_http_span()
@@ -558,6 +569,45 @@ const char* oboe_get_tracing_decisions_auth_message (int code);
 #define OBOE_INIT_SSL_CONFIG_AUTH 8
 #define OBOE_INIT_SSL_LOAD_CERT 9
 #define OBOE_INIT_SSL_REPORTER_CREATE 10
+
+//
+// these codes are returned by oboe_notifier_status()
+//
+#define OBOE_NOTIFIER_SHUTTING_DOWN -3
+#define OBOE_NOTIFIER_INITIALIZING -2
+#define OBOE_NOTIFIER_DISABLED -1
+#define OBOE_NOTIFIER_OK 0
+#define OBOE_NOTIFIER_SOCKET_PATH_TOO_LONG 1
+#define OBOE_NOTIFIER_SOCKET_CREATE 2
+#define OBOE_NOTIFIER_SOCKET_CONNECT 3
+#define OBOE_NOTIFIER_SOCKET_WRITE_FULL 4
+#define OBOE_NOTIFIER_SOCKET_WRITE_ERROR 5
+#define OBOE_NOTIFIER_SHUTDOWN_TIMED_OUT 6
+
+//
+// these codes are used for testing the notifier using oboe_notifier_test()
+//
+#define OBOE_NOTIFIER_TEST_KEEPALIVE 0
+#define OBOE_NOTIFIER_TEST_LOG 1
+#define OBOE_NOTIFIER_TEST_REMOTE_WARNING 2
+#define OBOE_NOTIFIER_TEST_REMOTE_CONFIG 3
+
+//
+// interval (in seconds) at which the notifier sends a keep-alive msg,
+// note that a keep-alive is only sent if no other message made it through
+// within the interval time
+//
+#define OBOE_NOTIFIER_KEEP_ALIVE_INTERVAL_SEC 10
+
+//
+// these codes are returned by oboe_custom_metric_summary() and oboe_custom_metric_increment()
+//
+#define OBOE_CUSTOM_METRICS_OK 0
+#define OBOE_CUSTOM_METRICS_INVALID_COUNT 1
+#define OBOE_CUSTOM_METRICS_INVALID_REPORTER 2
+#define OBOE_CUSTOM_METRICS_TAG_LIMIT_EXCEEDED 3
+#define OBOE_CUSTOM_METRICS_STOPPING 4
+#define OBOE_CUSTOM_METRICS_QUEUE_LIMIT_EXCEEDED 5
 
 // token buckets
 enum TOKEN_BUCKETS {
@@ -1059,6 +1109,9 @@ void oboe_timer_tool_wait(int usec);
 // Get profiling interval as configured remotely
 int oboe_get_profiling_interval();
 
+// Get server warning message
+const char* oboe_get_server_warning();
+
 // Regex tools
 void* oboe_regex_new_expression(const char* exprString);
 void oboe_regex_delete_expression(void* expression);
@@ -1066,6 +1119,12 @@ int oboe_regex_match(const char* string, void* expression);
 
 /* oboe internal stats for agents to consume */
 oboe_internal_stats_t* oboe_get_internal_stats();
+
+/* notifier related functions */
+int oboe_notifier_init(const char *socket_path);
+int oboe_notifier_stop(int blocking);
+int oboe_notifier_status();
+int oboe_notifier_test(int test_case, const char *test_str);
 
 #ifdef __cplusplus
 } // extern "C"

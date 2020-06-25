@@ -1,13 +1,5 @@
 #include "bindings.h"
 
-// Components
-#include "sanitizer.cc"
-#include "metadata.cc"
-#include "settings.cc"
-#include "config.cc"
-#include "event.cc"
-#include "reporter.cc"
-
 //
 // Initialize oboe
 //
@@ -38,7 +30,7 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
 
     // setup oboe's options structure
     oboe_init_options_t options;
-    options.version = 7;
+    options.version = 9;
 
     int setDefaultsStatus = oboe_init_options_set_defaults(&options);
     if (setDefaultsStatus > 0) {
@@ -112,7 +104,7 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
       processed.Set("eventsFlushBatchSize", eventsFlushBatchSize);
       if (eventsFlushBatchSize.IsNumber()) {
         valid.Set("eventsFlushBatchSize", eventsFlushBatchSize);
-        options.events_flush_batch_size = eventsFlushBatchSize.ToNumber().Int64Value();
+        options.max_request_size_bytes = eventsFlushBatchSize.ToNumber().Int64Value();
       }
     }
     if (o.Has("reporter")) {
@@ -206,6 +198,15 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
         options.ec2_metadata_timeout =  ec2MetadataTimeout.ToNumber().Int32Value();
       }
     }
+    if (o.Has("proxy")) {
+      Napi::Value proxy = o.Get("proxy");
+      processed.Set("proxy", proxy);
+      if (proxy.IsString()) {
+        valid.Set("proxy", proxy);
+        holdKeys[++kix] = proxy.ToString();
+        options.proxy = holdKeys[kix].c_str();
+      }
+    }
 
     if (skipInit) {
       return env.Null();
@@ -214,6 +215,29 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
     // initialize oboe
     int result = oboe_init(&options);
     return Napi::Number::New(env, result);
+}
+
+//
+// Check to see if oboe is ready to issue sampling decisions.
+//
+// returns coded status as below
+//
+Napi::Value isReadyToSample(const Napi::CallbackInfo& info) {
+  int ms = 0;  // milliseconds to wait
+  if (info[0].IsNumber()) {
+    ms = info[0].As<Napi::Number>().Int64Value();
+  }
+
+  int status;
+  status = oboe_is_ready(ms);
+
+  // UNKNOWN 0
+  // OK 1
+  // TRY_LATER 2
+  // LIMIT_EXCEEDED 3
+  // unused 4 (was INVALID_API_KEY)
+  // CONNECT_ERROR 5
+  return Napi::Number::New(info.Env(), status);
 }
 
 //
@@ -249,13 +273,14 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 
   // functions directly on the bindings object
   exports.Set("oboeInit", Napi::Function::New(env, oboeInit));
+  exports.Set("isReadyToSample", Napi::Function::New(env, isReadyToSample));
   exports.Set("o", Napi::Function::New(env, o));
 
   // classes and objects supplying different namespaces
   exports = Reporter::Init(env, exports);
   exports = Settings::Init(env, exports);
   exports = Sanitizer::Init(env, exports);
-  exports = Metadata::Init(env, exports);
+  exports = Notifier::Init(env, exports);
   exports = Event::Init(env, exports);
   exports = Config::Init(env, exports);
 

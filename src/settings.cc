@@ -254,11 +254,13 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   } else {
     omd.flags &= ~XTR_FLAGS_SAMPLED;
   }
-  Napi::Value v = Napi::External<oboe_metadata_t>::New(env, &omd);
-  Napi::Object md = Metadata::NewInstance(env, v);
+
+  Napi::Object event = Event::makeFromOboeMetadata(env, omd);
+  //Napi::Value v = Napi::External<oboe_metadata_t>::New(env, &omd);
+  //Napi::Object md = Metadata::NewInstance(env, v);
 
   // augment the return object
-  o.Set("metadata", md);
+  o.Set("metadata", event);
   o.Set("metadataFromXtrace", Napi::Boolean::New(env, have_metadata));
   //o.Set("status", Napi::Number::New(env, status));
   o.Set("edge", Napi::Boolean::New(env, edge));
