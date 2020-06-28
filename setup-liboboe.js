@@ -1,7 +1,7 @@
 'use strict'
 
-var fs = require('fs')
-var releaseInfo = require('linux-os-info')
+const fs = require('fs');
+const releaseInfo = require('linux-os-info');
 
 const dir = './oboe/'
 const soname = 'liboboe-1.0.so.0'
@@ -22,31 +22,34 @@ const oboeNames = {
 }
 
 function setupLiboboe (cb) {
-  const version = fs.readFileSync(dir + 'VERSION', 'utf8').slice(0, -1)
+  //const version = fs.readFileSync(dir + 'VERSION', 'utf8').slice(0, -1)
 
   releaseInfo().then(info => {
     if (info.platform !== 'linux') {
       const line1 = `AppopticsApm warning: the ${info.platform} platform is not yet supported`
-      const line2 = `see: https://docs.appoptics.com/kb/apm_tracing/supported_platforms/`
+      const line2 = 'see: https://docs.appoptics.com/kb/apm_tracing/supported_platforms/';
       const line3 = 'Contact support@appoptics.com if this is unexpected.'
       const bar = '='.repeat([line1, line2, line3].reduce((m, l) => l.length > m ? l.length : m, 0))
+      /* eslint-disable no-console */
       console.log(bar)
       console.log(line1)
       console.log(line2)
       console.log(line3)
       console.log(bar)
       process.exit(1)
+      /* eslint-enable no-console */
     }
     let versionKey = 'linux';
     if (info.id === 'alpine') {
+      versionKey = 'alpine';
       // if greater than version 3.9 then use alpine with openSSL. if less than 3.9
       // use the libreSSL version.
-      const parts = info.version_id.split('.').map(p => parseInt(p));
-      if (parts[0] > 3) {
-        versionKey = 'alpine';
-      } else {
-        versionKey = parts[0] === 3 && parts[1] >= 9 ? 'alpine' : 'alpineLibreSSL';
-      }
+      //const parts = info.version_id.split('.').map(p => parseInt(p));
+      //if (parts[0] > 3) {
+      //  versionKey = 'alpine';
+      //} else {
+      //  versionKey = parts[0] === 3 && parts[1] >= 9 ? 'alpine' : 'alpineLibreSSL';
+      //}
     }
     return versionKey;
   }).then(linux => {
@@ -75,17 +78,17 @@ function setupLiboboe (cb) {
 
     // delete the unused file if indicated. ignore errors.
     if (deleteUnused) {
-      let unusedOboe = oboeNames[linux === 'alpine' ? 'linux' : 'alpine']
+      const unusedOboe = oboeNames[linux === 'alpine' ? 'linux' : 'alpine']
       // do async so errors can easily be ignored
       fs.unlink(dir + unusedOboe, function (err) {
-        console.log(err)
+        console.log(err); // eslint-disable-line no-console
         process.exit(0)
       })
     }
     process.exit(0)
 
   }).catch(e => {
-    console.error(e)
+    console.error(e); // eslint-disable-line no-console
     process.exit(1)
   })
 }
@@ -102,7 +105,7 @@ function isSymbolicLink (name) {
 }
 
 if (!module.parent) {
-  var i = setInterval(function() {}, 100)
+  const i = setInterval(function () {}, 100)
   setupLiboboe(function () {clearInterval(i)})
 } else {
   module.exports = setupLiboboe
