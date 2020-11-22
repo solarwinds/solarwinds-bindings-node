@@ -463,6 +463,24 @@ Napi::Value sendMetric (const Napi::CallbackInfo& info) {
 }
 
 //
+// lambda additions
+//
+Napi::Value flush (const Napi::CallbackInfo& info) {
+  int status = oboe_reporter_flush();
+  // {OK: 0, TOO_BIG: 1, BAD_UTF8: 2, NO_REPORTER: 3, NOT_READY: 4}
+  return Napi::Number::New(info.Env(), status);
+}
+
+Napi::Value getType (const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const char* type = oboe_get_reporter_type();
+  if (!type) {
+    return env.Undefined();
+  }
+  return Napi::String::New(env, type);
+}
+
+//
 // Initialize the module.
 //
 namespace Reporter {
@@ -477,6 +495,9 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 
   module.Set("sendMetric", Napi::Function::New(env, sendMetric));
   module.Set("sendMetrics", Napi::Function::New(env, sendMetrics));
+
+  module.Set("flush", Napi::Function::New(env, flush));
+  module.Set("getType", Napi::Function::New(env, getType));
 
   exports.Set("Reporter", module);
 

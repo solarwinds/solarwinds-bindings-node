@@ -1,5 +1,3 @@
-'use strict';
-
 const bindings = require('../')
 const expect = require('chai').expect;
 
@@ -33,7 +31,7 @@ const goodOptions = {
   proxy: 'http://proxy-host:10101',
 }
 
-describe('addon.oboeInit()', function () {
+describe('bindings.oboeInit()', function () {
 
   it('should handle good options values', function () {
     const details = {};
@@ -123,44 +121,5 @@ describe('addon.oboeInit()', function () {
     expect(ready).be.a('number')
 
     expect(ready).equal(1, `${env.APPOPTICS_COLLECTOR} should be ready`)
-  })
-
-  it('should init without losing memory', function (done) {
-    // node 8, 10 completes in < 30 seconds but node 12 takes longer
-    this.timeout(40000);
-    const warmup = 1000000;
-    const checkCount = 1000000;
-    const options = Object.assign({}, goodOptions);
-
-    // garbage collect if available
-    const gc = typeof global.gc === 'function' ? global.gc : () => null;
-
-    // allow the system to come to a steady state. garbage collection makes it
-    // hard to isolate memory losses.
-    const start1 = process.memoryUsage().rss; // eslint-disable-line no-unused-vars
-    for (let i = warmup; i > 0; i--) {
-      bindings.oboeInit(options);
-    }
-
-    gc();
-
-    // now see if the code loses memory. if it's less than 1 byte per iteration
-    // then it's not losing memory for all practical purposes.
-    const start2 = process.memoryUsage().rss + checkCount;
-    for (let i = checkCount; i > 0; i--) {
-      bindings.oboeInit(options, {skipInit: true});
-    }
-
-    gc();
-
-    // give garbage collection a window to kick in.
-    setTimeout(function () {
-      const finish = process.memoryUsage().rss;
-      expect(finish).lte(start2, `should execute ${checkCount} metrics without memory growth`);
-      //console.log('s1', start1, 's2', start2 - checkCount, 'fin', finish);
-      done()
-    }, 250)
-
-    gc();
-  })
+  });
 })

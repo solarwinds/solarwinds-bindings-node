@@ -38,6 +38,7 @@ enum OBOE_DEBUG_MODULE {
     OBOE_MODULE_REPORTER_FILE,      /*!< File reporter */
     OBOE_MODULE_REPORTER_UDP,       /*!< UDP (Tracelyzer) reporter */
     OBOE_MODULE_REPORTER_SSL,       /*!< SSL reporter */
+    OBOE_MODULE_REPORTER_LAMBDA,    /*!< lambda wrapper */
     OBOE_MODULE_APACHE,             /*!< Apache webserver */
     OBOE_MODULE_NGINX,              /*!< Nginx webserver */
     OBOE_MODULE_PHP,                /*!< PHP interpreter */

@@ -222,10 +222,10 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   //}
 
   // ask for oboe's decisions on life, the universe, and everything.
-  out.version = 2;
+  out.version = 3;
   int status = oboe_tracing_decisions(&in, &out);
 
-  // version 2 of the oboe_tracing_decisions_out structure returns a
+  // version 2+ of the oboe_tracing_decisions_out structure returns a
   // pointer to the message string for all codes.
   //
   // -2 tracing-mode-disabled
@@ -268,6 +268,8 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   o.Set("doMetrics", Napi::Boolean::New(env, out.do_metrics));
   o.Set("source", Napi::Number::New(env, out.sample_source));
   o.Set("rate", Napi::Number::New(env, out.sample_rate));
+  o.Set("tokenBucketRate", Napi::Number::New(env, out.token_bucket_rate));
+  o.Set("tokenBucketCapacity", Napi::Number::New(env, out.token_bucket_capacity));
 
   return o;
 }

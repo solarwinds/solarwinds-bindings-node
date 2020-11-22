@@ -30,7 +30,7 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
 
     // setup oboe's options structure
     oboe_init_options_t options;
-    options.version = 9;
+    options.version = 10;
 
     int setDefaultsStatus = oboe_init_options_set_defaults(&options);
     if (setDefaultsStatus > 0) {
@@ -172,7 +172,7 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
       processed.Set("tokenBucketCapacity", tokenBucketCapacity);
       if (tokenBucketCapacity.IsNumber()) {
         valid.Set("tokenBucketCapacity", tokenBucketCapacity);
-        options.token_bucket_capacity = tokenBucketCapacity.ToNumber().Int64Value();
+        options.token_bucket_capacity = tokenBucketCapacity.ToNumber().DoubleValue();
       }
     }
     if (o.Has("tokenBucketRate")) {
@@ -180,7 +180,7 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
       processed.Set("tokenBucketRate", tokenBucketRate);
       if (tokenBucketRate.IsNumber()) {
         valid.Set("tokenBucketRate", tokenBucketRate);
-        options.token_bucket_rate = tokenBucketRate.ToNumber().Int64Value();
+        options.token_bucket_rate = tokenBucketRate.ToNumber().DoubleValue();
       }
     }
     // oneFilePerEvent maps to "file_single" field.

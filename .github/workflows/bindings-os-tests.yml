@@ -1,0 +1,48 @@
+name: bindings-os-tests extend tests to alpine & centos
+on: [workflow_dispatch]
+
+jobs:
+  test-bindings-on-alpine:
+    runs-on: ubuntu-latest
+    name: install and test bindings on alpine
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: install and test bindings
+        id: alpine
+        uses: ./.github/actions/alpine
+        with:
+          branch-to-test: 'github-actions'
+          ao-token-prod: ${{secrets.AO_TOKEN_PROD}}
+      - name: show operating system details
+        run: echo "/etc/os-release ${{steps.alpine.outputs.os-details}}"
+      - name: get install production results
+        run: echo "npm install --production --unsafe-perm ${{steps.alpine.outputs.install-prod}}"
+      - name: get install dev results
+        run: echo "npm install --unsafe-perm ${{steps.alpine.outputs.install-dev}}"
+      - name: get tests passed count
+        run: echo "tests passed ${{steps.alpine.outputs.tests-passed-count}}"
+      - name: get tests failed
+        run: echo "tests failed ${{steps.alpine.outputs.tests-failed-count}} - ${{steps.alpine.outputs.tests-failed}}"
+  test-bindings-on-centos:
+    runs-on: ubuntu-latest
+    name: install and test bindings on centos
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: install and test bindings
+        id: centos
+        uses: ./.github/actions/centos
+        with:
+          branch-to-test: 'github-actions'
+          ao-token-prod: ${{secrets.AO_TOKEN_PROD}}
+      - name: show operating system details
+        run: echo "/etc/os-release ${{steps.centos.outputs.os-details}}"
+      - name: get install production results
+        run: echo "npm install --production --unsafe-perm ${{steps.centos.outputs.install-prod}}"
+      - name: get install dev results
+        run: echo "npm install --unsafe-perm ${{steps.centos.outputs.install-dev}}"
+      - name: get tests passed count
+        run: echo "tests passed ${{steps.centos.outputs.tests-passed-count}}"
+      - name: get tests failed
+        run: echo "tests failed ${{steps.centos.outputs.tests-failed-count}} - ${{steps.centos.outputs.tests-failed}}"

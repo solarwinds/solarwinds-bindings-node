@@ -1,5 +1,3 @@
-'use strict'
-
 const bindings = require('..')
 const expect = require('chai').expect
 
@@ -83,6 +81,7 @@ describe('addon.settings', function () {
     const xtrace = event.toString();
     const settings = bindings.Settings.getTraceSettings({xtrace});
 
+    expect(settings).property('message', 'ok');
     expect(settings).property('status', -1)       // -1 means non-sampled xtrace
     expect(settings).property('doSample', false);
     expect(settings.metadata.toString()).equal(xtrace);
@@ -106,6 +105,8 @@ describe('addon.settings', function () {
         expect(settings).property('edge', true)
         expect(settings.metadata).instanceof(bindings.Event)
         expect(settings).property('rate', bindings.MAX_SAMPLE_RATE);
+        expect(settings).property('tokenBucketRate').exist;
+        expect(settings).property('tokenBucketCapacity').exist;
         // the following depends on whether this suite is run standalone or with other
         // test files.
         expect(settings.source).oneOf([1, 6]);

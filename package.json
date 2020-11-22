@@ -1,6 +1,9 @@
 {
   "name": "appoptics-bindings",
   "version": "10.0.0",
+  "appoptics": {
+    "version-suffix": "lambda-1"
+  },
   "description": "Bindings to liboboe for the AppOptics APM agent",
   "author": "Bruce A. MacNaughton <bruce@solarwinds.cloud>",
   "contributors": [
@@ -9,7 +12,7 @@
   ],
   "main": "index.js",
   "gypfile": true,
-  "license": "SEE LICENSE IN https://docs.appoptics.com/kb/apm_tracing/librato-open-license/",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/appoptics/appoptics-bindings-node"
@@ -30,8 +33,8 @@
     "node-gyp": "^4.0.0"
   },
   "devDependencies": {
+    "axios": "^0.21.0",
     "benchmark": "^2.1.4",
-    "chai": "^4.2.0",
-    "segfault-handler": "^1.2.0"
+    "chai": "^4.2.0"
   }
 }

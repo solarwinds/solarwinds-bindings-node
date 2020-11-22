@@ -103,6 +103,7 @@ extern "C" {
 #define OBOE_REPORTER_PROTOCOL_UDP "udp"
 #define OBOE_REPORTER_PROTOCOL_SSL "ssl"
 #define OBOE_REPORTER_PROTOCOL_NULL "null"
+#define OBOE_REPORTER_PROTOCOL_LAMBDA "lambda"
 
 /** Maximum reasonable length of an arguments string for configuring a reporter. */
 #define OBOE_REPORTER_ARGS_SIZE 4000
@@ -170,15 +171,15 @@ typedef struct oboe_init_options {
     int events_flush_interval;              // events flush timeout in seconds (threshold for batching messages before sending off)
     int max_request_size_bytes;             // limit max RPC request size
 
-    const char *reporter;                   // the reporter to be used (ssl, upd, file, null)
+    const char *reporter;                   // the reporter to be used (ssl, upd, file, null, lambda)
     const char *host;                       // collector endpoint (reporter=ssl), udp address (reporter=udp), or file path (reporter=file)
     const char *service_key;                // the service key
     const char *trusted_path;               // path to the SSL certificate (only for ssl)
     int buffer_size;                        // size of the message buffer
     int trace_metrics;                      // flag indicating if trace metrics reporting should be enabled (default) or disabled
     int histogram_precision;                // the histogram precision (only for ssl)
-    int token_bucket_capacity;              // custom token bucket capacity
-    int token_bucket_rate;                  // custom token bucket rate
+    double token_bucket_capacity;           // custom token bucket capacity
+    double token_bucket_rate;               // custom token bucket rate
     int file_single;                        // use single files in file reporter for each event
 
     int ec2_metadata_timeout;               // EC2 metadata timeout in milliseconds
@@ -229,6 +230,10 @@ typedef struct oboe_tracing_decisions_out {
     int auth_status;
     const char *auth_message;
     const char *status_message;
+
+    // v3
+    double token_bucket_rate;
+    double token_bucket_capacity;
 } oboe_tracing_decisions_out_t;
 
 typedef struct oboe_internal_stats {
@@ -330,6 +335,7 @@ typedef int (*reporter_destroy)(void *);
 typedef int (*reporter_server_response)(void *);
 typedef const char* (*reporter_server_warning)(void *);
 typedef int (*reporter_profiling_interval)(void *);
+typedef int (*reporter_flush)(void *);
 typedef struct oboe_reporter {
     void *              descriptor;     /*!< Reporter's context. */
     reporter_ready      eventReady;     /*!< Check if the reporter is ready for another trace. */
@@ -346,6 +352,7 @@ typedef struct oboe_reporter {
     reporter_server_response getServerResponse;
     reporter_profiling_interval profilingInterval;
     reporter_server_warning getServerWarning;
+    reporter_flush flush;
 } oboe_reporter_t;
 
 /**
@@ -420,6 +427,21 @@ void oboe_reporter_disconnect();    /* TODO: Need implementation. */
 void oboe_reporter_reconnect();     /* TODO: Need implementation. */
 
 /**
+ * tell reporter to flush all messages that are currently buffered
+ */
+int oboe_reporter_flush();
+
+/**
+ * get the reporter type used
+ */
+const char* oboe_get_reporter_type();
+
+/**
+ * Check if system is AWS Lambda
+ */
+int oboe_is_lambda();
+
+/**
  * Check if oboe is ready
  *
  * Ready means reporters are ready and settings have been received
@@ -489,10 +511,6 @@ void oboe_shutdown();
 #define OBOE_TRACE_ALWAYS  1    // deprecated: do not use, only here for backward compatibility
 #define OBOE_TRACE_DISABLED   0
 #define OBOE_TRACE_ENABLED  1
-
-#if defined _WIN32
-    #pragma pack(push, 1)
-#endif
 
 #define OBOE_SEND_EVENT 0
 #define OBOE_SEND_STATUS 1
@@ -569,6 +587,7 @@ const char* oboe_get_tracing_decisions_auth_message (int code);
 #define OBOE_INIT_SSL_CONFIG_AUTH 8
 #define OBOE_INIT_SSL_LOAD_CERT 9
 #define OBOE_INIT_SSL_REPORTER_CREATE 10
+#define OBOE_INIT_SSL_MISSING_KEY 11
 
 //
 // these codes are returned by oboe_notifier_status()
@@ -608,6 +627,15 @@ const char* oboe_get_tracing_decisions_auth_message (int code);
 #define OBOE_CUSTOM_METRICS_TAG_LIMIT_EXCEEDED 3
 #define OBOE_CUSTOM_METRICS_STOPPING 4
 #define OBOE_CUSTOM_METRICS_QUEUE_LIMIT_EXCEEDED 5
+
+//
+// these codes are returned by oboe_reporter_flush()
+//
+#define OBOE_REPORTER_FLUSH_OK 0
+#define OBOE_REPORTER_FLUSH_METRIC_TOO_BIG 1
+#define OBOE_REPORTER_FLUSH_BAD_UTF8 2
+#define OBOE_REPORTER_FLUSH_NO_REPORTER 3
+#define OBOE_REPORTER_FLUSH_REPORTER_NOT_READY 4
 
 // token buckets
 enum TOKEN_BUCKETS {
@@ -1019,16 +1047,6 @@ extern int oboe_config_get_revision();
  * Returns the complete VERSION string or null
  */
 const char* oboe_config_get_version_string();
-
-/*
- * Generate UUID for RUM
- *
- * @param access_key User Access Key
- * @param uuid_length Size of the UUID to generate
- * @param digest Pointer to array where the digest value gets stored
- * @param dlen Number of bytes of data stored
- */
-void oboe_rum_create_digest(const char* access_key, unsigned int uuid_length, unsigned char* digest, unsigned int *dlen);
 
 // Span reporting
 

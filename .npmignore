@@ -4,6 +4,8 @@ test/
 archived/
 # archived versions of oboe
 oboe-*
+# don't distribute the change log
+oboe/ChangeLog
 # links created by setup-liboboe
 oboe/liboboe-1.0.so.0
 oboe/liboboe.so

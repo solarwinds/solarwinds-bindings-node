@@ -294,8 +294,8 @@ Napi::Value Event::addInfo(const Napi::CallbackInfo& info) {
     std::string key = info[0].As<Napi::String>();
 
     if (info[1].IsBoolean()) {
-        bool v = info[1].As<Napi::Boolean>().Value();
-        status = oboe_event_add_info_bool(event, key.c_str(), v);
+      bool v = info[1].As<Napi::Boolean>().Value();
+      status = oboe_event_add_info_bool(event, key.c_str(), v);
     } else if (info[1].IsNumber()) {
       const double v = info[1].As<Napi::Number>();
       double v_int;
@@ -309,8 +309,9 @@ Napi::Value Event::addInfo(const Napi::CallbackInfo& info) {
       }
     } else if (info[1].IsString()) {
       std::string str = info[1].As<Napi::String>();
-      // binary is not really binary, it's utf8.
-      status = oboe_event_add_info_binary(event, key.c_str(), str.c_str(), str.length());
+      // binary is not really binary, it's utf8. but we don't want any embedded nulls so
+      // just use oboe_event_add_info.
+      status = oboe_event_add_info(event, key.c_str(), str.c_str());
     } else {
       Napi::TypeError::New(env, "Value must be a boolean, string or number")
           .ThrowAsJavaScriptException();
@@ -325,7 +326,7 @@ Napi::Value Event::addInfo(const Napi::CallbackInfo& info) {
     }
 
     if (status < 0) {
-        Napi::Error::New(env, "Failed to add info").ThrowAsJavaScriptException();
+      Napi::Error::New(env, "Failed to add info").ThrowAsJavaScriptException();
     }
 
     return Napi::Boolean::New(env, status == 0);
