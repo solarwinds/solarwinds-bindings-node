@@ -328,7 +328,7 @@ struct oboe_reporter;
 typedef int (*reporter_ready)(void *);
 typedef int (*reporter_is_within_limit)(void *, const char *, const char *);
 typedef ssize_t (*reporter_send)(void *, int, const char *, size_t);
-typedef int (*reporter_send_span)(void *, const char *, const char *, const int64_t);
+typedef int (*reporter_send_span)(void *, const char *, const char *, const int64_t, const int);
 typedef int (*reporter_send_http_span)(void *, const char *, const char *, const int64_t, const int, const char *, const int);
 typedef int (*reporter_add_custom_metric)(void *, const char *, const double, const int, const int, const char *, const int, const oboe_metric_tag_t*, const size_t);
 typedef int (*reporter_destroy)(void *);
@@ -632,7 +632,7 @@ const char* oboe_get_tracing_decisions_auth_message (int code);
 // these codes are returned by oboe_reporter_flush()
 //
 #define OBOE_REPORTER_FLUSH_OK 0
-#define OBOE_REPORTER_FLUSH_METRIC_TOO_BIG 1
+#define OBOE_REPORTER_FLUSH_METRIC_ERROR 1
 #define OBOE_REPORTER_FLUSH_BAD_UTF8 2
 #define OBOE_REPORTER_FLUSH_NO_REPORTER 3
 #define OBOE_REPORTER_FLUSH_REPORTER_NOT_READY 4
@@ -1143,6 +1143,7 @@ int oboe_notifier_init(const char *socket_path);
 int oboe_notifier_stop(int blocking);
 int oboe_notifier_status();
 int oboe_notifier_test(int test_case, const char *test_str);
+
 
 #ifdef __cplusplus
 } // extern "C"

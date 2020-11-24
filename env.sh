@@ -219,6 +219,13 @@ elif [ "$ARG" = "install-oboe-version" ]; then
 
 else
     echo "ERROR $ARG invalid"
+    echo "valid arguments are (VERSION like 10.1.0):"
+    echo "  fetch-oboe-version VERSION (downloads a version but doesn't install)"
+    echo "  install-local-oboe-version VERSION (installs an already downloaded version)"
+    echo "  install-oboe-version VERSION (this fetches and installs)"
+    echo "  udp, stg, prod, debug"
+    echo "when fetching SOURCE=STAGING definition will download from oboe staging area;"
+    echo "otherwise it will download from the production site."
 fi
 
 

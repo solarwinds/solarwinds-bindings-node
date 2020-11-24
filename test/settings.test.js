@@ -93,23 +93,30 @@ describe('addon.settings', function () {
     const event = new bindings.Event(bindings.Event.makeRandom(1));
     const xtraceString = event.toString();
     let counter = 20
+    // test for old behavior and "is-continued" behavior
+    const [maj, min] = bindings.Config.getVersionString().split('.').map(n => Number(n));
+    const negative = (maj == 10 && min >= 1) || (maj > 10);
     // poll to give time for the SSL connection to complete. it should have
     // been waited on in before() but it's possible for the connection to break.
     const id = setInterval(function () {
       const settings = bindings.Settings.getTraceSettings({xtrace: xtraceString});
-      if (--counter <= 0 || typeof settings === 'object' && settings.source !== 2) {
+      if (--counter <= 0 || typeof settings === 'object' && settings.source !== (negative ? -1 : 2)) {
         clearInterval(id)
         expect(settings).property('status', 0);
         expect(settings).property('doSample', true)
         expect(settings).property('doMetrics', true)
         expect(settings).property('edge', true)
         expect(settings.metadata).instanceof(bindings.Event)
-        expect(settings).property('rate', bindings.MAX_SAMPLE_RATE);
+        expect(settings).property('rate', negative ? -1 : bindings.MAX_SAMPLE_RATE);
         expect(settings).property('tokenBucketRate').exist;
         expect(settings).property('tokenBucketCapacity').exist;
         // the following depends on whether this suite is run standalone or with other
         // test files.
-        expect(settings.source).oneOf([1, 6]);
+        if (negative) {
+          expect(settings.source).equal(-1);
+        } else {
+          expect(settings.source).oneOf([1, 6]);
+        }
 
         if (counter < 0) {
           done(new Error('getTraceSettings() never returned valid settings'))
