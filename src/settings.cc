@@ -259,6 +259,12 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   //Napi::Value v = Napi::External<oboe_metadata_t>::New(env, &omd);
   //Napi::Object md = Metadata::NewInstance(env, v);
 
+  // oboe sets these if not continued, for when that change will be made
+  //out->sample_rate = -1;
+  //out->sample_source = -1;
+  //out->token_bucket_rate = -1;
+  //out->token_bucket_capacity = -1;
+
   // augment the return object
   o.Set("metadata", event);
   o.Set("metadataFromXtrace", Napi::Boolean::New(env, have_metadata));

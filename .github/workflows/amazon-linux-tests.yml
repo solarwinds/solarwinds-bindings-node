@@ -1,4 +1,4 @@
-name: os-tests for alpine and centos
+name: test on amazonlinux
 
 # https://github.community/t/trigger-workflow-only-on-pull-request-merge/17359
 on:
@@ -8,24 +8,18 @@ on:
   # "on pull_request merge to master"
   push:
     branches:
-      - master
+      - lambda
+      - gh-actions-2
 
 jobs:
   test-image-builder:
     strategy:
       matrix:
         os-version: [
-        'node:10-alpine3.9', 'node:10-alpine3.10', 'node:10-alpine3.11',
-        'node:12-alpine3.9', 'node:12-alpine3.10', 'node:12-alpine3.11', 'node:12-alpine3.12',
-        'node:14-alpine3.10', 'node:14-alpine3.11', 'node:14-alpine3.12',
-        'node:15-alpine3.12',
-        'centos:7+node:10', 'centos:8+node:10',
-        'centos:7+node:12', 'centos:8+node:12',
-        'centos:7+node:14', 'centos:8+node:14',
-        'centos:8+node:15'
+          'amazonlinux:2+node:10', 'amazonlinux:2+node:12'
         ]
     runs-on: ubuntu-latest
-    # (os-version) is appended, so "test" appears "test (node:10-alpine3.9)"
+    # (os-version) is appended, so "test" appears "test (amazonlinux:2+node:10)"
     name: test
     steps:
     # To use a repo-specific action you must check out the repository

@@ -1,0 +1,20 @@
+name: 'run tests'
+description: 'create a container that creates the container to run tests'
+inputs:
+  branch-to-test:  # id of input
+    description: 'which branch in the repo should be tested'
+    required: true
+    default: 'master'
+  ao-token-prod:
+    description: 'appoptics token valid in production environment'
+    required: true
+  node-image:
+    description: 'docker image that will be used to build the test container'
+runs:
+  using: 'docker'
+  image: 'generic.Dockerfile'
+  # these have to be in the same order as they are expected in entrypoint.sh
+  args:
+    - ${{inputs.node-image}}
+    - ${{inputs.branch-to-test}}
+    - ${{inputs.ao-token-prod}}
