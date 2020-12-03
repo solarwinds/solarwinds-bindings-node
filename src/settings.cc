@@ -185,15 +185,6 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     //showOut = o.Get("showOut").ToBoolean().Value();
   }
 
-  // if no xtrace or the xtrace was bad then construct new metadata.
-  // specifying the edge as true makes no sense in this case because
-  // there is no previous metadata.
-  if (!have_metadata) {
-    edge = false;
-    oboe_metadata_init(&omd);
-    oboe_metadata_random(&omd);
-  }
-
   // apply default or user specified values.
   in.version = 2;
   in.service_name = "";
@@ -244,6 +235,17 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   // status > 0 is an error return; do no additional processing.
   if (status > 0) {
     return o;
+  }
+
+  // if an x-trace was not used by oboe to make the decision then
+  // create metadata. oboe sets sample_source to -1 when it was a
+  // "continue" decision, i.e., the trace was continued using the
+  // supplied x-trace (no trace decision was made).
+  have_metadata = out.sample_source == -1;
+  if (!have_metadata) {
+    edge = false;
+    oboe_metadata_init(&omd);
+    oboe_metadata_random(&omd);
   }
 
   // now we have oboe_metadata_t either from a supplied xtrace id or from
