@@ -17,7 +17,7 @@
 
 const axios = require('axios');
 
-// simple syntax ./gh-actions.js workflow-name workflow-action workflow-specific-arguments
+// simple syntax ./gh-actions.js workflow-name action action-specific-arguments
 // workflow-action: list-runs
 
 
@@ -27,6 +27,7 @@ const actions = {
   'list-runs': listRuns,
   'get-run': getRun,
   'delete-run': deleteRun,
+  'delete-runs': deleteRun,
   'initiate': initiate,
 };
 
