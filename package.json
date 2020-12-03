@@ -1,6 +1,6 @@
 {
   "name": "appoptics-bindings",
-  "version": "10.0.0",
+  "version": "10.1.0",
   "appoptics": {
     "version-suffix": "lambda-1"
   },
@@ -28,7 +28,7 @@
   "dependencies": {
     "bindings": "~1.2.1",
     "linux-os-info": "^2.0.0",
-    "nan": "^2.14.1",
+    "nan": "^2.14.2",
     "node-addon-api": "^2.0.0",
     "node-gyp": "^4.0.0"
   },
