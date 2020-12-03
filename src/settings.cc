@@ -241,7 +241,7 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   // create metadata. oboe sets sample_source to -1 when it was a
   // "continue" decision, i.e., the trace was continued using the
   // supplied x-trace (no trace decision was made).
-  have_metadata = out.sample_source == -1;
+  have_metadata = out.sample_source == OBOE_SAMPLE_RATE_SOURCE_CONTINUED;
   if (!have_metadata) {
     edge = false;
     oboe_metadata_init(&omd);
