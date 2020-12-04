@@ -1,6 +1,6 @@
 {
   "name": "appoptics-bindings",
-  "version": "10.1.0",
+  "version": "10.1.0-rc",
   "appoptics": {
     "version-suffix": "lambda-1"
   },
