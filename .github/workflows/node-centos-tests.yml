@@ -1,4 +1,4 @@
-name: os-tests for alpine and centos
+name: centos-node-version matrix
 
 # https://github.community/t/trigger-workflow-only-on-pull-request-merge/17359
 on:
@@ -11,21 +11,20 @@ on:
       - master
 
 jobs:
-  test-image-builder:
+  test-combinations:
     strategy:
+      # github actions seems to fail with random network problems. don't fail all executions
+      # when one fails.
+      fail-fast: false
       matrix:
         os-version: [
-        'node:10-alpine3.9', 'node:10-alpine3.10', 'node:10-alpine3.11',
-        'node:12-alpine3.9', 'node:12-alpine3.10', 'node:12-alpine3.11', 'node:12-alpine3.12',
-        'node:14-alpine3.10', 'node:14-alpine3.11', 'node:14-alpine3.12',
-        'node:15-alpine3.12',
         'centos:7+node:10', 'centos:8+node:10',
         'centos:7+node:12', 'centos:8+node:12',
         'centos:7+node:14', 'centos:8+node:14',
         'centos:8+node:15'
         ]
     runs-on: ubuntu-latest
-    # (os-version) is appended, so "test" appears "test (node:10-alpine3.9)"
+    # (os-version) is appended, so "test" appears "test (centos:8+node:14)"
     name: test
     steps:
     # To use a repo-specific action you must check out the repository
@@ -34,21 +33,27 @@ jobs:
     # jump through a little hoop to get the branch by itself
     - name: get branch
       run: echo "gh_branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-    - name: Create specific alpine/node image
+    #
+    # pass the "with" parameters to action.yml's inputs which
+    # become generic.sh's positional arguments. those are
+    # used to build the os-specific docker containers in image-actions.
+    #
+    - name: Create specific os/node image
       id: generic
       uses: ./.github/actions/generic
       with:
+        script-to-run: node-os-tests.sh
         # specify testing the branch that this was invoked for
-        branch-to-test: ${{env.gh_branch}}
+        branch: ${{env.gh_branch}}
         ao-token-prod: ${{secrets.AO_TOKEN_PROD}}
         node-image: ${{matrix.os-version}}
     # Use the output from the `generic` step
     - name: show info, context, and debugging information
       run: |
-        echo "all args 1 ${{steps.generic.outputs.all-args}}"
-        echo "all args 2 ${{steps.generic.outputs.all-args-2}}"
+        echo "all args 1 ${{steps.generic.outputs.all-args-generic}}"
+        echo "all args 2 ${{steps.generic.outputs.all-args-in-script}}"
         echo "os ${{steps.generic.outputs.os-details}}"
-        echo "branch ${{steps.generic.outputs.branch-to-test}}"
+        echo "branch ${{steps.generic.outputs.branch}}"
     - name: test results
       run: |
         echo "npm install --production --unsafe-perm: ${{steps.generic.outputs.install-prod}}"

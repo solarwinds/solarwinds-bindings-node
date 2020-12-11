@@ -117,7 +117,7 @@ describe('bindings.oboeInit()', function () {
   it('should check if ready to sample', function () {
     // wait 5 seconds max. This will fail if not using
     // a real collector (collector or collector-stg).appoptics.com
-    const ready = bindings.isReadyToSample(5000);
+    const ready = bindings.isReadyToSample(60000);
     expect(ready).be.a('number')
 
     expect(ready).equal(1, `${env.APPOPTICS_COLLECTOR} should be ready`)

@@ -1,17 +1,33 @@
 {
-  "name": "appoptics-bindings",
-  "version": "10.1.0-rc",
+  "name": "@appoptics/apm-bindings",
+  "os": [
+    "!darwin",
+    "!win32"
+  ],
+  "version": "11.0.0",
   "appoptics": {
     "version-suffix": "lambda-1"
   },
-  "description": "Bindings to liboboe for the AppOptics APM agent",
-  "author": "Bruce A. MacNaughton <bruce@solarwinds.cloud>",
+  "description": "Bindings for appoptics-apm with pre-built support",
+  "author": "Bruce A. MacNaughton <bruce.macnaughton@solarwinds.com>",
   "contributors": [
     "Stephen Belanger <admin@stephenbelanger.com>",
     "Silvio Fernandes <silviofernandes.developer@gmail.com"
   ],
   "main": "index.js",
   "gypfile": true,
+  "binary": {
+    "napi_versions": [
+      4
+    ],
+    "module_name": "apm_bindings",
+    "module_path": "./dist/{node_napi_label}",
+    "staging_host": "https://apm-bruce-staging.s3.amazonaws.com",
+    "production_host": "https://apm-bruce-production.s3.amazonaws.com",
+    "host": "",
+    "remote_path": "./apm_bindings/v{version}",
+    "package_name": "{module_name}-v{version}-{node_napi_label}-{libc}-{arch}.tar.gz"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -22,10 +38,14 @@
   },
   "scripts": {
     "test": "./test.sh",
-    "install": "node setup-liboboe.js && node-gyp rebuild",
-    "rebuild": "node setup-liboboe.js && node-gyp rebuild"
+    "install": "node setup-liboboe.js &&  node-pre-gyp install --fallback-to-build",
+    "configure": "node-pre-gyp configure",
+    "rebuild": "node setup-liboboe.js && node-pre-gyp install --build-from-source",
+    "package": "node-pre-gyp package",
+    "publish": "node-pre-gyp publish"
   },
   "dependencies": {
+    "@mapbox/node-pre-gyp": "git+https://github.com/mapbox/node-pre-gyp.git#473c3f1617e66e66eb36813ef261c4fd7b8538a7",
     "bindings": "~1.2.1",
     "linux-os-info": "^2.0.0",
     "nan": "^2.14.2",
@@ -33,7 +53,8 @@
     "node-gyp": "^4.0.0"
   },
   "devDependencies": {
-    "axios": "^0.21.0",
+    "aws-sdk": "^2.802.0",
+    "axios": "^0.21.1",
     "benchmark": "^2.1.4",
     "chai": "^4.2.0"
   }
