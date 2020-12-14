@@ -3,7 +3,7 @@
 FROM alpine:latest
 
 # Copy the docker files that we'll build.
-COPY docker-action /docker-action
+COPY test-actions /test-actions
 COPY entrypoint.sh /entrypoint.sh
 
 RUN apk add --update --no-cache docker

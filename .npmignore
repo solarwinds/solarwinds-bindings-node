@@ -1,4 +1,6 @@
 build/
+build-tmp*/
+dist/
 node_modules/
 test/
 archived/

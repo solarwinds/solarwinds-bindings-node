@@ -71,7 +71,7 @@ esac
 #
 #exit 0
 
-cd /docker-action || exit 1
+cd /test-actions || exit 1
 echo "creating test image from: $image"
 echo "make a change"
 

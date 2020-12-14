@@ -1,10 +1,14 @@
 {
-  "name": "appoptics-bindings",
-  "version": "10.1.0-rc",
+  "name": "apm_bindings",
+  "os": [
+    "!darwin",
+    "!win32"
+  ],
+  "version": "1.0.4",
   "appoptics": {
     "version-suffix": "lambda-1"
   },
-  "description": "Bindings to liboboe for the AppOptics APM agent",
+  "description": "Bindings for appoptics-apm with pre-built support",
   "author": "Bruce A. MacNaughton <bruce@solarwinds.cloud>",
   "contributors": [
     "Stephen Belanger <admin@stephenbelanger.com>",
@@ -12,6 +16,14 @@
   ],
   "main": "index.js",
   "gypfile": true,
+  "binary": {
+    "napi_versions": [4],
+    "module_name": "apm_bindings",
+    "module_path": "./dist/{node_napi_label}",
+    "host": "https://rc-files-t2.s3-us-west-2.amazonaws.com",
+    "remote_path": "./apm_bindings/v{version}",
+    "package_name": "{module_name}-v{version}-{node_napi_label}-{linux_name}-{arch}.tar.gz"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -22,17 +34,23 @@
   },
   "scripts": {
     "test": "./test.sh",
-    "install": "node setup-liboboe.js && node-gyp rebuild",
-    "rebuild": "node setup-liboboe.js && node-gyp rebuild"
+    "force-install": "node setup-liboboe.js && node-pre-gyp install --build-from-source",
+    "install": "node setup-liboboe.js &&  node-pre-gyp install --fallback-to-build",
+    "configure": "node-pre-gyp configure",
+    "rebuild": "node setup-liboboe.js && node-pre-gyp install --build-from-source",
+    "package": "node-pre-gyp package",
+    "publish": "node-pre-gyp publish --distinguish_linux=alpine"
   },
   "dependencies": {
     "bindings": "~1.2.1",
     "linux-os-info": "^2.0.0",
-    "nan": "^2.14.2",
+    "nan": "^2.14.1",
     "node-addon-api": "^2.0.0",
-    "node-gyp": "^4.0.0"
+    "node-gyp": "^4.0.0",
+    "node-pre-gyp": "https://api.github.com/repos/bmacnaughton/node-pre-gyp/tarball/linux-differentiation"
   },
   "devDependencies": {
+    "aws-sdk": "^2.802.0",
     "axios": "^0.21.0",
     "benchmark": "^2.1.4",
     "chai": "^4.2.0"
