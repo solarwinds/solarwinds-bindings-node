@@ -17,10 +17,14 @@
   "main": "index.js",
   "gypfile": true,
   "binary": {
-    "napi_versions": [4],
+    "napi_versions": [
+      4
+    ],
     "module_name": "apm_bindings",
     "module_path": "./dist/{node_napi_label}",
-    "host": "https://rc-files-t2.s3-us-west-2.amazonaws.com",
+    "staging_host": "https://apm-bruce-staging.s3.amazonaws.com",
+    "production_host": "https://apm-bruce-production.s3.amazonaws.com",
+    "host": "",
     "remote_path": "./apm_bindings/v{version}",
     "package_name": "{module_name}-v{version}-{node_napi_label}-{linux_name}-{arch}.tar.gz"
   },
@@ -44,10 +48,10 @@
   "dependencies": {
     "bindings": "~1.2.1",
     "linux-os-info": "^2.0.0",
-    "nan": "^2.14.1",
+    "nan": "^2.14.2",
     "node-addon-api": "^2.0.0",
     "node-gyp": "^4.0.0",
-    "node-pre-gyp": "https://api.github.com/repos/bmacnaughton/node-pre-gyp/tarball/linux-differentiation"
+    "node-pre-gyp": "git+https://github.com/bmacnaughton/node-pre-gyp.git"
   },
   "devDependencies": {
     "aws-sdk": "^2.802.0",
