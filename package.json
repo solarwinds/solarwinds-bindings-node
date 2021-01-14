@@ -1,10 +1,10 @@
 {
-  "name": "apm_bindings",
+  "name": "@appoptics/apm-bindings",
   "os": [
     "!darwin",
     "!win32"
   ],
-  "version": "1.0.4",
+  "version": "11.0.0",
   "appoptics": {
     "version-suffix": "lambda-1"
   },
@@ -26,7 +26,7 @@
     "production_host": "https://apm-bruce-production.s3.amazonaws.com",
     "host": "",
     "remote_path": "./apm_bindings/v{version}",
-    "package_name": "{module_name}-v{version}-{node_napi_label}-{linux_name}-{arch}.tar.gz"
+    "package_name": "{module_name}-v{version}-{node_napi_label}-{libc}-{arch}.tar.gz"
   },
   "license": "Apache-2.0",
   "repository": {
@@ -43,9 +43,10 @@
     "configure": "node-pre-gyp configure",
     "rebuild": "node setup-liboboe.js && node-pre-gyp install --build-from-source",
     "package": "node-pre-gyp package",
-    "publish": "node-pre-gyp publish --distinguish_linux=alpine"
+    "publish": "node-pre-gyp publish"
   },
   "dependencies": {
+    "@mapbox/node-pre-gyp": "git+ssh://git@github.com/mapbox/node-pre-gyp.git",
     "bindings": "~1.2.1",
     "linux-os-info": "^2.0.0",
     "nan": "^2.14.2",
@@ -55,7 +56,7 @@
   },
   "devDependencies": {
     "aws-sdk": "^2.802.0",
-    "axios": "^0.21.0",
+    "axios": "^0.21.1",
     "benchmark": "^2.1.4",
     "chai": "^4.2.0"
   }
