@@ -18,7 +18,7 @@ describe('reporter-metrics-memory', function () {
       throw new Error('oboeInit() failed');
     }
 
-    const ready = aob.isReadyToSample(5000);
+    const ready = aob.isReadyToSample(20000);
     expect(ready).equal(1, `should connected to ${env.APPOPTICS_COLLECTOR} and ready`);
 
     for (let i = 0; i < batchSize; i++) {
@@ -36,22 +36,22 @@ describe('reporter-metrics-memory', function () {
     // garbage collect if available
     const gc = typeof global.gc === 'function' ? global.gc : () => null;
 
-    /* eslint-disable no-unused-vars */
     let start1;
     let done1;
     let start2;
     let done2;
     let finish1;
-    /* eslint-enable no-unused-vars */
 
     // allow the system to come to a steady state. garbage collection makes it
     // hard to isolate memory losses.
     return wait()
       .then(function () {
+        // eslint-disable-next-line no-unused-vars
         start1 = process.memoryUsage().rss;
         for (let i = warmup; i > 0; i--) {
           r.sendMetric('nothing.really', {value: i});
         }
+        // eslint-disable-next-line no-unused-vars
         done1 = process.memoryUsage().rss;
         gc(true);
       })
@@ -63,6 +63,7 @@ describe('reporter-metrics-memory', function () {
         for (let i = checkCount; i > 0; i--) {
           r.sendMetric('nothing.really', {value: i, testing: true});
         }
+        // eslint-disable-next-line no-unused-vars
         done2 = process.memoryUsage().rss;
         gc(true);
       })
@@ -109,10 +110,12 @@ describe('reporter-metrics-memory', function () {
     // hard to isolate memory losses.
     return wait()
       .then(function () {
+        // eslint-disable-next-line no-unused-vars
         start1 = process.memoryUsage().rss;
         for (let i = warmup; i > 0; i -= batchSize) {
           r.sendMetrics(metrics);
         }
+        // eslint-disable-next-line no-unused-vars
         done1 = process.memoryUsage().rss;
         gc(true);
       })
@@ -124,6 +127,7 @@ describe('reporter-metrics-memory', function () {
         for (let i = checkCount; i > 0; i -= batchSize) {
           r.sendMetrics(metrics);
         }
+        // eslint-disable-next-line no-unused-vars
         done2 = process.memoryUsage().rss;
         gc(true);
       })
