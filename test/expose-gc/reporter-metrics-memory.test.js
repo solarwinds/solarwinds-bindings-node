@@ -35,8 +35,8 @@ describe('reporter-metrics-memory', function () {
     this.timeout(40000);
     const warmup =  500000;
     const checkCount =  1000000;
-    // if it's less than 1.5 bytes per iteration it's good
-    const margin = checkCount * 1.5;
+    // if it's less than 2 bytes per iteration it's good
+    const margin = checkCount * 2;
 
     // garbage collect if available
     const gc = typeof global.gc === 'function' ? global.gc : () => null;
