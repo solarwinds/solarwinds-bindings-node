@@ -1,4 +1,4 @@
-const binary = require('node-pre-gyp');
+const binary = require('@mapbox/node-pre-gyp');
 const path = require('path');
 const pkgpath = path.resolve(path.join(__dirname, './package.json'));
 const binding_path = binary.find(pkgpath);
