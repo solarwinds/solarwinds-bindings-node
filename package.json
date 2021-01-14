@@ -52,7 +52,7 @@
     "nan": "^2.14.2",
     "node-addon-api": "^2.0.0",
     "node-gyp": "^4.0.0",
-    "node-pre-gyp": "git+https://github.com/mapbox/node-pre-gyp.git"
+    "node-pre-gyp": "https://github.com/mapbox/node-pre-gyp"
   },
   "devDependencies": {
     "aws-sdk": "^2.802.0",
