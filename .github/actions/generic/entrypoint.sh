@@ -7,6 +7,10 @@
 # 'node:10-alpine3.9'
 # 'centos:7+node:10'
 #
+# the first is used when are pre-built node image can be used; the second is
+# used when there is not an image pre-built with node that can be used. those
+# images install node in their dockerfiles.
+#
 OS_VERSION=$1
 BRANCH=$2         # the branch to test
 TOKEN=$3          # the AO_SWOKEN to use for the tests
@@ -71,7 +75,7 @@ esac
 #
 #exit 0
 
-cd /test-actions || exit 1
+cd /image-actions || exit 1
 echo "creating test image from: $image"
 echo "make a change"
 
