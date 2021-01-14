@@ -18,8 +18,13 @@ describe('reporter-metrics-memory', function () {
       throw new Error('oboeInit() failed');
     }
 
+    const start = Date.now();
     const ready = aob.isReadyToSample(60000);
-    expect(ready).equal(1, `should be connected to ${env.APPOPTICS_COLLECTOR} and ready`);
+    const endPoint = env.APPOPTICS_COLLECTOR || 'collector.appoptics.com';
+    // eslint-disable-next-line no-console
+    console.log(`[isReadyToSample() took ${Date.now() - start}ms]`);
+
+    expect(ready).equal(1, `should be connected to ${endPoint} and ready`);
 
     for (let i = 0; i < batchSize; i++) {
       metrics.push({name: 'node.metrics.batch.test', value: i});
