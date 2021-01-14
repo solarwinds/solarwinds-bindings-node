@@ -46,7 +46,7 @@
     "publish": "node-pre-gyp publish"
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "git+ssh://git@github.com/mapbox/node-pre-gyp.git",
+    "@mapbox/node-pre-gyp": "git+https://github.com/mapbox/node-pre-gyp.git",
     "bindings": "~1.2.1",
     "linux-os-info": "^2.0.0",
     "nan": "^2.14.2",
