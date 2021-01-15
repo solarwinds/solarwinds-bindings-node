@@ -49,5 +49,5 @@ jobs:
         echo "branch ${{steps.generic.outputs.branch-to-test}}"
     - name: test results
       run: |
-        echo "published name ${{steps.generic.outputs.publish-name"
-        echo "publish destination ${{steps.generic.outputs.publish-destination"
+        echo "published name ${{steps.generic.outputs.publish-name}}"
+        echo "publish destination ${{steps.generic.outputs.publish-destination}}"
