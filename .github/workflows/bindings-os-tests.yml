@@ -19,10 +19,10 @@ jobs:
         'node:12-alpine3.9', 'node:12-alpine3.10', 'node:12-alpine3.11', 'node:12-alpine3.12',
         'node:14-alpine3.10', 'node:14-alpine3.11', 'node:14-alpine3.12',
         'node:15-alpine3.12',
-        'centos:7+node:10', 'centos:8+node:10',
-        'centos:7+node:12', 'centos:8+node:12',
-        'centos:7+node:14', 'centos:8+node:14',
-        'centos:8+node:15'
+        #'centos:7+node:10', 'centos:8+node:10',
+        #'centos:7+node:12', 'centos:8+node:12',
+        #'centos:7+node:14', 'centos:8+node:14',
+        #'centos:8+node:15'
         ]
     runs-on: ubuntu-latest
     # (os-version) is appended, so "test" appears "test (node:10-alpine3.9)"
