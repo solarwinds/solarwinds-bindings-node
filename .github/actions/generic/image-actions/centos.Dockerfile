@@ -35,7 +35,7 @@ RUN yum -y install \
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.1/install.sh | bash
 
 RUN mkdir /image-scripts
-COPY *.sh /image-scripts
+COPY *.sh /image-scripts/
 RUN chmod +x /image-scripts/*
 
 # use no brackets so the env vars are interpreted

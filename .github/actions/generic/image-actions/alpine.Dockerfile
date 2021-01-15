@@ -27,7 +27,7 @@ RUN apk update && apk add \
   nano
 
 RUN mkdir /image-scripts
-COPY *.sh /image-scripts
+COPY *.sh /image-scripts/
 RUN chmod +x /image-scripts/*
 
 # use no brackets so the env vars are interpreted
