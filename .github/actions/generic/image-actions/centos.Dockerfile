@@ -2,14 +2,14 @@
 ARG image
 FROM $image
 
-ARG SCRIPT_TO_RUN
+ARG script_to_run
 ARG branch
 ARG token
 ARG workspace
 ARG node_version
 ARG os_string
 
-ENV SCRIPT_TO_RUN=$SCRIPT_TO_RUN \
+ENV SCRIPT_TO_RUN=$script_to_run \
     BRANCH=$branch \
     TOKEN=$token \
     GITHUB_ACTIONS=true \
