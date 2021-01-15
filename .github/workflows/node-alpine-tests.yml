@@ -6,11 +6,7 @@ on:
   # and that is impossible to test in a branch. for bindings i have set up a private
   # repo, apm-node-bindings-actions-test. i develop on a branch in appoptics-bindings-node
   # but push like "git push actions-test HEAD:master". actions-test is defined in
-  # .git/config as:
-  # [remote "actions-test"]
-	#     url = git@github.com:appoptics/apm-node-bindings-actions-test.git
-	#     fetch = +refs/heads/*:refs/remotes/actions-test/*
-
+  # .git/config to be a remote pointing to apm-node-bindings-actions-test.
   workflow_dispatch:
   # most pushes to master are the result of a pull request, so this is effectively
   # "on pull_request merge to master"
