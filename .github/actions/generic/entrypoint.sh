@@ -16,6 +16,13 @@ NODE_IMAGE=$2
 BRANCH=$3         # the branch to test
 TOKEN=$4          # the AO_SWOKEN to use for the tests
 
+#
+# the following positional arguments are only supplied by the publish workflow.
+#
+# AWS_ACCESS_KEY_ID=$5
+# AWS_SECRET_ACCESS_KEY=$6
+
+
 echo "::set-output name=all-args::$*"
 
 # get the image and, if centos, the node version specification
@@ -46,7 +53,7 @@ EOS
 # and 3) the node version is "$tag_node_version".
 #
 # if the base is not node then 1) node is not installed, 2) the os is
-# "$base$tag", and 3) the node version is "$node_version".
+# "$base$tag", and 3) the node version is "$key_node_version".
 #
 # in all cases, the image to use is "$image"
 #

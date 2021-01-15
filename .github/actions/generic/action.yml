@@ -18,6 +18,16 @@ inputs:
     description: 'appoptics token valid in production environment'
     required: true
 
+  # the following are required but only used when script-to-run is publish.sh
+  aws-access-key-id:
+    description: 'aws access key for publishing pre-built bindings'
+    required: true
+    default: ''
+  aws-secret-access-key:
+    description: 'aws secret access key for publishing pre-built bindings'
+    required: true
+    default: ''
+
 runs:
   using: 'docker'
   image: 'generic.Dockerfile'
@@ -27,3 +37,7 @@ runs:
     - ${{inputs.node-image}}
     - ${{inputs.branch-to-test}}
     - ${{inputs.ao-token-prod}}
+
+    - ${{inputs.aws-access-key-id}}
+    - ${{inputs.aws-secret-access-key}}
+

@@ -1,0 +1,53 @@
+name: publish using node-pre-gyp for pre-built glibc and musl versions
+
+# https://github.community/t/trigger-workflow-only-on-pull-request-merge/17359
+on:
+  # manual trigger only
+  workflow_dispatch:
+    inputs:
+      tag-to-publish:
+        description: 'this tag will be checked out and used to published apm-bindings'
+        required: true
+
+jobs:
+  target-image-builder:
+    strategy:
+      matrix:
+        os-version: [         # build with the lowest versions of node and OSes supported
+          'node:10-alpine3.9',
+          'centos:7+node:10'
+        ]
+    runs-on: ubuntu-latest    # this doesn't build the bindings; it loads the container that builds the bindings.
+
+    # (os-version) is appended, so "test" appears "test (node:10-alpine3.9)"
+    name: publish
+    steps:
+    # To use a repo-specific action you must check out the repository
+    - name: Checkout to root dir
+      uses: actions/checkout@v2
+    # jump through a little hoop to get the branch by itself
+    - name: get branch
+      run: echo "gh_branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+    - name: Create specific alpine/node image
+      id: generic
+      uses: ./.github/actions/generic
+      with:
+        script-to-run: publish.sh
+        # specify testing the branch that this was invoked for
+        branch-to-test: ${{env.gh_branch}}
+        ao-token-prod: ${{secrets.AO_TOKEN_PROD}}
+        node-image: ${{matrix.os-version}}
+        aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
+        aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+
+    # Use the output from the `generic` step
+    - name: show info, context, and debugging information
+      run: |
+        echo "all args 1 ${{steps.generic.outputs.all-args}}"
+        echo "all args 2 ${{steps.generic.outputs.all-args-in-script}}"
+        echo "os ${{steps.generic.outputs.os-details}}"
+        echo "branch ${{steps.generic.outputs.branch-to-test}}"
+    - name: test results
+      run: |
+        echo "published name ${{steps.generic.outputs.publish-name"
+        echo "publish destination ${{steps.generic.outputs.publish-destination"
