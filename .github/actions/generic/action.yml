@@ -3,7 +3,7 @@ description: 'create a container that creates the container to execute an action
 inputs:
   # each os-specific container executes common.sh as the entrypoint script. common.sh
   # executes this script with the remaining arguments. this allows the the containers
-  # to execute arbitrary scripts, at this time build-and-test-bindings.sh or publish.sh.
+  # to execute arbitrary scripts, at this time node-os-tests.sh or publish.sh.
   script-to-run:
     description: 'specify the script that the os-specific container should run'
     required: true

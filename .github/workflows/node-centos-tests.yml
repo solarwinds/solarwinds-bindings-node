@@ -39,7 +39,7 @@ jobs:
       id: generic
       uses: ./.github/actions/generic
       with:
-        script-to-run: build-and-test-bindings.sh
+        script-to-run: node-os-tests.sh
         # specify testing the branch that this was invoked for
         branch-to-test: ${{env.gh_branch}}
         ao-token-prod: ${{secrets.AO_TOKEN_PROD}}

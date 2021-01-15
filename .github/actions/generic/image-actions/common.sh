@@ -2,7 +2,7 @@
 
 #
 # this file looks at the first argument to determine whether to run the
-# build-and-test-bindings.sh script or the publish-bindings.sh script.
+# node-os-tests.sh script or the publish-bindings.sh script.
 #
 script_to_run="/image-scripts/$1"
 
