@@ -15,8 +15,9 @@ describe('reporter-metrics', function () {
       throw new Error('oboeInit() failed');
     }
 
-    const ready = aob.isReadyToSample(10000);
-    expect(ready).equal(1, `should be connected to ${env.APPOPTICS_COLLECTOR} and ready`);
+    const ready = aob.isReadyToSample(60000);
+    const endPoint = env.APPOPTICS_COLLECTOR || 'collector.appoptics.com';
+    expect(ready).equal(1, `should be connected to ${endPoint} and ready`);
   });
 
   it('should require an array argument', function () {

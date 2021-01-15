@@ -9,7 +9,7 @@ describe('addon.settings', function () {
     const result = bindings.oboeInit({serviceKey});
     // either already init'd or success.
     expect(result).oneOf([-1, 0]);
-    bindings.isReadyToSample(10000)
+    bindings.isReadyToSample(60000)
   })
 
   it('should set tracing mode to never', function () {
