@@ -43,7 +43,7 @@ jobs:
     # Use the output from the `generic` step
     - name: show info, context, and debugging information
       run: |
-        echo "all args 1 ${{steps.generic.outputs.all-args}}"
+        echo "all args 1 ${{steps.generic.outputs.all-args-generic}}"
         echo "all args 2 ${{steps.generic.outputs.all-args-in-script}}"
         echo "os ${{steps.generic.outputs.os-details}}"
         echo "branch ${{steps.generic.outputs.branch-to-test}}"

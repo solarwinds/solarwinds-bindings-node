@@ -19,5 +19,5 @@ echo "::set-output name=os-details::$details"
 
 echo "::set-output name=branch-to-test::$branch with node $node_version"
 
-echo "::set-output name=publish-name::pass"
+echo "::set-output name=publish-name::bruce-ness"
 echo "::set-output name=publish-destination::somewhere"

@@ -23,7 +23,7 @@ TOKEN=$4          # the AO_SWOKEN to use for the tests
 # AWS_SECRET_ACCESS_KEY=$6
 
 
-echo "::set-output name=all-args::$*"
+echo "::set-output name=all-args-generic::$*"
 
 # get the image and, if centos, the node version specification
 IFS='+' read -r image node_spec << EOS
