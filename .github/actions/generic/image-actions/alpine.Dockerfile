@@ -2,12 +2,14 @@
 ARG image
 FROM $image
 
+ARG SCRIPT_TO_RUN
 ARG branch
 ARG token
 ARG workspace
 ARG node_version
 ARG os_string
-ENV BRANCH=$branch \
+ENV SCRIPT_TO_RUN=$SCRIPT_TO_RUN \
+    BRANCH=$branch \
     TOKEN=$token \
     GITHUB_ACTIONS=true \
     CI=true \
@@ -24,9 +26,9 @@ RUN apk update && apk add \
   curl \
   nano
 
-
-COPY build-and-test-bindings.sh /build-and-test-bindings.sh
-RUN chmod +x /build-and-test-bindings.sh
+RUN mkdir /image-scripts
+COPY *.sh /image-scripts
+RUN chmod +x /image-scripts/*
 
 # use no brackets so the env vars are interpreted
-ENTRYPOINT /build-and-test-bindings.sh $BRANCH $TOKEN $NODE_VERSION $OS_STRING
+ENTRYPOINT /image-scripts/common.sh "$SCRIPT_TO_RUN" $BRANCH $TOKEN $NODE_VERSION $OS_STRING

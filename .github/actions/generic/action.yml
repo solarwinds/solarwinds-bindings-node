@@ -1,6 +1,15 @@
-name: 'run tests'
-description: 'create a container that creates the container to run tests'
+name: 'execute action'
+description: 'create a container that creates the container to execute an action'
 inputs:
+  # each os-specific container executes common.sh as the entrypoint script. common.sh
+  # executes this script with the remaining arguments. this allows the the containers
+  # to execute arbitrary scripts, at this time build-and-test-bindings.sh or publish.sh.
+  script-to-run:
+    description: 'specify the script that the os-specific container should run'
+    required: true
+
+  node-image:
+    description: 'docker image that will be used to build the test container'
   branch-to-test:  # id of input
     description: 'which branch in the repo should be tested'
     required: true
@@ -8,13 +17,13 @@ inputs:
   ao-token-prod:
     description: 'appoptics token valid in production environment'
     required: true
-  node-image:
-    description: 'docker image that will be used to build the test container'
+
 runs:
   using: 'docker'
   image: 'generic.Dockerfile'
-  # these have to be in the same order as they are expected in entrypoint.sh
+  # these must be in the same order as they are expected in entrypoint.sh
   args:
+    - ${{inputs.script-to-run}}
     - ${{inputs.node-image}}
     - ${{inputs.branch-to-test}}
     - ${{inputs.ao-token-prod}}

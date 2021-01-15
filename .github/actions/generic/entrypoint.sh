@@ -3,7 +3,7 @@
 # this is the entrypoint of generic.Dockerfile. It will build an os/node
 # specific container that will run the tests.
 #
-# OS_VERSION is an encoded specification for the image:tag[+node:node-version]
+# NODE_IMAGE is an encoded specification for the image:tag[+node:node-version]
 # 'node:10-alpine3.9'
 # 'centos:7+node:10'
 #
@@ -11,15 +11,16 @@
 # used when there is not an image pre-built with node that can be used. those
 # images install node in their dockerfiles.
 #
-OS_VERSION=$1
-BRANCH=$2         # the branch to test
-TOKEN=$3          # the AO_SWOKEN to use for the tests
+SCRIPT_TO_RUN=$1
+NODE_IMAGE=$2
+BRANCH=$3         # the branch to test
+TOKEN=$4          # the AO_SWOKEN to use for the tests
 
 echo "::set-output name=all-args::$*"
 
 # get the image and, if centos, the node version specification
 IFS='+' read -r image node_spec << EOS
-$OS_VERSION
+$NODE_IMAGE
 EOS
 
 # split the image into the base and the tag
@@ -84,6 +85,7 @@ echo "make a change"
 docker build . -f "$os.Dockerfile" -t "docker-$os_string-$node_version" \
     --build-arg workspace="$GITHUB_WORKSPACE" \
     --build-arg image="$image" \
+    --build-arg script_to_run="$SCRIPT_TO_RUN" \
     --build-arg branch="$BRANCH" \
     --build-arg token="$TOKEN" \
     --build-arg node_version="$node_version" \
