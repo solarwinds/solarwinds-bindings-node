@@ -42,6 +42,7 @@ RUN yum -y install \
   which \
   nano
 
+RUN echo -e "--no-progress\n" > .nvmrc
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.1/install.sh | bash
 
 RUN mkdir /image-scripts
