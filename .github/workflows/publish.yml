@@ -6,10 +6,10 @@ on:
   workflow_dispatch:
     inputs:
       tag-to-publish:
-        description: 'this branch or tag will be checked out and used to published apm-bindings'
+        description: 'branch/tag: this will be used to publish apm-bindings'
         required: true
       production:
-        description: 'will publish to staging unless this is set to true'
+        description: 'production flag: will publish to staging unless this is set to true'
         default: false
         required: true
 
