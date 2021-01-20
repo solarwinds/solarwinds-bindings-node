@@ -4,12 +4,15 @@ const expect = require('chai').expect;
 
 const env = process.env;
 
+const maxIsReadyToSampleWait = 60000;
+
 describe('reporter-metrics-memory', function () {
   const serviceKey = `${env.AO_TOKEN_PROD}:node-bindings-test`;
   const metrics = [];
   const batchSize = 100;
 
   before(function () {
+    this.timeout(maxIsReadyToSampleWait);
     const status = aob.oboeInit({serviceKey});
     // oboeInit can return -1 for already initialized or 0 if succeeded.
     // depending on whether this is run as part of a suite or standalone
@@ -19,7 +22,7 @@ describe('reporter-metrics-memory', function () {
     }
 
     const start = Date.now();
-    const ready = aob.isReadyToSample(60000);
+    const ready = aob.isReadyToSample(maxIsReadyToSampleWait);
     const endPoint = env.APPOPTICS_COLLECTOR || 'collector.appoptics.com';
     // eslint-disable-next-line no-console
     console.log(`[isReadyToSample() took ${Date.now() - start}ms]`);

@@ -3,10 +3,13 @@ const expect = require('chai').expect;
 
 const env = process.env;
 
+const maxIsReadyToSampleWait = 60000;
+
 describe('reporter-metrics', function () {
   const serviceKey = `${env.AO_TOKEN_PROD}:node-bindings-test`;
 
   before(function () {
+    this.timeout(maxIsReadyToSampleWait);
     const status = aob.oboeInit({serviceKey});
     // oboeInit can return -1 for already initialized or 0 if succeeded.
     // depending on whether this is run as part of a suite or standalone
@@ -15,7 +18,7 @@ describe('reporter-metrics', function () {
       throw new Error('oboeInit() failed');
     }
 
-    const ready = aob.isReadyToSample(60000);
+    const ready = aob.isReadyToSample(maxIsReadyToSampleWait);
     const endPoint = env.APPOPTICS_COLLECTOR || 'collector.appoptics.com';
     expect(ready).equal(1, `should be connected to ${endPoint} and ready`);
   });

@@ -3,13 +3,16 @@ const expect = require('chai').expect
 
 const serviceKey = `${process.env.AO_TOKEN_PROD}:node-bindings-test`;
 
+const maxIsReadyToSampleWait = 60000;
+
 describe('addon.settings', function () {
 
   it('should initialize oboe with only a service key', function () {
+    this.timeout(maxIsReadyToSampleWait);
     const result = bindings.oboeInit({serviceKey});
     // either already init'd or success.
     expect(result).oneOf([-1, 0]);
-    bindings.isReadyToSample(60000)
+    bindings.isReadyToSample(maxIsReadyToSampleWait)
   })
 
   it('should set tracing mode to never', function () {
