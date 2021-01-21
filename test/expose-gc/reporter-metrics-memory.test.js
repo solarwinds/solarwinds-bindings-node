@@ -1,3 +1,5 @@
+'use strict';
+
 const aob = require('../..');
 const r = aob.Reporter;
 const expect = require('chai').expect;

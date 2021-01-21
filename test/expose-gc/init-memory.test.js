@@ -1,3 +1,4 @@
+'use strict';
 //
 // this runs as a separate test in order to make sure that oboe and
 // other tests don't result in false positives. the goal of the test

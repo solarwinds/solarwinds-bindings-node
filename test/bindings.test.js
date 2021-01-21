@@ -1,3 +1,5 @@
+'use strict';
+
 const bindings = require('../')
 const expect = require('chai').expect;
 
