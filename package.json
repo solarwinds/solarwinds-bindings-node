@@ -45,12 +45,12 @@
     "publish": "node-pre-gyp publish"
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "git+https://github.com/mapbox/node-pre-gyp.git#473c3f1617e66e66eb36813ef261c4fd7b8538a7",
     "bindings": "~1.2.1",
     "linux-os-info": "^2.0.0",
     "nan": "^2.14.2",
     "node-addon-api": "^2.0.0",
-    "node-gyp": "^4.0.0"
+    "node-gyp": "^4.0.0",
+    "@mapbox/node-pre-gyp": "^1.0.0-alpha2"
   },
   "devDependencies": {
     "aws-sdk": "^2.802.0",
