@@ -13,6 +13,9 @@
     'include_dirs': [
       '<!@(node --no-warnings -p "require(\'node-addon-api\').include")',
     ],
+    'defines': [
+      'NAPI_VERSION=<(napi_build_version)'
+    ],
     # preprocessor only (in bindings.o for some reason)
     #'cflags': ['-E'],
     # suppress warnings
@@ -57,6 +60,9 @@
       },
     'include_dirs': [
       '<!@(node --no-warnings -p "require(\'nan\')")',
+    ],
+    'defines': [
+      'NAPI_VERSION=<(napi_build_version)'
     ],
     # preprocessor only (in bindings.o for some reason)
     #'cflags': ['-E'],
