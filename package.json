@@ -9,7 +9,7 @@
     "version-suffix": "lambda-1"
   },
   "description": "Bindings for appoptics-apm with pre-built support",
-  "author": "Bruce A. MacNaughton <bruce@solarwinds.cloud>",
+  "author": "Bruce A. MacNaughton <bruce.macnaughton@solarwinds.com>",
   "contributors": [
     "Stephen Belanger <admin@stephenbelanger.com>",
     "Silvio Fernandes <silviofernandes.developer@gmail.com"
@@ -38,7 +38,6 @@
   },
   "scripts": {
     "test": "./test.sh",
-    "force-install": "node setup-liboboe.js && node-pre-gyp install --build-from-source",
     "install": "node setup-liboboe.js &&  node-pre-gyp install --fallback-to-build",
     "configure": "node-pre-gyp configure",
     "rebuild": "node setup-liboboe.js && node-pre-gyp install --build-from-source",
@@ -46,12 +45,12 @@
     "publish": "node-pre-gyp publish"
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "git+https://github.com/mapbox/node-pre-gyp.git",
     "bindings": "~1.2.1",
     "linux-os-info": "^2.0.0",
     "nan": "^2.14.2",
     "node-addon-api": "^2.0.0",
-    "node-gyp": "^4.0.0"
+    "node-gyp": "^4.0.0",
+    "@mapbox/node-pre-gyp": "^1.0.0-alpha2"
   },
   "devDependencies": {
     "aws-sdk": "^2.802.0",

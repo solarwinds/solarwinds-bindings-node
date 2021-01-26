@@ -154,7 +154,7 @@ fi
 # AOBT_FAIL_COUNT="::set-output name=tests-failed-count::"
 # AOBT_FAILED_TESTS="::set-output name=tests-failed::"
 
-echo "$"
+echo "test summary"
 # shellcheck disable=2059
 if [ $errorCount -ne 0 ]; then
     printf "${GREEN}$SUITES_PASSED suite${sps} in $GROUPS_PASSED group${gps} passed${NC}\n"

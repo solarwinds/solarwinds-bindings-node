@@ -19,7 +19,7 @@ if ! which node; then
     export NVM_DIR="$HOME/.nvm"
     # shellcheck disable=SC1090
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-    nvm install "$node_version"
+    nvm install --no-progress "$node_version"
 fi
 
 cd "$GITHUB_WORKSPACE" || exit 1

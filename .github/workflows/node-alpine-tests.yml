@@ -17,6 +17,9 @@ on:
 jobs:
   test-combinations:
     strategy:
+      # github actions seems to fail with random network problems. don't fail all executions
+      # when one fails.
+      fail-fast: false
       matrix:
         os-version: [
         'node:10-alpine3.9', 'node:10-alpine3.10', 'node:10-alpine3.11',
@@ -36,7 +39,7 @@ jobs:
       run: echo "gh_branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
     #
     # pass the "with" parameters to action.yml's inputs which
-    # become entrypoint.sh's positional arguments. those are
+    # become generic.sh's positional arguments. those are
     # used to build the os-specific docker containers in image-actions.
     #
     - name: Create specific os/node image
@@ -45,7 +48,7 @@ jobs:
       with:
         script-to-run: node-os-tests.sh
         # specify testing the branch that this was invoked for
-        branch-to-test: ${{env.gh_branch}}
+        branch: ${{env.gh_branch}}
         ao-token-prod: ${{secrets.AO_TOKEN_PROD}}
         node-image: ${{matrix.os-version}}
     # Use the output from the `generic` step
@@ -54,7 +57,7 @@ jobs:
         echo "all args 1 ${{steps.generic.outputs.all-args-generic}}"
         echo "all args 2 ${{steps.generic.outputs.all-args-in-script}}"
         echo "os ${{steps.generic.outputs.os-details}}"
-        echo "branch ${{steps.generic.outputs.branch-to-test}}"
+        echo "branch ${{steps.generic.outputs.branch}}"
     - name: test results
       run: |
         echo "npm install --production --unsafe-perm: ${{steps.generic.outputs.install-prod}}"

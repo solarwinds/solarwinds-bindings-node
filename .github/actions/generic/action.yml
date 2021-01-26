@@ -10,7 +10,7 @@ inputs:
 
   node-image:
     description: 'docker image that will be used to build the test container'
-  branch-to-test:  # id of input
+  branch:  # id of input
     description: 'which branch in the repo should be tested'
     required: true
     default: 'master'
@@ -22,22 +22,26 @@ inputs:
   aws-access-key-id:
     description: 'aws access key for publishing pre-built bindings'
     required: true
-    default: ''
+    default: 'none'
   aws-secret-access-key:
     description: 'aws secret access key for publishing pre-built bindings'
     required: true
-    default: ''
+    default: 'none'
+  production:
+    description: 'default: false publishes to staging. set true to publish production'
+    required: true
+    default: "false"
 
 runs:
   using: 'docker'
   image: 'generic.Dockerfile'
-  # these must be in the same order as they are expected in entrypoint.sh
+  # these must be in the same order as they are expected in generic.sh
   args:
     - ${{inputs.script-to-run}}
     - ${{inputs.node-image}}
-    - ${{inputs.branch-to-test}}
+    - ${{inputs.branch}}
     - ${{inputs.ao-token-prod}}
 
     - ${{inputs.aws-access-key-id}}
     - ${{inputs.aws-secret-access-key}}
-
+    - ${{inputs.production}}
