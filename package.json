@@ -22,10 +22,10 @@
     ],
     "module_name": "apm_bindings",
     "module_path": "./dist/{node_napi_label}",
-    "staging_host": "https://apm-bruce-staging.s3.amazonaws.com",
+    "staging_host": "https://rc-files-t2.s3-us-west-2.amazonaws.com",
     "production_host": "https://apm-bruce-production.s3.amazonaws.com",
     "host": "",
-    "remote_path": "./apm_bindings/v{version}",
+    "remote_path": "./nodejs/bindings",
     "package_name": "{module_name}-v{version}-{node_napi_label}-{libc}-{arch}.tar.gz"
   },
   "license": "Apache-2.0",
