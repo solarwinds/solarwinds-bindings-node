@@ -1,6 +1,6 @@
 {
 'targets': [{
-    'target_name': 'appoptics-bindings',
+    'target_name': 'apm_bindings',
       'cflags!': [ '-fno-exceptions' ],
       'cflags_cc!': [ '-fno-exceptions' ],
       'xcode_settings': { 'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
@@ -12,6 +12,9 @@
       },
     'include_dirs': [
       '<!@(node --no-warnings -p "require(\'node-addon-api\').include")',
+    ],
+    'defines': [
+      'NAPI_VERSION=<(napi_build_version)'
     ],
     # preprocessor only (in bindings.o for some reason)
     #'cflags': ['-E'],
@@ -45,7 +48,7 @@
         }]
     ]
   }, {
-    'target_name': 'ao-metrics',
+    'target_name': 'ao_metrics',
       'cflags!': [ '-fno-exceptions' ],
       'cflags_cc!': [ '-fno-exceptions' ],
       'xcode_settings': { 'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
@@ -57,6 +60,9 @@
       },
     'include_dirs': [
       '<!@(node --no-warnings -p "require(\'nan\')")',
+    ],
+    'defines': [
+      'NAPI_VERSION=<(napi_build_version)'
     ],
     # preprocessor only (in bindings.o for some reason)
     #'cflags': ['-E'],
@@ -83,6 +89,23 @@
             '-Wl,-rpath,\$$ORIGIN/../../oboe/'
         ],
         }]
+    ]
+  }, {
+    "target_name": "action_after_build",
+    "type": "none",
+    "dependencies": ["<(module_name)"],
+    "copies": [
+      {
+        "files": [
+          # explicitly copy targets
+          "<(PRODUCT_DIR)/apm_bindings.node",
+          "<(PRODUCT_DIR)/ao_metrics.node",
+          # this will be linked to the correct version of liboboe by setup-liboboe.js
+          #"<(module_root_dir)/oboe/liboboe-1.0.so.0",
+          #"<!(readlink -f <(module_root_dir)/oboe/liboboe-1.0.so.0)"
+        ],
+        "destination": "<(module_path)/"
+      }
     ]
   }]
 }

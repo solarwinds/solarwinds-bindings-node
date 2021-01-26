@@ -3,19 +3,32 @@
 # this is the entrypoint of generic.Dockerfile. It will build an os/node
 # specific container that will run the tests.
 #
-# OS_VERSION is an encoded specification for the image:tag[+node:node-version]
+# NODE_IMAGE is an encoded specification for the image:tag[+node:node-version]
 # 'node:10-alpine3.9'
 # 'centos:7+node:10'
 #
-OS_VERSION=$1
-BRANCH=$2         # the branch to test
-TOKEN=$3          # the AO_SWOKEN to use for the tests
+# the first is used when are pre-built node image can be used; the second is
+# used when there is not an image pre-built with node that can be used. those
+# images install node in their dockerfiles.
+#
+SCRIPT_TO_RUN=$1
+NODE_IMAGE=$2
+BRANCH=$3         # the branch to test
+TOKEN=$4          # the AO_SWOKEN to use for the tests//access-enabled url for publishing
 
-echo "::set-output name=all-args::$*"
+#
+# the following positional arguments are only supplied by the publish workflow.
+#
+AWS_ACCESS_KEY_ID=$5
+AWS_SECRET_ACCESS_KEY=$6
+PRODUCTION=$7     # default false implies staging; specify true for production
+
+
+echo "::set-output name=all-args-generic::$*"
 
 # get the image and, if centos, the node version specification
 IFS='+' read -r image node_spec << EOS
-$OS_VERSION
+$NODE_IMAGE
 EOS
 
 # split the image into the base and the tag
@@ -41,7 +54,7 @@ EOS
 # and 3) the node version is "$tag_node_version".
 #
 # if the base is not node then 1) node is not installed, 2) the os is
-# "$base$tag", and 3) the node version is "$node_version".
+# "$base$tag", and 3) the node version is "$key_node_version".
 #
 # in all cases, the image to use is "$image"
 #
@@ -71,17 +84,21 @@ esac
 #
 #exit 0
 
-cd /docker-action || exit 1
+cd /image-actions || exit 1
 echo "creating test image from: $image"
 echo "make a change"
 
-# here we can make the construction of the image as customizable as we need
-# and if we need parameterizable values it is a matter of sending them as inputs
+# here we can make the construction of the image as customizable as we need.
+# if we need parameterizable values add them as arguments.
 docker build . -f "$os.Dockerfile" -t "docker-$os_string-$node_version" \
     --build-arg workspace="$GITHUB_WORKSPACE" \
     --build-arg image="$image" \
+    --build-arg script_to_run="$SCRIPT_TO_RUN" \
     --build-arg branch="$BRANCH" \
     --build-arg token="$TOKEN" \
     --build-arg node_version="$node_version" \
     --build-arg os_string="$os_string" \
+    --build-arg AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+    --build-arg AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+    --build-arg PRODUCTION="$PRODUCTION" \
     && docker run -v /github/workspace:/github/workspace "docker-$os_string-$node_version"

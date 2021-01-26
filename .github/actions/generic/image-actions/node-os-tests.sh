@@ -7,6 +7,8 @@ node_version="$3"
 # shellcheck disable=SC2034
 os_string="$4"
 
+echo "::set-output name=all-args-in-script::$*"
+
 # make os-release one line and get rid of the garbage that confuses github actions
 details=$(tr -d '()' < /etc/os-release | tr '\n' ',' | sed 's/ANSI_COLOR="0;3.",//')
 echo "::set-output name=os-details::$details"
@@ -17,7 +19,7 @@ if ! which node; then
     export NVM_DIR="$HOME/.nvm"
     # shellcheck disable=SC1090
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-    nvm install "$node_version"
+    nvm install --no-progress "$node_version"
 fi
 
 cd "$GITHUB_WORKSPACE" || exit 1

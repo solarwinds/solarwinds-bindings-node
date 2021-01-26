@@ -1,3 +1,5 @@
+'use strict';
+
 const bindings = require('../')
 const expect = require('chai').expect;
 
@@ -5,6 +7,8 @@ const EnvVarOptions = require('./lib/env-var-options');
 const keyMap = require('./lib/env-var-key-map');
 
 const env = process.env;
+
+const maxIsReadyToSampleWait = 60000;
 
 //
 // goodOptions are used in multiple tests so they're declared here
@@ -115,9 +119,9 @@ describe('bindings.oboeInit()', function () {
   });
 
   it('should check if ready to sample', function () {
-    // wait 5 seconds max. This will fail if not using
-    // a real collector (collector or collector-stg).appoptics.com
-    const ready = bindings.isReadyToSample(5000);
+    // This will fail if not using a real collector (collector or collector-stg).appoptics.com
+    this.timeout(maxIsReadyToSampleWait);
+    const ready = bindings.isReadyToSample(maxIsReadyToSampleWait);
     expect(ready).be.a('number')
 
     expect(ready).equal(1, `${env.APPOPTICS_COLLECTOR} should be ready`)

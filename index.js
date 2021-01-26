@@ -1,5 +1,12 @@
-module.exports = require('bindings')('appoptics-bindings.node')
-module.exports.version = require('./package.json').version
+const binary = require('@mapbox/node-pre-gyp');
+const path = require('path');
+const pkgpath = path.resolve(path.join(__dirname, './package.json'));
+const binding_path = binary.find(pkgpath);
+const bindings = require(binding_path);
+
+module.exports = bindings;
+
+module.exports.version = require('./package.json').version;
 module.exports.init = function (sk) {
   return module.exports.oboeInit({serviceKey: sk || process.env.APPOPTICS_SERVICE_KEY});
 }

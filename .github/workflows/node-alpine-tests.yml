@@ -1,28 +1,34 @@
-name: test on amazonlinux
+name: alpine-node-version matrix
 
 # https://github.community/t/trigger-workflow-only-on-pull-request-merge/17359
 on:
-  # manual trigger
+  # manual trigger. n.b. - to trigger a workflow it must be on the default branch
+  # and that is impossible to test in a branch. for bindings i have set up a private
+  # repo, apm-node-bindings-actions-test. i develop on a branch in appoptics-bindings-node
+  # but push like "git push actions-test HEAD:master". actions-test is defined in
+  # .git/config to be a remote pointing to apm-node-bindings-actions-test.
   workflow_dispatch:
   # most pushes to master are the result of a pull request, so this is effectively
   # "on pull_request merge to master"
   push:
     branches:
-      - lambda
-      - gh-actions-2
+      - master
 
 jobs:
-  test-image-builder:
+  test-combinations:
     strategy:
       # github actions seems to fail with random network problems. don't fail all executions
       # when one fails.
       fail-fast: false
       matrix:
         os-version: [
-          'amazonlinux:2+node:10', 'amazonlinux:2+node:12'
+        'node:10-alpine3.9', 'node:10-alpine3.10', 'node:10-alpine3.11',
+        'node:12-alpine3.9', 'node:12-alpine3.10', 'node:12-alpine3.11', 'node:12-alpine3.12',
+        'node:14-alpine3.10', 'node:14-alpine3.11', 'node:14-alpine3.12',
+        'node:15-alpine3.12',
         ]
     runs-on: ubuntu-latest
-    # (os-version) is appended, so "test" appears "test (amazonlinux:2+node:10)"
+    # (os-version) is appended, so "test" appears "test (node:10-alpine3.9)"
     name: test
     steps:
     # To use a repo-specific action you must check out the repository
@@ -36,7 +42,7 @@ jobs:
     # become generic.sh's positional arguments. those are
     # used to build the os-specific docker containers in image-actions.
     #
-    - name: Create specific alpine/node image
+    - name: Create specific os/node image
       id: generic
       uses: ./.github/actions/generic
       with:
