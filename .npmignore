@@ -1,6 +1,8 @@
+# node-pre-gyp directories
 build/
 build-tmp*/
 dist/
+# for development
 node_modules/
 test/
 archived/
