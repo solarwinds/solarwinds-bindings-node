@@ -1,3 +1,5 @@
+'use strict';
+
 const binary = require('@mapbox/node-pre-gyp');
 const path = require('path');
 const pkgpath = path.resolve(path.join(__dirname, './package.json'));
@@ -12,8 +14,12 @@ module.exports.init = function (sk) {
 }
 
 try {
-  module.exports.metrics = require('bindings')('ao-metrics');
+  // this is hardcoded as node-pre-gyp doesn't know about multiple targets.
+  const metrics_path = binding_path.replace('apm_bindings.node', 'ao_metrics.node');
+  module.export.metrics = require(metrics_path);
 } catch (e) {
+  // eslint-disable-next-line no-console
+  console.warn(`appoptics metrics disabled ${e.message}`);
   // return an dummy metrics if this can't be loaded
   module.exports.metrics = {
     start () {return true},
