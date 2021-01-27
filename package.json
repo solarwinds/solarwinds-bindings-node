@@ -4,7 +4,7 @@
     "!darwin",
     "!win32"
   ],
-  "version": "11.0.0-alpha1",
+  "version": "11.0.0-alpha2",
   "appoptics": {
     "version-suffix": "lambda-1"
   },
@@ -18,7 +18,7 @@
   "gypfile": true,
   "binary": {
     "napi_versions": [
-      4
+      4, 7
     ],
     "module_name": "apm_bindings",
     "module_path": "./dist/{node_napi_label}",
@@ -39,18 +39,16 @@
   "scripts": {
     "test": "./test.sh",
     "install": "node setup-liboboe.js &&  node-pre-gyp install --fallback-to-build",
-    "configure": "node-pre-gyp configure",
     "rebuild": "node setup-liboboe.js && node-pre-gyp install --build-from-source",
-    "package": "node-pre-gyp package",
-    "publish": "node-pre-gyp publish"
+    "eslint": "eslint test/**/*.js working/*.js *.js"
   },
   "dependencies": {
+    "@mapbox/node-pre-gyp": "^1.0.0-alpha2",
     "bindings": "~1.2.1",
     "linux-os-info": "^2.0.0",
     "nan": "^2.14.2",
     "node-addon-api": "^2.0.0",
-    "node-gyp": "^4.0.0",
-    "@mapbox/node-pre-gyp": "^1.0.0-alpha2"
+    "node-gyp": "^4.0.0"
   },
   "devDependencies": {
     "aws-sdk": "^2.802.0",

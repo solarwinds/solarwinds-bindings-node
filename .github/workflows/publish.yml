@@ -18,8 +18,8 @@ jobs:
     strategy:
       matrix:
         os-version: [         # build with the lowest versions of node and OSes supported
-          'node:10-alpine3.9',
-          'centos:7+node:10'
+          'node:10-alpine3.9', 'node:12-alpine3.9', 'node:14-alpine3.9',
+          'centos:7+node:10', 'centos:7+node:12', 'centos:7+node:14'
         ]
     runs-on: ubuntu-latest    # this doesn't build the bindings; it loads the container that builds the bindings.
 
