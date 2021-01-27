@@ -1,4 +1,5 @@
 #! /usr/bin/env node
+'use strict';
 
 // auth options https://developer.github.com/v3/auth/
 // trigger https://docs.github.com/en/free-pro-team@latest/rest/reference/actions#create-a-workflow-dispatch-event

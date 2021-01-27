@@ -1,3 +1,5 @@
+'use strict';
+
 const net = require('net');
 const aob = require('../..')
 const expect = require('chai').expect;

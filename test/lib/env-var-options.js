@@ -1,3 +1,4 @@
+'use strict';
 
 class EnvVarOptions {
   constructor (prefix, options = {}) {
@@ -24,7 +25,7 @@ class EnvVarOptions {
 
   getConverted (keyMap, options = {}) {
     keyMap = keyMap || this.keyMap;
-    const converter = options.converter || convert;
+    //const converter = options.converter || convert;
     if (!keyMap) {
       throw new TypeError('must supply keyMap option to get converted vars');
     }
