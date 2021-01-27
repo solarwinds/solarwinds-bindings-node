@@ -26,7 +26,7 @@
     "production_host": "https://apm-bruce-production.s3.amazonaws.com",
     "host": "",
     "remote_path": "./nodejs/bindings",
-    "package_name": "{module_name}-v{version}-{node_napi_label}-{libc}-{arch}.tar.gz"
+    "package_name": "{module_name}-v{version}-{node_abi}-{node_napi_label}-{libc}-{arch}.tar.gz"
   },
   "license": "Apache-2.0",
   "repository": {
