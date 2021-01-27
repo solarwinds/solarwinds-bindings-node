@@ -16,7 +16,7 @@ module.exports.init = function (sk) {
 try {
   // this is hardcoded as node-pre-gyp doesn't know about multiple targets.
   const metrics_path = binding_path.replace('apm_bindings.node', 'ao_metrics.node');
-  module.export.metrics = require(metrics_path);
+  module.exports.metrics = require(metrics_path);
 } catch (e) {
   // eslint-disable-next-line no-console
   console.warn(`appoptics metrics disabled ${e.message}`);
