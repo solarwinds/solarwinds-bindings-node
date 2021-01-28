@@ -1,3 +1,5 @@
+'use strict';
+
 // portion of env var after 'APPOPTICS_': {bindings-name, type: [s]tring, [i]nteger, or [b]oolean}
 const keyMap = {
   // these have been documented for end-users; the names should not be changed

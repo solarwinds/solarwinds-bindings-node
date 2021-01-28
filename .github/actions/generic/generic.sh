@@ -23,7 +23,6 @@ AWS_ACCESS_KEY_ID=$5
 AWS_SECRET_ACCESS_KEY=$6
 PRODUCTION=$7     # default false implies staging; specify true for production
 
-
 echo "::set-output name=all-args-generic::$*"
 
 # get the image and, if centos, the node version specification

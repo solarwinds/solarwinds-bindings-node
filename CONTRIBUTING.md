@@ -2,7 +2,7 @@
 
 ## Two minutes on how it works
 
-[appoptics-bindings](https://github.com/appoptics/appoptics-bindings-node)
+[@appoptics/apm-bindings](https://github.com/appoptics/appoptics-bindings-node)
 implements the low-level interface to liboboe. liboboe implements communications and aggregation functions
 to enable the efficient sampling of traces. Traces are sequences of entry and exit events which capture
 performance information. Each event has a:
@@ -28,9 +28,12 @@ Note: layer is a legacy term for span. It has been replaced in the code but stil
 
 ## Dev environment
 
-The development environment is quite simple. Only the tools to build the
-extension (the gcc tool suite version 4.7 or above) and Python 2.7 for node-gyp
+The tools to build the extension (gcc tool suite version 4.7 or above and Python 2.7) for node-gyp
 are required.
+
+`eslint` is installed globally; if your environment is different you'll need to install it in this
+repository. Development is done with an editor that uses eslint to check against the rules in `.eslintrc.json`.
+If your editor doesn't support that then you'll need to invoke `npm run eslint` to check for errors.
 
 The sourceable script file `env.sh` has options to configure the development environment
 for different purposes. There is also an option to download a new version of oboe.
@@ -43,13 +46,12 @@ with a valid service key.
 
 ## Testing
 
-This repo is simpler than `appoptics-apm` in that it does not have a segmented test suite.
-Simply execute `npm test` to run the test suite.
+Execute `npm test` to run the test suite.
 
-The following environment variables must be set for the "should get verification that a request should be sampled" test. `env.sh` will set them up for you if you have defined AO_TOKEN_STG
+The following environment variables must be set for the "should get verification that a request should be sampled" test. `env.sh` will set them up for you if you have defined AO_TOKEN_PROD.
 
-- `APPOPTICS_COLLECTOR=collector.appoptics.com:443` or `:4444`
-- `APPOPTICS\_SERVICE_KEY=<a valid service key for the appoptics>:name`
+- `APPOPTICS_COLLECTOR=collector.appoptics.com:443`
+- `APPOPTICS_SERVICE_KEY=<a valid service key for the appoptics>:name`
 
 ## Debugging
 
@@ -97,32 +99,58 @@ Finally, here's a link to using output formats (and the whole set of gdb docs) [
 
 The `src` directory contains the C++ code to bind to liboboe. The `test`
 directory contains the test suite. The `oboe` directory contains liboboe
-and its required header files.
+and its required header files. `.github` contains the files for github
+actions.
 
 ## Process
 
 ### Building
 
-Whenever you do an `npm install`, a `preinstall` script will run that creates
-symbolic links to liboboe so the `SONAME` field can be satisfied. Then the
-`build.js` script is run to build the addon. By default the script conceals
-compiler output; you may want to skip that if dealing with build issues. There
-are multiple ways to do so. `npm run rebuild` bypasses the `build.js` script
-altogether. You can also set `APPOPTICS\_SHOW_GYP` to any non-empty value.
+`setup-liboboe.js` must be run in order to create symbolic links to the correct version
+of liboboe so the `SONAME` field can be satisfied. The `install` and `rebuild` scripts
+run `setup-liboboe.js` as the first step. `setup-liboboe.js` can be run multiple times.
 
-(This section will not be useful for installing once the N-API version has been
-released.)
+`node-pre-gyp` is now used so that in most cases end users will not need to install the
+build tool chain. For development you will either need to change the install script so
+that it uses `--build-from-source` instead of `--fallback-to-build` or you can change the
+`binary.staging_host` property to point to an S3 bucket that you can publish too. If
+changing the `binary.staging_host` you'll need to prefix the install command by setting
+`node_pre_gyp_s3_host=staging` so that it installs from the staging host, e.g.,
+`node_pre_gyp_s3_host=staging node-pre-gyp install --fallback-to-build`. The reason is that
+publishing defaults to staging while installation defaults to production.
 
 
 ### Developing
 
-Just like `appoptics-apm`, this repo uses simple feature branches that only
-get merged to master via a pull request.
+Just like `appoptics-apm`, this repo uses simple feature branches that get merged to master
+via a pull request. Developers without write access to the repository should fork the repo and
+submit a PR.
 
 ### Releasing
 
-Again, like `appoptics-apm` the `npm version major.minor.patch` tool is used
-to commit a version bump and tag to push to github. You must use `git push origin 'tagname'` in order to push the tag in addition to the changes. If you do not the tag will not be sent to the repo. The versioning should follow [semver](www.semver.org) conventions, most importantly that breaking changes get a major version update. A pull request should be generated on github. Once the PR has been merged to master on github then, after updating local master with `git pull`, you can run `npm publish` to publish the release. This should be done using a `@solarwinds.cloud` email account. The branch can be deleted once it has been merged.
+Before releasing the version in package.json should be bumped using [semver](www.semver.org) conventions.
+Then a git tag with the same version (but with a `v` prefix) should be created. Push the tag using
+`git push origin tagname` or it will not be sent to the repo.
+
+Before publishing switch to the master branch and execute `git pull` to make sure what will be published
+is in sync with the repository. Publishing is done from the master branch.
+
+For releasing there are two steps. The github action `publish` is used to publish pre-built binaries via
+node-pre-gyp. npm is then used to publish to `npmjs` using the command `npm publish --access public --otp=123456`.
+If publishing an alpha/rc release you *must* add `--tag=alpha` (or `rc` or `rc1`) so that it will not become
+the default download. Publishing should be done using an account with a Solarwinds email.
+
+The reason that these two steps are decoupled is that it's possible for the node-pre-gyp publish step to fail
+even when `npm publish` to npmjs.com succeeds. It is not possible to replace a version published to npmjs.com, so
+publishing each separately avoids extra version bumps if a node-pre-gyp error occurs. When developing, you might
+want to manually publish using node-pre-gyp; the steps to do that are in
+`.github/actions/generic/image-actions/publish.sh`. while node-pre-gyp will not publish on top of an existing file by the same name, it does allow unpublishing; the S3 console can also be used to delete the published files.
+
+By default the `publish` command will publish to `staging_host` while the `install` command will install from
+`production_host`. This facilitates testing while making it seamless for end users to install the production code.
+To publish to `production_host` preface use the option `--s3_host=production` or set the environment variable
+`node_pre_gyp_s3_host=production`. Set either to `staging` to make both commands target `staging_host`.
+
 
 ### Miscellaneous
 

@@ -31,6 +31,9 @@ inputs:
     description: 'default: false publishes to staging. set true to publish production'
     required: true
     default: "false"
+  another:
+    description: 'another for testing conditional'
+    required: true
 
 runs:
   using: 'docker'
@@ -45,3 +48,4 @@ runs:
     - ${{inputs.aws-access-key-id}}
     - ${{inputs.aws-secret-access-key}}
     - ${{inputs.production}}
+    - ${{inputs.another}}

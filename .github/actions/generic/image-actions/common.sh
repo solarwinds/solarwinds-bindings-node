@@ -21,7 +21,7 @@ if [ "$script_name" = "node-os-tests.sh" ]; then
         exit 1
     fi
 elif [ "$script_name" = "publish.sh" ]; then
-    if [ $# -ne 8 ]; then
+    if [ $# -lt 8 ]; then
         echo "? error: publish.sh requires 8 arguments, not $#"
         echo "args: $*"
         exit 1
