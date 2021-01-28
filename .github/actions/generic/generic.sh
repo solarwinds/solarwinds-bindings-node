@@ -24,6 +24,8 @@ AWS_SECRET_ACCESS_KEY=$6
 PRODUCTION=$7     # default false implies staging; specify true for production
 ANOTHER=$8
 
+echo "ANOTHER=$ANOTHER"
+
 
 echo "::set-output name=all-args-generic::$*"
 
