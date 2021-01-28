@@ -57,6 +57,7 @@ jobs:
         aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
         aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
         production: ${{github.event.inputs.production}}
+        another: ${{github.event.inputs.production == 'production' && 'prod-it-is' || 'must-be-staging'}}
 
     # Use the output from the `generic` step
     - name: show info, context, and debugging information

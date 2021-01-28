@@ -22,6 +22,7 @@ TOKEN=$4          # the AO_SWOKEN to use for the tests//access-enabled url for p
 AWS_ACCESS_KEY_ID=$5
 AWS_SECRET_ACCESS_KEY=$6
 PRODUCTION=$7     # default false implies staging; specify true for production
+ANOTHER=$8
 
 
 echo "::set-output name=all-args-generic::$*"
