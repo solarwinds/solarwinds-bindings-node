@@ -17,7 +17,9 @@ jobs:
   target-image-builder:
     strategy:
       matrix:
-        os-version: [         # build with the lowest versions of node and OSes supported
+        # build with the lowest versions of the OSes supported so the glibc/musl versions
+        # are the oldest/most compatible. there is no node:14-alpine3.9 release, so use 3.10.
+        os-version: [
           'node:10-alpine3.9', 'node:12-alpine3.9', 'node:14-alpine3.10',
           'centos:7+node:10', 'centos:7+node:12', 'centos:7+node:14'
         ]
