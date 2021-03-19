@@ -30,7 +30,7 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
 
     // setup oboe's options structure
     oboe_init_options_t options;
-    options.version = 10;
+    options.version = 11;
 
     int setDefaultsStatus = oboe_init_options_set_defaults(&options);
     if (setDefaultsStatus > 0) {
@@ -205,6 +205,14 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
         valid.Set("proxy", proxy);
         holdKeys[++kix] = proxy.ToString();
         options.proxy = holdKeys[kix].c_str();
+      }
+    }
+    if (o.Has("stdoutClearNonblocking")) {
+      Napi::Value stdoutClearNonblocking = o.Get("stdoutClearNonblocking");
+      processed.Set("stdoutClearNonblocking", stdoutClearNonblocking);
+      if (stdoutClearNonblocking.IsNumber()) {
+        valid.Set("stdoutClearNonblocking", stdoutClearNonblocking);
+        options.stdout_clear_nonblocking = stdoutClearNonblocking.ToNumber().Int32Value();
       }
     }
 
