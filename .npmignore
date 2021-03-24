@@ -9,21 +9,24 @@ archived/
 # archived versions of oboe
 oboe-*
 # don't distribute the change log
-oboe/ChangeLog
+oboe/InternalChangeLog
 # links created by setup-liboboe
 oboe/liboboe-1.0.so.0
 oboe/liboboe.so
 # development focused
-.vscode/
-.nyc_output/
-.npmignore
-.travis.yml
-CONTRIBUTING.md
-Gulpfile.js
-env.sh
-.editorconfig
 *.tgz
 *.tmp
 *-notes.md
-working/
+.editorconfig
+.eslintrc.json
+.github/
+.npmignore
+.nyc_output/
+.vscode/
+.travis.yml
 bench/
+env.sh
+CONTRIBUTING.md
+Gulpfile.js
+test.sh
+working/
