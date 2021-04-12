@@ -267,9 +267,9 @@ int oboe_metadata_destroy   (oboe_metadata_t *);
 
 int oboe_metadata_is_valid   (const oboe_metadata_t *);
 
-void oboe_metadata_copy     (oboe_metadata_t *, const oboe_metadata_t *);
+int oboe_metadata_copy     (oboe_metadata_t *, const oboe_metadata_t *);
 
-void oboe_metadata_random   (oboe_metadata_t *);
+int oboe_metadata_random   (oboe_metadata_t *);
 
 int oboe_metadata_set_lengths   (oboe_metadata_t *, size_t, size_t);
 int oboe_metadata_create_event  (const oboe_metadata_t *, oboe_event_t *);
@@ -313,10 +313,10 @@ int oboe_event_send(int channel, oboe_event_t *evt, oboe_metadata_t *md);
 // oboe_context
 
 oboe_metadata_t *oboe_context_get();
-void oboe_context_set(oboe_metadata_t *);
+int oboe_context_set(oboe_metadata_t *);
 int oboe_context_set_fromstr(const char *, size_t);
 
-void oboe_context_clear();
+int oboe_context_clear();
 
 int oboe_context_is_valid();
 
