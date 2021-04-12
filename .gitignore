@@ -7,5 +7,5 @@ node_modules
 oboe-*
 oboe/liboboe-1.0.so.0
 oboe/liboboe.so
-oboe/ChangeLog
+oboe/*ChangeLog
 .nyc_output/

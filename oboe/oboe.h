@@ -161,7 +161,7 @@ typedef struct oboe_metric_tag {
 } oboe_metric_tag_t;
 
 typedef struct oboe_init_options {
-    int version;                            // the version of this structure
+    int version;                            // the version of this structure (currently on version 11)
     const char *hostname_alias;             // optional hostname alias
     int log_level;                          // level at which log messages will be written to log file (0-6)
                                             // use LOGLEVEL_DEFAULT for default log level
@@ -184,6 +184,8 @@ typedef struct oboe_init_options {
 
     int ec2_metadata_timeout;               // EC2 metadata timeout in milliseconds
     const char *proxy;                      // HTTP proxy address and port to be used for the gRPC connection
+    int stdout_clear_nonblocking;           // flag indicating if the O_NONBLOCK flag on stdout should be cleared,
+                                            // only used in lambda reporter (off=0, on=1, default off)
 } oboe_init_options_t;
 
 typedef struct oboe_span_params {
@@ -265,9 +267,9 @@ int oboe_metadata_destroy   (oboe_metadata_t *);
 
 int oboe_metadata_is_valid   (const oboe_metadata_t *);
 
-void oboe_metadata_copy     (oboe_metadata_t *, const oboe_metadata_t *);
+int oboe_metadata_copy     (oboe_metadata_t *, const oboe_metadata_t *);
 
-void oboe_metadata_random   (oboe_metadata_t *);
+int oboe_metadata_random   (oboe_metadata_t *);
 
 int oboe_metadata_set_lengths   (oboe_metadata_t *, size_t, size_t);
 int oboe_metadata_create_event  (const oboe_metadata_t *, oboe_event_t *);
@@ -311,10 +313,10 @@ int oboe_event_send(int channel, oboe_event_t *evt, oboe_metadata_t *md);
 // oboe_context
 
 oboe_metadata_t *oboe_context_get();
-void oboe_context_set(oboe_metadata_t *);
+int oboe_context_set(oboe_metadata_t *);
 int oboe_context_set_fromstr(const char *, size_t);
 
-void oboe_context_clear();
+int oboe_context_clear();
 
 int oboe_context_is_valid();
 

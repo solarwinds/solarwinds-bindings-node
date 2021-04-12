@@ -6,7 +6,7 @@
   ],
   "version": "11.0.0",
   "appoptics": {
-    "version-suffix": "lambda-1"
+    "version-suffix": "lambda-2"
   },
   "description": "Bindings for appoptics-apm with pre-built support",
   "author": "Bruce A. MacNaughton <bruce.macnaughton@solarwinds.com>",
@@ -39,7 +39,7 @@
   },
   "scripts": {
     "test": "./test.sh",
-    "install": "node setup-liboboe.js &&  node-pre-gyp install --fallback-to-build",
+    "install": "node setup-liboboe.js && node-pre-gyp install --fallback-to-build",
     "rebuild": "node setup-liboboe.js && node-pre-gyp install --build-from-source",
     "eslint": "eslint test/**/*.js working/*.js *.js"
   },

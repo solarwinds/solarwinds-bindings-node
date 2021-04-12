@@ -146,6 +146,10 @@ get_new_oboe() {
         fi
     done
 
+    # npm pack never ignores CHANGELOG and its variants, so rename to have
+    # .npmignore actually work
+    mv "./oboe-$PARAM/ChangeLog" "./oboe-$PARAM/InternalChangeLog"
+
     # expand the zip files if they were downloaded
     for f in "./oboe-$PARAM/"*.gz
     do
