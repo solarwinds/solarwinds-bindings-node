@@ -6,7 +6,7 @@
   ],
   "version": "11.0.0",
   "appoptics": {
-    "version-suffix": "lambda-2"
+    "version-suffix": "lambda-1"
   },
   "description": "Bindings for appoptics-apm with pre-built support",
   "author": "Bruce A. MacNaughton <bruce.macnaughton@solarwinds.com>",
