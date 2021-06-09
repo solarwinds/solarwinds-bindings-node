@@ -46,11 +46,13 @@ describe('reporter-metrics-memory', function () {
     // garbage collect if available
     const gc = typeof global.gc === 'function' ? global.gc : () => null;
 
+    /* eslint-disable no-unused-vars */
     let start1;
     let done1;
     let start2;
     let done2;
     let finish1;
+    /* eslint-enable no-unused-vars */
 
     // allow the system to come to a steady state. garbage collection makes it
     // hard to isolate memory losses.
