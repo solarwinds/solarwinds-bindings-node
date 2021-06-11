@@ -44,10 +44,6 @@ else
   echo "::set-output name=install-dev::pass"
 fi
 
-# mocha is installed globally in the development environment; it's
-# not a devDependency.
-npm install -g mocha || error=true
-
 #
 # setup some vars that the test script will look for
 # and use.

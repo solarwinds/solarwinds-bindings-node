@@ -19,7 +19,6 @@ jobs:
           node-version: ${{matrix.node-version}}
       - name: Environment Information
         run: npx envinfo
-      - run: npm install -g mocha
       - name: verify install works
         run: npm install
       - name: get core tests working
