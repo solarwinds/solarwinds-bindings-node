@@ -25,24 +25,20 @@ characters, and the flag byte is 2 characters.
 
 Note: layer is a legacy term for span. It has been replaced in the code but still appears in event messages as Layer and in the liboboe interface.
 
-
 ## Dev environment
 
 The tools to build the extension (gcc tool suite version 4.7 or above and Python 2.7) for node-gyp
 are required.
 
-`eslint` is installed globally; if your environment is different you'll need to install it in this
-repository. Development is done with an editor that uses eslint to check against the rules in `.eslintrc.json`.
-If your editor doesn't support that then you'll need to invoke `npm run eslint` to check for errors.
+Linting is not currently part of the build process. Invoke `npm run eslint` to check for errors.
 
 The sourceable script file `env.sh` has options to configure the development environment
 for different purposes. There is also an option to download a new version of oboe.
 
-Generally the command `$ . env.sh prod` is the most useful - it sets up the environment
+Generally the command `. env.sh prod` is the most useful - it sets up the environment
 variables to work against the real appoptics collector. This is used during the test suite
 to verify that basic connectivity exists. It does require `APPOPTICS_SERVICE_KEY` be defined
 with a valid service key.
-
 
 ## Testing
 
@@ -53,6 +49,12 @@ The following environment variables must be set for the "should get verification
 - `APPOPTICS_COLLECTOR=collector.appoptics.com:443`
 - `APPOPTICS_SERVICE_KEY=<a valid service key for the appoptics>:name`
 
+## With Docker
+
+1. Create a `.env` file and set: `AO_TOKEN_PROD={a valid production token}`. Potentially you can also set `AO_TOKEN_STG={a valid staging token}`
+2. Run `./docker-dev.sh` - this will create a docker container, set it up, and open a shell. To specify a node version run `./docker-dev.sh {version}`
+3. Run `npm test` to make sure all is ok. To run tests in other configurations use `. env.sh stg`, `. env.sh udp`
+
 ## Debugging
 
 Debugging node addons is not intuitive but this might help (from [stackoverflow](https://stackoverflow.com/questions/23228868/how-to-debug-binary-module-of-nodejs))
@@ -60,7 +62,7 @@ Debugging node addons is not intuitive but this might help (from [stackoverflow]
 
 First, compile your add-on using node-gyp with the --debug flag.
 
-`$ node-gyp --debug configure rebuild`
+`node-gyp --debug configure rebuild`
 
 (The next point about changing the require path doesn't apply to appoptics-bindings because it uses the `bindings` module and that will find the module in `Debug`, `Release`, and other locations.)
 

@@ -40,7 +40,8 @@ const goodOptions = {
 describe('init-memory', function (done) {
   it('should oboeInit without losing memory', function (done) {
     // node 8, 10 completes in < 30 seconds but node 12 takes longer
-    this.timeout(process.env.CI ? 100000 : 40000);
+    // node 14 with docker needs about 90 seconds
+    this.timeout(process.env.CI ? 100000 : 90000);
     const warmup = 1000000;
     const checkCount = 1000000;
     const tolerance = process.env.CI ? checkCount * 2 : checkCount;

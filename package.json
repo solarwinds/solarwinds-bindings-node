@@ -41,7 +41,7 @@
     "test": "./test.sh",
     "install": "node setup-liboboe.js && node-pre-gyp install --fallback-to-build",
     "rebuild": "node setup-liboboe.js && node-pre-gyp install --build-from-source",
-    "eslint": "eslint test/**/*.js working/*.js *.js"
+    "lint": "eslint test/**/*.js working/*.js *.js"
   },
   "dependencies": {
     "@mapbox/node-pre-gyp": "^1.0.0-alpha2",
@@ -54,6 +54,8 @@
     "aws-sdk": "^2.802.0",
     "axios": "^0.21.1",
     "benchmark": "^2.1.4",
-    "chai": "^4.2.0"
+    "chai": "^4.2.0",
+    "eslint": "^7.28.0",
+    "mocha": "^8.4.0"
   }
 }
