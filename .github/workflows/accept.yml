@@ -1,0 +1,126 @@
+name: Build & Package, Target Install (Merge)
+
+on: 
+  push: 
+    branches: 
+      # triggered by pull request approval triggers which is a merge to default branch
+      - master
+
+  workflow_dispatch:
+    inputs: 
+      target-test:
+        required: false
+        description: 'Run Tests on Target Group? (type: yes)'
+        default: false
+
+jobs:
+  load-build-group:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - name: Checkout ${{ github.ref }}
+      uses: actions/checkout@v2
+
+      # *** comments for: build-group.json
+      # build with the lowest versions of the OSes supported so the glibc/musl versions are the oldest/most compatible. 
+      # note: some of those images are no longer supported officially (https://hub.docker.com/_/node)
+    - name: Load build group data
+      id: set-matrix
+      run: .github/scripts/matrix-from-json.sh .github/config/build-group.json
+
+  build-group-publish:
+    runs-on: ubuntu-latest 
+    needs: load-build-group
+    strategy:
+      matrix: ${{fromJson(needs.load-build-group.outputs.matrix)}}
+
+    env:
+      AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
+
+    steps:
+      - name: Checkout ${{ github.ref }}
+        uses: actions/checkout@v2
+
+      # *** IMPORTANT: 
+      # send staging key pair to enable container to access S3 buckets
+      - name: Create Container ${{ matrix.image }}
+        id: create
+        run: |
+         .github/scripts/container-from-matrix-input.sh \
+          ${{ matrix.image }} \
+          ${{ secrets.AWS_ACCESS_KEY_ID }} \
+          ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      # must install specific dependency for liboboe.js before a build
+      - name: NPM Install linux-os-info
+        run: docker exec ${{ steps.create.outputs.containerId }} npm install --save linux-os-info --unsafe-perm
+
+      # runs: node setup-liboboe.js && node-pre-gyp install --build-from-source
+      - name: NPM Install with Rebuild fron source
+        run: docker exec ${{ steps.create.outputs.containerId }} npm run rebuild --unsafe-perm 
+
+       # node-pre-gyp direct rebuild
+      - name: Build
+        run: docker exec ${{ steps.create.outputs.containerId }} npx node-pre-gyp rebuild
+
+      # artifacts are at:build/stage/nodejs/bindings/
+      - name: Package
+        run: docker exec ${{ steps.create.outputs.containerId }} npx node-pre-gyp package # requires clean rebuild
+
+      # *** IMPORTANT: 
+      # always include --s3_host flag regardless of node-pre-gyp defaults.
+      # node-pre-gyp can't publish over existing version, thus always attempt unpublished of current in staging bucket
+      - name: Clear Staging for version
+        run: docker exec ${{ steps.create.outputs.containerId }} npx node-pre-gyp unpublish --s3_host=staging
+
+      - name: Publish Package to Staging
+        run: docker exec ${{ steps.create.outputs.containerId }} npx node-pre-gyp publish --s3_host=staging
+
+      - name: Stop container
+        if: always()
+        run: docker stop ${{ steps.create.outputs.containerId }}
+
+  load-target-group:
+    runs-on: ubuntu-latest
+    needs: build-group-publish
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - name: Checkout ${{ github.ref }}
+      uses: actions/checkout@v2
+
+      # *** comments for: target-group.json
+    - name: Load target group data
+      id: set-matrix
+      run: .github/scripts/matrix-from-json.sh .github/config/target-group.json
+
+  target-group-install:
+    runs-on: ubuntu-latest 
+    needs: load-target-group
+    strategy:
+      matrix: ${{fromJson(needs.load-target-group.outputs.matrix)}}
+
+    env:
+      AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
+
+    steps:
+      - name: Checkout ${{ github.ref }}
+        uses: actions/checkout@v2
+
+      - name: Create Container ${{ matrix.image }}
+        id: create
+        run: .github/scripts/container-from-matrix-input.sh ${{ matrix.image }}
+
+      # *** IMPORTANT: by default our package is installed from production bucket as defined in package.json. 
+      # to test current build pass --s3_host="staging"
+      - name: NPM Install Staging
+        run: docker exec ${{ steps.create.outputs.containerId }} npm install --unsafe-perm --s3_host=staging
+
+      - name: Run tests
+        run: docker exec ${{ steps.create.outputs.containerId }} npm test
+        if: ${{ github.event.inputs.target-test }}
+
+      - name: Stop container
+        if: always()
+        run: docker stop ${{ steps.create.outputs.containerId }}

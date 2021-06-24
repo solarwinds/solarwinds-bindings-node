@@ -1,0 +1,49 @@
+name: Single Build & Test (Push)
+
+# workflow is for a branch push only. do not run on push to master.
+# push to master (which is a pull requet merge) has a more elaborate workflow to run
+# github repo is configured with branch protection on master.
+on: 
+  push:
+    branches-ignore:
+      - 'master'
+
+  workflow_dispatch:
+    inputs: 
+      node:
+        required: false
+        description: 'A node image (e.g: node:15.14.0) or docker dir (e.g. ./.github/docker-node/16/centos7)'
+        default: 'node' # as of June 2021 this is node:16-buster
+
+jobs:
+  build-single-test:
+    runs-on: ubuntu-latest # environment job will run in
+
+    env:
+      AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
+
+    steps:
+      - name: Checkout ${{ github.ref }}
+        uses: actions/checkout@v2
+
+      - name: Create Container ${{ github.event.inputs.node || 'node' }}
+        id: create
+        run: .github/scripts/container-from-matrix-input.sh ${{ github.event.inputs.node || 'node' }} # when running from 'push' there is no input, default to 'node' image
+
+      # must install specific dependency for liboboe.js before a build
+      - name: NPM Install linux-os-info
+        run: docker exec ${{ steps.create.outputs.containerId }} npm install --save linux-os-info --unsafe-perm
+
+      # runs: node setup-liboboe.js && node-pre-gyp install --build-from-source
+      - name: NPM Install with Rebuild fron source
+        run: docker exec ${{ steps.create.outputs.containerId }} npm run rebuild --unsafe-perm 
+
+      - name: Show Artifacts
+        run: docker exec ${{ steps.create.outputs.containerId }} ls -R -al ./dist
+
+      - name: Run tests
+        run: docker exec ${{ steps.create.outputs.containerId }} npm test
+
+      - name: Stop container
+        if: always()
+        run: docker stop ${{ steps.create.outputs.containerId }}
