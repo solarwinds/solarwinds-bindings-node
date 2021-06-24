@@ -34,6 +34,7 @@ container_id=$(docker run -itd \
     --workdir /usr/src/work \
     -v "$(pwd)":/usr/src/work \
     -v ~/.gitconfig:/root/.gitconfig \
+    -v ~/.ssh:/root/.ssh \
     --env-file .env \
     "$os_node" bash)
 
