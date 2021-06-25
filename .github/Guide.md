@@ -182,7 +182,7 @@ PROD_AWS_SECRET_ACCESS_KEY
 NPM_AUTH_TOKEN
 ```
 2. AO_TOKEN_PROD is set as environment variable in all jobs that create a container. It is picked up by the created container via ```container-from-matrix-input.sh```
-````
+```
     env:
       AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
 ```
