@@ -1,4 +1,4 @@
-name: Build & Package, Target Install (Merge)
+name: Fallback Install, Build & Package & Prebuilt Install (Merge)
 
 on: 
   push: 
@@ -14,6 +14,52 @@ on:
         default: false
 
 jobs:
+  # entry point 1: fallback group
+  load-fallback-group:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - name: Checkout ${{ github.ref }}
+      uses: actions/checkout@v2
+
+      # *** comments for: fallback-group.json
+      # contains images that are able to build "out of the box"
+    - name: Load target group data
+      id: set-matrix
+      run: .github/scripts/matrix-from-json.sh .github/config/fallback-group.json
+
+  fallback-group-install:
+    runs-on: ubuntu-latest
+    needs: load-fallback-group
+    strategy:
+      matrix: ${{fromJson(needs.load-fallback-group.outputs.matrix)}}
+
+    env:
+      AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
+
+    steps:
+      - name: Checkout ${{ github.ref }}
+        uses: actions/checkout@v2
+
+      - name: Create Container ${{ matrix.image }}
+        id: create
+        run: .github/scripts/container-from-matrix-input.sh ${{ matrix.image }}
+
+      # the current version package has yet to be built.
+      # it will fallback to build from source
+      - name: NPM Install (to fallback)
+        run: docker exec ${{ steps.create.outputs.containerId }} npm install --unsafe-perm
+
+      - name: Run tests
+        run: docker exec ${{ steps.create.outputs.containerId }} npm test
+        if: ${{ github.event.inputs.target-test }}
+
+      - name: Stop container
+        if: always()
+        run: docker stop ${{ steps.create.outputs.containerId }}
+
+  # entry point 2: build group, prebuilt group
   load-build-group:
     runs-on: ubuntu-latest
     outputs:
@@ -81,7 +127,7 @@ jobs:
         if: always()
         run: docker stop ${{ steps.create.outputs.containerId }}
 
-  load-target-group:
+  load-prebuilt-group:
     runs-on: ubuntu-latest
     needs: build-group-publish
     outputs:
@@ -90,16 +136,17 @@ jobs:
     - name: Checkout ${{ github.ref }}
       uses: actions/checkout@v2
 
-      # *** comments for: target-group.json
+      # *** comments for: prebuilt-group.json
+      # contains images that are unable to build "out of the box" and will install prebuilt
     - name: Load target group data
       id: set-matrix
-      run: .github/scripts/matrix-from-json.sh .github/config/target-group.json
+      run: .github/scripts/matrix-from-json.sh .github/config/prebuilt-group.json
 
-  target-group-install:
+  prebuilt-group-install:
     runs-on: ubuntu-latest 
-    needs: load-target-group
+    needs: load-prebuilt-group
     strategy:
-      matrix: ${{fromJson(needs.load-target-group.outputs.matrix)}}
+      matrix: ${{fromJson(needs.load-prebuilt-group.outputs.matrix)}}
 
     env:
       AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}

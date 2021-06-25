@@ -1,0 +1,82 @@
+{
+  "include": [
+    {
+      "image": "node:10-buster-slim"
+    },
+    {
+      "image": "node:10-stretch-slim"
+    },
+    {
+      "image": "node:10-alpine3.9"
+    },
+    {
+      "image": "node:10-alpine3.10"
+    },
+    {
+      "image": "node:10-alpine3.11"
+    },
+    {
+      "image": "./.github/docker-node/10/centos7"
+    },
+    {
+      "image": "./.github/docker-node/10/centos8"
+    },
+    {
+      "image": "./.github/docker-node/10/amazonlinux2"
+    },
+    {
+      "image": "node:12-buster-slim"
+    },
+    {
+      "image": "node:12-stretch-slim"
+    },
+    {
+      "image": "node:12-alpine3.9"
+    },
+    {
+      "image": "node:12-alpine3.10"
+    },
+    {
+      "image": "node:12-alpine3.11"
+    },
+    {
+      "image": "node:12-alpine3.12"
+    },
+    {
+      "image": "./.github/docker-node/12/centos7"
+    },
+    {
+      "image": "./.github/docker-node/12/centos8"
+    },
+    {
+      "image": "./.github/docker-node/14/amazonlinux2"
+    },
+    {
+      "image": "node:14-buster-slim"
+    },
+    {
+      "image": "node:14-stretch-slim"
+    },
+    {
+      "image": "node:14-alpine3.10"
+    },
+    {
+      "image": "node:14-alpine3.11"
+    },
+    {
+      "image": "node:14-alpine3.12"
+    },
+    {
+      "image": "node:14-alpine3.13"
+    },
+    {
+      "image": "./.github/docker-node/14/centos7"
+    },
+    {
+      "image": "./.github/docker-node/14/centos8"
+    },
+    {
+      "image": "./.github/docker-node/14/amazonlinux2"
+    }
+  ]
+}
