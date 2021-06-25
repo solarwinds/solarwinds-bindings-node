@@ -133,15 +133,23 @@ jobs:
         id: create
         run: .github/scripts/container-from-matrix-input.sh node
 
-      # *** IMPORTANT: by default our package is tagged with 'latest'
-      # to set other pass --tag. 
-      # note - the only pre-relese --preid triggering this workflow is alpha
+      # the file is created in the container. it should be cleared when the container is "garbage collected" by GitHub
+      - name: Set NPM Token
+        run: |
+          docker exec ${{ steps.create.outputs.containerId }} bash -c "echo '//registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}' >> .npmrc"
+          docker exec ${{ steps.create.outputs.containerId }} bash -c "echo 'registry=https://registry.npmjs.org/' >> .npmrc"
+          docker exec ${{ steps.create.outputs.containerId }} bash -c "echo 'always-auth=true '>> .npmrc"
+
+      # *** IMPORTANT: 
+      # by default our package is tagged with 'latest' to set other pass --tag. 
+      # the only pre-relese --preid triggering this workflow is alpha
+      # package is scoped to organization (@appoptics/apm-binding) set --access public to avoid 402 Payment Required
       - name: NPM Publish (alpha)
-        run: echo docker exec ${{ steps.create.outputs.containerId }} npm publish --tag alpha #TODO: enable when keys/setup available
+        run: docker exec ${{ steps.create.outputs.containerId }} npm publish --tag alpha --access public
         if: ${{ contains(github.ref, '-') }}
 
       - name: NPM Publish (latest)
-        run: echo docker exec ${{ steps.create.outputs.containerId }} npm publish #TODO: enable when keys/setup available
+        run: docker exec ${{ steps.create.outputs.containerId }} npm publish --access public
         if: ${{ !contains(github.ref, '-') }}
 
       - name: Stop container
