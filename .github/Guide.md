@@ -110,13 +110,13 @@ push alpha tag     │Build Group Build & Package │ S3 Package
 > **tl;dr** There is no need to modify workflows. All data used is externalized.
 
 ### Definitions
+* Local images are defined in [docker-node](./docker-node) ordered by node version.
 * S3 Staging bucket is defined in [package.json](../package.json).
 * S3 Production bucket is defined in [package.json](../package.json).
-* Build Group are images on which various versions of add-on are built. They include combinations to support different Node versions and libc implementations. Generally build is done with the lowest versions of the OSes supported, so that glibc/musl versions are the oldest/most compatible. They are defined in [config/build-group.json](./config/build-group.json) using local Dockerfile.
-* Fallback Group images are defined in [config/fallback-group.json](./config/fallback-group.json) using [images from Docker Hub](https://hub.docker.com/_/node) or using local Dockerfiles. They include OS and Node version combinations that *can* build for source.
-* Prebuilt Group images are defined in [config/prebuilt-group.json](./config/prebuilt-group.json) using [images from Docker Hub](https://hub.docker.com/_/node) or using local Dockerfiles. They include OS and Node version combinations that *can not* build for source and thus require a prebuilt tarball.
-* Target Group images are defined in [config/target-group.json](./config/target-group.json) using [images from Docker Hub](https://hub.docker.com/_/node) or using local Dockerfiles. They include a wide variety of OS and Node version combinations. Group includes both images that can build from code as well as those which can not. 
-* Local images are defined in [docker-node](./docker-node).
+* Build Group are images on which the various versions of the add-on are built. They include combinations to support different Node versions and libc implementations. Generally build is done with the lowest versions of the OSes supported, so that `glibc`/`musl` versions are the oldest/most compatible. They are listed in [config/build-group.json](./config/build-group.json) and defined using local Dockerfile.
+* Fallback Group images are listed in [config/fallback-group.json](./config/fallback-group.json) and defined using [images from Docker Hub](https://hub.docker.com/_/node). They include OS and Node version combinations that *can* build for source.
+* Prebuilt Group images are listed in [config/prebuilt-group.json](./config/prebuilt-group.json) and defined using [images from Docker Hub](https://hub.docker.com/_/node) or using local Dockerfiles. They include OS and Node version combinations that *can not* build for source and thus require a prebuilt tarball.
+* Target Group images are listed in [config/target-group.json](./config/target-group.json) and defined using [images from Docker Hub](https://hub.docker.com/_/node) or using local Dockerfiles. They include a wide variety of OS and Node version combinations. Group includes both images that can build from code as well as those which can not.
 
 ### Adding a local Dockerfile
 
@@ -124,29 +124,68 @@ push alpha tag     │Build Group Build & Package │ S3 Package
 2. Create a folder to represent the operating system. Any string is valid. Use something descriptive (e.g. `ubuntu20.04.2`).
 3. Place a Docker file in the directory.
 
-### Modifying build group and Target Group lists
+### Modifying group lists
 
 1. Find available tags at: https://hub.docker.com/_/node or use local Dockerfile path (e.g. `./.github/docker-node/10/ubuntu20.04.2`)
-2. Add to appropriate json file in `config`.
+2. Add to appropriate group json file in `config`.
 
 ### Adding a Node Version
 
 1. Create a folder under `docker-node` named for the version of node added.
 2. Create an `alpine` builder image and a `centos` builder image. Use previous node version Dockerfiles as guide.
-3. Add to both json files in `config`.
+3. Add to appropriate group json files in `config`.
 
 ### Remove a node version
 
-1. Remove version images from appropriate json file in `config`.
+1. Remove version images from appropriate group json file in `config`.
 2. Leave the directory in `docker-node` for future reference.
 
-## Implement
+## Implementation
 
 > **tl;dr** No Actions used. Simple script gets image, returns running container id. Steps exec on container.
 
-WIP
+### Workflows
 
+1. All workflows `runs-on: ubuntu-latest`.
+2. Workflows only use `actions/checkout@v2`. No other actions are used. For maintainability and security custom actions are avoided and shell scripts preferred.
+3. All jobs start with a two-step process:
+  - check out code:
+    ```yaml
+     - name: Checkout ${{ github.ref }}
+       uses: actions/checkout@v2
+    ```
+  - create a container loaded with repo code:
+    ```yaml
+      - name: Create Container  ${{ matrix.image }}
+        id: create
+        run: .github/scripts/container-from-matrix-input.sh ${{ matrix.image }}
+    ```
+4. All job steps are named.
+5. All following steps are executed using `docker exec` against the created container.
+6. All jobs end with stopping the container:
+  ```yaml
+      - name: Stop container
+        if: always()
+        run: docker stop ${{ steps.create.outputs.containerId }}
+  ```
+7. Job are linked using `needs:`.
 
+### Secrets
 
+1. Repo is defined with 6 secrets:
+```
+AO_TOKEN_PROD
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+PROD_AWS_ACCESS_KEY_ID
+PROD_AWS_SECRET_ACCESS_KEY
+NPM_AUTH_TOKEN
+```
+2. AO_TOKEN_PROD is set as environment variable in all jobs that create a container. It is picked up by the created container via ```container-from-matrix-input.sh```
+````
+    env:
+      AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
+```
+3. Credential secrets are explicitly passed when needed.
 
-
+Fabriqué au Canada : Made in Canada 🇨🇦
