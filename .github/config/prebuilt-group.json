@@ -49,7 +49,7 @@
       "image": "./.github/docker-node/12/centos8"
     },
     {
-      "image": "./.github/docker-node/14/amazonlinux2"
+      "image": "./.github/docker-node/12/amazonlinux2"
     },
     {
       "image": "node:14-buster-slim"
