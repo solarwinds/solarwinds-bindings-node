@@ -31,6 +31,7 @@ jobs:
     runs-on: ubuntu-latest 
     needs: load-build-group
     strategy:
+      fail-fast: false
       matrix: ${{fromJson(needs.load-build-group.outputs.matrix)}}
 
     env:
@@ -94,6 +95,7 @@ jobs:
     runs-on: ubuntu-latest 
     needs: load-target-group
     strategy:
+      fail-fast: false
       matrix: ${{fromJson(needs.load-target-group.outputs.matrix)}}
 
     env:

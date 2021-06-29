@@ -33,6 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: load-fallback-group
     strategy:
+      fail-fast: false
       matrix: ${{fromJson(needs.load-fallback-group.outputs.matrix)}}
 
     env:
@@ -79,6 +80,7 @@ jobs:
     runs-on: ubuntu-latest 
     needs: load-build-group
     strategy:
+      fail-fast: false
       matrix: ${{fromJson(needs.load-build-group.outputs.matrix)}}
 
     env:
@@ -146,6 +148,7 @@ jobs:
     runs-on: ubuntu-latest 
     needs: load-prebuilt-group
     strategy:
+      fail-fast: false
       matrix: ${{fromJson(needs.load-prebuilt-group.outputs.matrix)}}
 
     env:
