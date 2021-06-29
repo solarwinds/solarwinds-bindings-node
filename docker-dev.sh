@@ -17,8 +17,6 @@ cleanup() {
     rm -rf dist
     rm -rf build-tmp-napi-v7
     rm -rf build-tmp-napi-v4
-
-    trap 'exit 0' EXIT
 }
 
 set -e
