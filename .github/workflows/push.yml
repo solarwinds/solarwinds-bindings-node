@@ -35,7 +35,7 @@ jobs:
         run: docker exec ${{ steps.create.outputs.containerId }} npm install --save linux-os-info --unsafe-perm
 
       # runs: node setup-liboboe.js && node-pre-gyp install --build-from-source
-      - name: NPM Install with Rebuild fron source
+      - name: NPM Install with Rebuild from source
         run: docker exec ${{ steps.create.outputs.containerId }} npm run rebuild --unsafe-perm 
 
       - name: Show Artifacts

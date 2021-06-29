@@ -56,7 +56,7 @@ jobs:
         run: docker exec ${{ steps.create.outputs.containerId }} npm install --save linux-os-info
 
       # runs: node setup-liboboe.js && node-pre-gyp install --build-from-source
-      - name: NPM Install with Rebuild fron source
+      - name: NPM Install with Rebuild from source
         run: docker exec ${{ steps.create.outputs.containerId }} npm run rebuild
 
       # node-pre-gyp direct rebuild
@@ -144,7 +144,7 @@ jobs:
 
       # *** IMPORTANT: 
       # by default any package published to npm registry is tagged with 'latest'. to set other pass --tag. 
-      # any pre-release package (has - in version) and regardless of name as defined with version preid, will be npm tagged with 'prerelease'.
+      # any pre-release package (has - in version), regardless of name defined with version preid, will be npm tagged with 'prerelease'.
       # package is scoped to organization (@appoptics/apm-binding) set --access public to avoid 402 Payment Required
       - name: NPM Publish (alpha)
         run: docker exec ${{ steps.create.outputs.containerId }} npm publish --tag prerelease --access public
