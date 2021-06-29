@@ -1,13 +1,20 @@
 #!/bin/bash
 
-# note: alpine has no bash
+# script used to enable local mac dev. no other usage. always WIP.
 #
+# notes:
+# alpine has no bash.
+# other issues may arise with "slimer" images.
+# one run, one exit. do not run multiple instances against same code mount.
+# 
 # to run the image:
 # ./docker_dev image
 #
 # Can use specific tags:
-# ./docker_dev 
-# ./docker_dev 
+# ./docker-dev.sh node:latest
+# ./docker-dev.sh node:14.16.1-stretch
+# 
+# more official images here: https://hub.docker.com/_/node?tab=tags
 
 os_node=${1:-'node:14-buster'} # when add support to 16 change to 'node'
 
