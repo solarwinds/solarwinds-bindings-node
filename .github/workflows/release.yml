@@ -143,11 +143,11 @@ jobs:
           docker exec ${{ steps.create.outputs.containerId }} bash -c "echo 'always-auth=true '>> .npmrc"
 
       # *** IMPORTANT: 
-      # by default our package is tagged with 'latest' to set other pass --tag. 
-      # the only pre-relese --preid triggering this workflow is alpha
+      # by default any package published to npm registry is tagged with 'latest'. to set other pass --tag. 
+      # any pre-release package (has - in version) and regardless of name as defined with version preid, will be npm tagged with 'prerelease'.
       # package is scoped to organization (@appoptics/apm-binding) set --access public to avoid 402 Payment Required
       - name: NPM Publish (alpha)
-        run: docker exec ${{ steps.create.outputs.containerId }} npm publish --tag alpha --access public
+        run: docker exec ${{ steps.create.outputs.containerId }} npm publish --tag prerelease --access public
         if: ${{ contains(github.ref, '-') }}
 
       - name: NPM Publish (latest)
