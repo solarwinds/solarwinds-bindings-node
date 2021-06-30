@@ -12,7 +12,7 @@ on:
     inputs: 
       node:
         required: false
-        description: 'A node image (e.g: node:15.14.0) or docker dir (e.g. ./.github/docker-node/16/centos7)'
+        description: 'A build enabled node image (e.g: node:15.14.0) or docker dir (e.g. ./.github/docker-node/16/centos7-build)'
         default: 'node' # as of June 2021 this is node:16-buster
 
 jobs:
