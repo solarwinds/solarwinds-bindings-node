@@ -10,6 +10,9 @@
       "image": "./.github/docker-node/14/alpine3.10-build"
     },
     {
+      "image": "./.github/docker-node/16/alpine3.11-build"
+    },
+    {
       "image": "./.github/docker-node/10/centos7-build"
     },
     {
@@ -17,6 +20,9 @@
     },
     {
       "image": "./.github/docker-node/14/centos7-build"
+    },
+    {
+      "image": "./.github/docker-node/16/centos7-build"
     }
   ]
 }

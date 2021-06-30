@@ -95,6 +95,36 @@
     },
     {
       "image": "./.github/docker-node/14/amazonlinux2"
+    },
+    {
+      "image": "node:16-buster"
+    },
+    {
+      "image": "node:16-buster-slim"
+    },
+    {
+      "image": "node:16-stretch"
+    },
+    {
+      "image": "node:16-stretch-slim"
+    },
+    {
+      "image": "node:16-alpine3.11"
+    },
+    {
+      "image": "node:16-alpine3.12"
+    },
+    {
+      "image": "node:16-alpine3.13"
+    },
+    {
+      "image": "./.github/docker-node/16/centos7"
+    },
+    {
+      "image": "./.github/docker-node/16/centos8"
+    },
+    {
+      "image": "./.github/docker-node/16/amazonlinux2"
     }
   ]
 }
