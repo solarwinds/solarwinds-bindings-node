@@ -49,7 +49,7 @@
     "test": "./test.sh",
     "install": "node setup-liboboe.js && node-pre-gyp install --fallback-to-build",
     "rebuild": "node setup-liboboe.js && node-pre-gyp install --build-from-source",
-    "lint": "eslint test/**/*.js working/*.js *.js"
+    "lint": "eslint *.js test/*.js --fix"
   },
   "dependencies": {
     "@mapbox/node-pre-gyp": "^1.0.0-alpha2",
