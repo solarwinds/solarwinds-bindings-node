@@ -16,6 +16,13 @@
     "Yaron (Ron) Ilan <ron.ilan@solarwinds.com>"
   ],
   "main": "index.js",
+  "files": [
+    "src",
+    "oboe",
+    "setup-liboboe.js",
+    "binding.gyp",
+    "test.sh"
+  ],
   "gypfile": true,
   "binary": {
     "napi_versions": [
