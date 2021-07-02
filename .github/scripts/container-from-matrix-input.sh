@@ -12,7 +12,7 @@ then
   echo "Container from File"
   docker build -t my:tag "$os_node"
   container_id=$(docker run \
-    -t -d --privileged \
+    -t -d \
     -e AO_TOKEN_PROD="$AO_TOKEN_PROD" \
     -e AWS_ACCESS_KEY_ID="$aws_access_key_id" \
     -e AWS_SECRET_ACCESS_KEY="$aws_secret_access_key" \
@@ -22,7 +22,7 @@ else
   echo "Container from Image"
   docker pull "$os_node"
   container_id=$(docker run \
-    -t -d --privileged \
+    -t -d \
     -e AO_TOKEN_PROD="$AO_TOKEN_PROD" \
     --workdir=/usr/src/work/ \
     "$os_node")
