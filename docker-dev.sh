@@ -20,6 +20,7 @@ os_node=${1:-'node:14-buster'} # when add support to 16 change to 'node'
 
 cleanup() {
     # remove artifacts left locally by previous npm install
+    rm -rf build
     rm -rf node_modules 
     rm -rf dist
     rm -rf build-tmp-napi-v7
