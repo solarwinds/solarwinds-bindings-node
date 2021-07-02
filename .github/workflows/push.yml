@@ -44,6 +44,8 @@ jobs:
       - name: Run tests
         run: docker exec ${{ steps.create.outputs.containerId }} npm test
 
-      - name: Stop container
+      - name: Stop & Remove container
         if: always()
-        run: docker stop ${{ steps.create.outputs.containerId }}
+        run: |
+          docker stop ${{ steps.create.outputs.containerId }}
+          docker rm --force ${{ steps.create.outputs.containerId }}

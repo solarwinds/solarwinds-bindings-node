@@ -73,9 +73,11 @@ jobs:
       - name: Publish Package to Production
         run: docker exec ${{ steps.create.outputs.containerId }} npx node-pre-gyp publish --s3_host=production
 
-      - name: Stop container
+      - name: Stop & Remove container
         if: always()
-        run: docker stop ${{ steps.create.outputs.containerId }}
+        run: |
+          docker stop ${{ steps.create.outputs.containerId }}
+          docker rm --force ${{ steps.create.outputs.containerId }}
 
   load-target-group:
     runs-on: ubuntu-latest
@@ -115,9 +117,11 @@ jobs:
       # - name: Run tests
       #   run: docker exec ${{ steps.create.outputs.containerId }} npm test TODO: make decision on this
 
-      - name: Stop container
+      - name: Stop & Remove container
         if: always()
-        run: docker stop ${{ steps.create.outputs.containerId }}
+        run: |
+          docker stop ${{ steps.create.outputs.containerId }}
+          docker rm --force ${{ steps.create.outputs.containerId }}
 
   npm-publish:
     runs-on: ubuntu-latest 
@@ -154,6 +158,8 @@ jobs:
         run: docker exec ${{ steps.create.outputs.containerId }} npm publish --access public
         if: ${{ !contains(github.ref, '-') }}
 
-      - name: Stop container
+      - name: Stop & Remove container
         if: always()
-        run: docker stop ${{ steps.create.outputs.containerId }}
+        run: |
+          docker stop ${{ steps.create.outputs.containerId }}
+          docker rm --force ${{ steps.create.outputs.containerId }}
