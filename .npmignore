@@ -30,3 +30,4 @@ CONTRIBUTING.md
 Gulpfile.js
 test.sh
 working/
+.env
