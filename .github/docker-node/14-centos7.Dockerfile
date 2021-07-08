@@ -2,9 +2,6 @@ FROM centos:7
 
 ENV NODE_VERSION 14.17.0
 
-# centos needs the user to be root; sudo doesn't work.
-USER root
-
 # install nvm
 ENV NVM_DIR /root/.nvm
 

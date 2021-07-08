@@ -2,9 +2,6 @@ FROM centos:7
 
 ENV NODE_VERSION 12.22.1
 
-# centos needs the user to be root; sudo doesn't work.
-USER root
-
 # install software required for this OS
 RUN yum -y install \
   gcc-c++ \
