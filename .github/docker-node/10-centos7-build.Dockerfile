@@ -9,8 +9,7 @@ USER root
 RUN yum -y install \
   gcc-c++ \
   python2 \
-  make \
-  curl
+  make
 
 # install nvm
 ENV NVM_DIR /root/.nvm
