@@ -1,0 +1,52 @@
+name: Build Docker Images
+
+on:
+  push:
+    paths:
+      - '.github/docker-node/*.Dockerfile'
+
+  workflow_dispatch:
+
+jobs:
+  build-push:
+    name: Build docker images
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: 
+        tag: [
+          '10-alpine3.9-build',
+          '10-centos7-build',
+          '10-amazonlinux2',
+          '10-centos7',
+          '10-centos8',
+          '12-alpine3.9-build',
+          '12-centos7-build',
+          '12-amazonlinux2',
+          '12-centos7',
+          '12-centos8',
+          '14-alpine3.10-build',
+          '14-centos7-build',
+          '14-amazonlinux2',
+          '14-centos7',
+          '14-centos8'
+        ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./.github/docker-node/
+          file: ./.github/docker-node/${{ matrix.tag }}.Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/node:${{ matrix.tag }}
