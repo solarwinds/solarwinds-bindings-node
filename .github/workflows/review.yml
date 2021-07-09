@@ -1,0 +1,53 @@
+name: Group Build & Test (Pull)
+
+on: 
+  pull_request: 
+
+  workflow_dispatch:
+
+jobs:
+  build-group-test:
+    runs-on: ubuntu-latest 
+    strategy:
+      fail-fast: false
+      # build with the lowest versions of the OSs supported.
+      # ensures the glibc/musl versions are the oldest/most compatible. 
+      matrix: 
+        image: [
+          'ghcr.io/${{ github.repository }}/node:10-alpine3.9-build',
+          'ghcr.io/${{ github.repository }}/node:12-alpine3.9-build',
+          'ghcr.io/${{ github.repository }}/node:14-alpine3.10-build',
+          'ghcr.io/${{ github.repository }}/node:10-centos7-build',
+          'ghcr.io/${{ github.repository }}/node:12-centos7-build',
+          'ghcr.io/${{ github.repository }}/node:14-centos7-build'
+        ]
+    container:
+        image: ${{ matrix.image }}
+
+    env:
+      # TODO: move to staging when AO-20147
+      AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
+
+    steps:
+      - name: Checkout ${{ github.ref }}
+        uses: actions/checkout@v2
+
+      - name: Show Environment Info
+        run: |
+          printenv
+          node --version
+          npm --version 
+          cat /etc/os-release
+
+      # must install specific dependencies before a build
+      # can't call npm install. doing so may fallback-to-build if package has yet to be published (double build)
+      # use npm workaround specifying a package name to bypass install script in package.json
+      - name: NPM Install dependencies
+        run: npm install linux-os-info --unsafe-perm
+
+      # runs: node setup-liboboe.js && node-pre-gyp install --build-from-source
+      - name: NPM Install with Rebuild from source
+        run: npm run rebuild
+
+      - name: Run tests
+        run: npm test
