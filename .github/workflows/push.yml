@@ -1,0 +1,57 @@
+name: Single Build & Test (Push)
+
+# workflow is for a branch push only and ignores master.
+# push to master (which is also pull requet merge) has a more elaborate workflow to run
+# github repo is configured with branch protection on master.
+on: 
+  push:
+    branches-ignore:
+      - 'master'
+
+  workflow_dispatch:
+    inputs: 
+      node:
+        required: false
+        description: 'A node version (e.g 10.16.0)'
+        default: '14' # TODO: update to 16 when support is added
+
+jobs:
+  build-single-test:
+    runs-on: ubuntu-latest # environment job will run in
+
+    env:
+      # TODO: move to staging when AO-20147
+      AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }} 
+
+    steps:
+      - name: Checkout ${{ github.ref }}
+        uses: actions/checkout@v2
+
+      - name: Setup Node ${{ github.event.inputs.node || github.event.inputs.node.default }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ github.event.inputs.node || github.event.inputs.node.default }}
+
+      - name: Show Info
+        run: |
+          whoami
+          id
+          printenv
+          node --version
+          npm --version 
+          cat /etc/os-release
+          pwd
+          ls -al
+
+      # must install specific dependencies before a build
+      # can't call npm install. doing so may fallback-to-build if package has yet to be published (double build)
+      # use npm workaround specifying a package name to bypass install script in package.json
+      - name: NPM Install dependencies
+        run: npm install linux-os-info --unsafe-perm
+
+      # runs: node setup-liboboe.js && node-pre-gyp install --build-from-source
+      - name: NPM Install with Rebuild from source
+        run: npm run rebuild
+
+      - name: Run tests
+        run: npm test
