@@ -1,7 +1,7 @@
 name: Single Build & Test (Push)
 
 # workflow is for a branch push only and ignores master.
-# push to master (which is also pull requet merge) has a more elaborate workflow to run
+# push to master (which is also pull request merge) has a more elaborate workflow to run
 # github repo is configured with branch protection on master.
 on: 
   push:
@@ -27,10 +27,10 @@ jobs:
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v2
 
-      - name: Setup Node ${{ github.event.inputs.node || github.event.inputs.node.default }}
+      - name: Setup Node ${{ github.event.inputs.node || '14' }}
         uses: actions/setup-node@v2
         with:
-          node-version: ${{ github.event.inputs.node || github.event.inputs.node.default }}
+          node-version: ${{ github.event.inputs.node || '14' }}
 
       - name: Show Info
         run: |
