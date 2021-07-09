@@ -32,16 +32,12 @@ jobs:
         with:
           node-version: ${{ github.event.inputs.node || '14' }}
 
-      - name: Show Info
+      - name: Show Environment Info
         run: |
-          whoami
-          id
           printenv
           node --version
           npm --version 
           cat /etc/os-release
-          pwd
-          ls -al
 
       # must install specific dependencies before a build
       # can't call npm install. doing so may fallback-to-build if package has yet to be published (double build)
