@@ -6,21 +6,26 @@ on:
   workflow_dispatch:
 
 jobs:
+  load-build-group:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - name: Checkout ${{ github.ref }}
+      uses: actions/checkout@v2
+
+      # build with the lowest versions of the OSs supported.
+      # ensures the glibc/musl versions are the oldest/most compatible.
+    - name: Load build group data
+      id: set-matrix
+      run: .github/scripts/matrix-from-json.sh .github/config/build-group.json
+
   build-group-test:
     runs-on: ubuntu-latest 
+    needs: load-build-group
     strategy:
       fail-fast: false
-      # build with the lowest versions of the OSs supported.
-      # ensures the glibc/musl versions are the oldest/most compatible. 
-      matrix: 
-        image: [
-          'ghcr.io/${{ github.repository }}/node:10-alpine3.9-build',
-          'ghcr.io/${{ github.repository }}/node:12-alpine3.9-build',
-          'ghcr.io/${{ github.repository }}/node:14-alpine3.10-build',
-          'ghcr.io/${{ github.repository }}/node:10-centos7-build',
-          'ghcr.io/${{ github.repository }}/node:12-centos7-build',
-          'ghcr.io/${{ github.repository }}/node:14-centos7-build'
-        ]
+      matrix: ${{fromJson(needs.load-build-group.outputs.matrix)}}
     container:
         image: ${{ matrix.image }}
 
