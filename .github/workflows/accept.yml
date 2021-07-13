@@ -53,8 +53,8 @@ jobs:
           npm --version 
           cat /etc/os-release
 
-      # must install specific dependencies before a build
-      # can't call npm install. doing so may fallback-to-build if package has yet to be published (double build)
+      # must install dependencies before using node-pre-gyp
+      # rather not call npm install as doing so may fallback-to-build if package has yet to be published.
       # use npm workaround specifying a package name to bypass install script in package.json
       - name: NPM Install dependencies
         run: npm install linux-os-info --unsafe-perm
