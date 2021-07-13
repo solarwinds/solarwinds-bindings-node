@@ -1,4 +1,4 @@
-name: Build Docker Images
+name: Prep - Build Docker Images (manual)
 
 on:
   # TODO: revisit.
@@ -33,7 +33,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix: ${{fromJson(needs.load-docker-node.outputs.matrix)}}
+      matrix: ${{ fromJson(needs.load-docker-node.outputs.matrix) }}
 
     steps:
       - name: Checkout repository

@@ -1,4 +1,4 @@
-name: Release! Build & Package, Target Prod Install, NPM Publish (Tag)
+name: Release - Build & Package, Target Prod Install, NPM Publish (on push tag)
 
 on: 
   push: 
@@ -28,7 +28,7 @@ jobs:
     needs: load-build-group
     strategy:
       fail-fast: false
-      matrix: ${{fromJson(needs.load-build-group.outputs.matrix)}}
+      matrix: ${{ fromJson(needs.load-build-group.outputs.matrix) }}
     container:
         image:  ${{ matrix.image }}
 
@@ -89,7 +89,7 @@ jobs:
     needs: load-target-group
     strategy:
       fail-fast: false
-      matrix: ${{fromJson(needs.load-target-group.outputs.matrix)}}
+      matrix: ${{ fromJson(needs.load-target-group.outputs.matrix) }}
 
     steps:
       - name: Checkout ${{ github.ref }}

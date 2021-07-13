@@ -1,4 +1,4 @@
-name: Single Build & Test (Push)
+name: Push - Single Build & Test (on push)
 
 # workflow is for a branch push only and ignores master.
 # push to master (which is also pull request merge) has a more elaborate workflow to run

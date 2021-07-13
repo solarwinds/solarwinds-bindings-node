@@ -1,4 +1,4 @@
-name: Group Build & Test (Pull)
+name: Review - Group Build & Test (on pull)
 
 on: 
   pull_request: 
@@ -25,7 +25,7 @@ jobs:
     needs: load-build-group
     strategy:
       fail-fast: false
-      matrix: ${{fromJson(needs.load-build-group.outputs.matrix)}}
+      matrix: ${{ fromJson(needs.load-build-group.outputs.matrix) }}
     container:
         image: ${{ matrix.image }}
 
