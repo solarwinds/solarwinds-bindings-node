@@ -43,6 +43,10 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
 
     steps:
+      # See comment at bottom of file.
+      - name: Change Owner of Container Working Directory
+        run: chown root:root .
+
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v2
 
@@ -90,6 +94,10 @@ jobs:
       AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
 
     steps:
+      # See comment at bottom of file.
+      - name: Change Owner of Container Working Directory
+        run: chown root:root .
+
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v2
 
@@ -126,6 +134,10 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
 
     steps:
+      # See comment at bottom of file.
+      - name: Change Owner of Container Working Directory
+        run: chown root:root .
+
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v2
 
@@ -188,6 +200,10 @@ jobs:
       AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
 
     steps:
+      # See comment at bottom of file.
+      - name: Change Owner of Container Working Directory
+        run: chown root:root .
+
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v2
 
@@ -209,3 +225,12 @@ jobs:
       - name: Run tests
         run: npm test
         if: ${{ github.event.inputs.target-test }}
+
+      # Why Change Owner of Container Working Directory?
+
+      # the working directory is created by the runner and mounted to the container.
+      # container user is root and the runner is not a user in the container.
+      # this is a github actions design flaw.
+      # when npm 7 is run as root, scripts are always run with the effective uid and gid of the working directory owner.
+      # node 16 can't install under default setup.
+      # specifying workdir for container and path for checkout does not work due to bug.
