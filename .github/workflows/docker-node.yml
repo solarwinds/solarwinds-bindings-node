@@ -1,9 +1,14 @@
 name: Build Docker Images
 
 on:
-  push:
-    paths:
-      - '.github/docker-node/*.Dockerfile'
+  # TODO: revisit.
+  # as of July 2021, there seems to be a GitHub Actions bug causing this workflow to run when a tag is pushed.
+  # adding tags-ignore: causes the workflow to not run at all.
+  # since tag push is used for release trigger, decision was made to build images using manual trigger only.
+
+  # push:
+  #   paths:
+  #     - '.github/docker-node/*.Dockerfile'
 
   workflow_dispatch:
 
