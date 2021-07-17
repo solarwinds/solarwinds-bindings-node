@@ -1,4 +1,4 @@
-name: Single Build & Test (Push)
+name: Push - Single Build & Test (on push)
 
 # workflow is for a branch push only and ignores master.
 # push to master (which is also pull request merge) has a more elaborate workflow to run
@@ -7,6 +7,8 @@ on:
   push:
     branches-ignore:
       - 'master'
+      # any branch with a name ending in -no-build will not trigger this workflow.
+      - '*-no-build'
 
   workflow_dispatch:
     inputs: 

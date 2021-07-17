@@ -1,4 +1,4 @@
-name: Fallback Install, Build & Package & Prebuilt Install (Merge)
+name: Accept - Fallback Install, Build & Package & Prebuilt Install (on merge)
 
 on: 
   push: 
@@ -34,7 +34,7 @@ jobs:
     needs: load-build-group
     strategy:
       fail-fast: false
-      matrix: ${{fromJson(needs.load-build-group.outputs.matrix)}}
+      matrix: ${{ fromJson(needs.load-build-group.outputs.matrix) }}
     container:
         image:  ${{ matrix.image }}
 
@@ -81,7 +81,7 @@ jobs:
     needs: load-fallback-group
     strategy:
       fail-fast: false
-      matrix: ${{fromJson(needs.load-fallback-group.outputs.matrix)}}
+      matrix: ${{ fromJson(needs.load-fallback-group.outputs.matrix) }}
     container:
         image: ${{ matrix.image }}
 
@@ -117,7 +117,7 @@ jobs:
     needs: [load-build-group, fallback-group-install]
     strategy:
       fail-fast: false
-      matrix: ${{fromJson(needs.load-build-group.outputs.matrix)}}
+      matrix: ${{ fromJson(needs.load-build-group.outputs.matrix) }}
     container:
         image:  ${{ matrix.image }}
 
@@ -179,7 +179,7 @@ jobs:
     needs: load-prebuilt-group
     strategy:
       fail-fast: false
-      matrix: ${{fromJson(needs.load-prebuilt-group.outputs.matrix)}}
+      matrix: ${{ fromJson(needs.load-prebuilt-group.outputs.matrix) }}
     container:
         image: ${{ matrix.image }}
 
