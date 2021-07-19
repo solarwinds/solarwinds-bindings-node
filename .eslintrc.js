@@ -4,8 +4,10 @@ module.exports = {
     es2021: true,
     node: true
   },
+  plugins: ['yaml'],
   extends: [
-    'standard'
+    'standard',
+    'plugin:yaml/recommended'
   ],
   parserOptions: {
     ecmaVersion: 12
