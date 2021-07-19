@@ -9,11 +9,12 @@ RUN yum -y install \
 
 # yum install gcc-c++  will install version 4.8.5
 # we need a higher version that supports c++ 14.
-# following will get version 7.3.1 and set as default
+# see: https://github.com/nodejs/node/blob/master/BUILDING.md#supported-toolchains
+# following will get version 8.3.1 and set as default
 RUN yum install -y centos-release-scl
-RUN yum install -y devtoolset-7-gcc*
+RUN yum install -y devtoolset-8-gcc*
 
-ENV PATH=/opt/rh/devtoolset-7/root/bin:$PATH
+ENV PATH=/opt/rh/devtoolset-8/root/bin:$PATH
 
 # install nvm
 ENV NVM_DIR /root/.nvm
