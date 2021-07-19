@@ -12,7 +12,8 @@
   "author": "Bruce A. MacNaughton <bruce.macnaughton@solarwinds.com>",
   "contributors": [
     "Stephen Belanger <admin@stephenbelanger.com>",
-    "Silvio Fernandes <silviofernandes.developer@gmail.com"
+    "Silvio Fernandes <silviofernandes.developer@gmail.com",
+    "Ron Ilan <ron.ilan@solarwinds.com>"
   ],
   "main": "index.js",
   "gypfile": true,
