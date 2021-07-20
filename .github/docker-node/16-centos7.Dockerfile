@@ -1,6 +1,6 @@
 FROM centos:7
 
-ENV NODE_VERSION 16.3.0
+ENV NODE_VERSION 16.5.0
 
 # install nvm
 ENV NVM_DIR /root/.nvm
