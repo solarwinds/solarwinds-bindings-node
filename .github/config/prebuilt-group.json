@@ -58,6 +58,9 @@
       "image": "node:14-stretch-slim"
     },
     {
+      "image": "ghcr.io/$GITHUB_REPOSITORY/node:14-alpine3.9"
+    },
+    {
       "image": "node:14-alpine3.10"
     },
     {
@@ -80,6 +83,39 @@
     },
     {
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:14-amazonlinux2"
+    },
+    {
+      "image": "node:16-buster-slim"
+    },
+    {
+      "image": "node:16-stretch-slim"
+    },
+    {
+      "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-alpine3.9"
+    },
+    {
+      "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-alpine3.10"
+    },
+    {
+      "image": "node:16-alpine3.11"
+    },
+    {
+      "image": "node:16-alpine3.12"
+    },
+    {
+      "image": "node:16-alpine3.13"
+    },
+    {
+      "image": "node:16-alpine3.14"
+    },
+    {
+      "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-centos7"
+    },
+    {
+      "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-centos8"
+    },
+    {
+      "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-amazonlinux2"
     }
   ]
 }
