@@ -22,8 +22,6 @@ const oboeNames = {
 }
 
 function setupLiboboe (cb) {
-  // const version = fs.readFileSync(dir + 'VERSION', 'utf8').slice(0, -1)
-
   releaseInfo().then(info => {
     if (info.platform !== 'linux') {
       /* eslint-disable no-console */
@@ -36,14 +34,6 @@ function setupLiboboe (cb) {
     let versionKey = 'linux'
     if (info.id === 'alpine') {
       versionKey = 'alpine'
-      // if greater than version 3.9 then use alpine with openSSL. if less than 3.9
-      // use the libreSSL version.
-      // const parts = info.version_id.split('.').map(p => parseInt(p));
-      // if (parts[0] > 3) {
-      //  versionKey = 'alpine';
-      // } else {
-      //  versionKey = parts[0] === 3 && parts[1] >= 9 ? 'alpine' : 'alpineLibreSSL';
-      // }
     }
     return versionKey
   }).then(linux => {
