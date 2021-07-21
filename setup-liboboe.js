@@ -17,8 +17,7 @@ const deleteUnused = false
 //
 const oboeNames = {
   linux: 'liboboe-1.0-x86_64.so.0.0.0',
-  alpine: 'liboboe-1.0-alpine-x86_64.so.0.0.0',
-  alpineLibreSSL: 'liboboe-1.0-alpine-libressl-x86_64.so.0.0.0'
+  alpine: 'liboboe-1.0-alpine-x86_64.so.0.0.0'
 }
 
 function setupLiboboe (cb) {
