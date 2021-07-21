@@ -1,19 +1,19 @@
-'use strict';
+/* global describe, it */
+'use strict'
 
 const bindings = require('..')
 const expect = require('chai').expect
 
-const serviceKey = `${process.env.AO_TOKEN_PROD}:node-bindings-test`;
+const serviceKey = `${process.env.AO_TOKEN_PROD}:node-bindings-test`
 
-const maxIsReadyToSampleWait = 60000;
+const maxIsReadyToSampleWait = 60000
 
 describe('addon.settings', function () {
-
   it('should initialize oboe with only a service key', function () {
-    this.timeout(maxIsReadyToSampleWait);
-    const result = bindings.oboeInit({serviceKey});
+    this.timeout(maxIsReadyToSampleWait)
+    const result = bindings.oboeInit({ serviceKey })
     // either already init'd or success.
-    expect(result).oneOf([-1, 0]);
+    expect(result).oneOf([-1, 0])
     bindings.isReadyToSample(maxIsReadyToSampleWait)
   })
 
@@ -53,7 +53,7 @@ describe('addon.settings', function () {
   })
 
   it('should not throw when setting invalid sample rate', function () {
-    let threw = false;
+    let threw = false
     try {
       bindings.Settings.setDefaultSampleRate(-1)
       bindings.Settings.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE + 1)
@@ -65,7 +65,7 @@ describe('addon.settings', function () {
   })
 
   it('should handle bad sample rates correctly', function () {
-    let rateUsed;
+    let rateUsed
     rateUsed = bindings.Settings.setDefaultSampleRate(-1)
     expect(rateUsed).equal(0)
     rateUsed = bindings.Settings.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE + 1)
@@ -81,46 +81,46 @@ describe('addon.settings', function () {
   })
 
   it('should tell us that a non-traced xtrace doesn\'t need to be sampled', function () {
-    const ev0 = bindings.Event.makeRandom(0);
-    const event = new bindings.Event(ev0);
-    const xtrace = event.toString();
-    const settings = bindings.Settings.getTraceSettings({xtrace});
+    const ev0 = bindings.Event.makeRandom(0)
+    const event = new bindings.Event(ev0)
+    const xtrace = event.toString()
+    const settings = bindings.Settings.getTraceSettings({ xtrace })
 
-    expect(settings).property('message', 'ok');
-    expect(settings).property('status', -1)       // -1 means non-sampled xtrace
-    expect(settings).property('doSample', false);
-    expect(settings.metadata.toString()).equal(xtrace);
+    expect(settings).property('message', 'ok')
+    expect(settings).property('status', -1) // -1 means non-sampled xtrace
+    expect(settings).property('doSample', false)
+    expect(settings.metadata.toString()).equal(xtrace)
   })
 
   it('should get verification that a request should be sampled', function (done) {
     bindings.Settings.setTracingMode(bindings.TRACE_ALWAYS)
     bindings.Settings.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE)
-    const event = new bindings.Event(bindings.Event.makeRandom(1));
-    const xtraceString = event.toString();
+    const event = new bindings.Event(bindings.Event.makeRandom(1))
+    const xtraceString = event.toString()
     let counter = 20
     // test for old behavior and "is-continued" behavior
-    const [maj, min] = bindings.Config.getVersionString().split('.').map(n => Number(n));
-    const negative = (maj == 10 && min >= 1) || (maj > 10);
+    const [maj, min] = bindings.Config.getVersionString().split('.').map(n => Number(n))
+    const negative = (maj == 10 && min >= 1) || (maj > 10) // eslint-disable-line eqeqeq
     // poll to give time for the SSL connection to complete. it should have
     // been waited on in before() but it's possible for the connection to break.
     const id = setInterval(function () {
-      const settings = bindings.Settings.getTraceSettings({xtrace: xtraceString});
-      if (--counter <= 0 || typeof settings === 'object' && settings.source !== (negative ? -1 : 2)) {
+      const settings = bindings.Settings.getTraceSettings({ xtrace: xtraceString })
+      if (--counter <= 0 || typeof settings === 'object' && settings.source !== (negative ? -1 : 2)) { // eslint-disable-line no-mixed-operators
         clearInterval(id)
-        expect(settings).property('status', 0);
+        expect(settings).property('status', 0)
         expect(settings).property('doSample', true)
         expect(settings).property('doMetrics', true)
         expect(settings).property('edge', true)
         expect(settings.metadata).instanceof(bindings.Event)
-        expect(settings).property('rate', negative ? -1 : bindings.MAX_SAMPLE_RATE);
-        expect(settings).property('tokenBucketRate').exist;
-        expect(settings).property('tokenBucketCapacity').exist;
+        expect(settings).property('rate', negative ? -1 : bindings.MAX_SAMPLE_RATE)
+        expect(settings).property('tokenBucketRate').exist // eslint-disable-line no-unused-expressions
+        expect(settings).property('tokenBucketCapacity').exist // eslint-disable-line no-unused-expressions
         // the following depends on whether this suite is run standalone or with other
         // test files.
         if (negative) {
-          expect(settings.source).equal(-1);
+          expect(settings.source).equal(-1)
         } else {
-          expect(settings.source).oneOf([1, 6]);
+          expect(settings.source).oneOf([1, 6])
         }
 
         if (counter < 0) {
