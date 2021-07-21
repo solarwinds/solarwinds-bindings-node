@@ -48,7 +48,7 @@
     "test": "./test.sh",
     "install": "node setup-liboboe.js && node-pre-gyp install --fallback-to-build",
     "rebuild": "node setup-liboboe.js && node-pre-gyp install --build-from-source",
-    "lint": "eslint test/**/*.js working/*.js *.js"
+    "lint": "eslint . --ext .json,.js,.yml --ignore-pattern working --ignore-pattern bench --ignore-pattern archived"
   },
   "dependencies": {
     "@mapbox/node-pre-gyp": "^1.0.0-alpha2",
@@ -62,7 +62,13 @@
     "axios": "^0.21.1",
     "benchmark": "^2.1.4",
     "chai": "^4.2.0",
-    "eslint": "^7.28.0",
+    "eslint": "^7.31.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-json": "^3.0.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "eslint-plugin-yaml": "^0.5.0",
     "mocha": "^8.4.0"
   }
 }
