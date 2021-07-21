@@ -1,3 +1,4 @@
+/* global describe, it */
 'use strict'
 
 const bindings = require('..')
@@ -99,12 +100,12 @@ describe('addon.settings', function () {
     let counter = 20
     // test for old behavior and "is-continued" behavior
     const [maj, min] = bindings.Config.getVersionString().split('.').map(n => Number(n))
-    const negative = (maj == 10 && min >= 1) || (maj > 10)
+    const negative = (maj == 10 && min >= 1) || (maj > 10) // eslint-disable-line eqeqeq
     // poll to give time for the SSL connection to complete. it should have
     // been waited on in before() but it's possible for the connection to break.
     const id = setInterval(function () {
       const settings = bindings.Settings.getTraceSettings({ xtrace: xtraceString })
-      if (--counter <= 0 || typeof settings === 'object' && settings.source !== (negative ? -1 : 2)) {
+      if (--counter <= 0 || typeof settings === 'object' && settings.source !== (negative ? -1 : 2)) { // eslint-disable-line no-mixed-operators
         clearInterval(id)
         expect(settings).property('status', 0)
         expect(settings).property('doSample', true)
@@ -112,8 +113,8 @@ describe('addon.settings', function () {
         expect(settings).property('edge', true)
         expect(settings.metadata).instanceof(bindings.Event)
         expect(settings).property('rate', negative ? -1 : bindings.MAX_SAMPLE_RATE)
-        expect(settings).property('tokenBucketRate').exist
-        expect(settings).property('tokenBucketCapacity').exist
+        expect(settings).property('tokenBucketRate').exist // eslint-disable-line no-unused-expressions
+        expect(settings).property('tokenBucketCapacity').exist // eslint-disable-line no-unused-expressions
         // the following depends on whether this suite is run standalone or with other
         // test files.
         if (negative) {

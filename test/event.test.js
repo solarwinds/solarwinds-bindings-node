@@ -1,3 +1,4 @@
+/* global describe, it */
 'use strict'
 
 const bindings = require('../')
@@ -38,7 +39,7 @@ describe('addon.event', function () {
 
     for (const t of tests) {
       function badCall () {
-        new bindings.Event(...t.args)
+        new bindings.Event(...t.args) // eslint-disable-line no-new
       }
       expect(badCall, `${t.text} should throw "${t.e}"`).throws(TypeError, t.e)
     }
@@ -55,7 +56,7 @@ describe('addon.event', function () {
   it('should construct an event with or without an edge', function () {
     // eslint-disable-next-line space-infix-ops
     const fmt = 1|2|8 // just compare the header, task, and flags.
-    const event = new aob.Event.makeRandom()
+    const event = new aob.Event.makeRandom() // eslint-disable-line new-cap
 
     const tests = [
       { args: [event, false], text: 'no edge' },
@@ -183,23 +184,23 @@ describe('addon.event', function () {
   })
 
   it('makeRandom() should allocate a small event', function () {
-    const event = new aob.Event.makeRandom()
+    const event = new aob.Event.makeRandom() // eslint-disable-line new-cap
     const bytes = event.getBytesAllocated()
     expect(bytes).equal(224, 'sizeof(oboe_event_t) should be 224')
   })
 
   it('makeFromString() should allocate a small event', function () {
-    let event = new aob.Event.makeFromString(evUnsampled)
+    let event = new aob.Event.makeFromString(evUnsampled) // eslint-disable-line new-cap
     let bytes = event.getBytesAllocated()
     expect(bytes).equal(224, 'sizeof(oboe_event_t) should be 224')
 
-    event = new aob.Event.makeFromString(evSampled)
+    event = new aob.Event.makeFromString(evSampled) // eslint-disable-line new-cap
     bytes = event.getBytesAllocated()
     expect(bytes).equal(224, 'sizeof(oboe_event_t) should be 224')
   })
 
   it('new Event() should allocate a full event', function () {
-    const xtraceData = new aob.Event.makeRandom()
+    const xtraceData = new aob.Event.makeRandom() // eslint-disable-line new-cap
     const event = new aob.Event(xtraceData)
     const bytes = event.getBytesAllocated()
     expect(bytes).equal(224 + 1024, 'should include a 1024 byte buffer')

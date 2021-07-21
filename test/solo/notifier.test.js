@@ -1,3 +1,4 @@
+/* global describe, before, it */
 'use strict'
 
 const net = require('net')

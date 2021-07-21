@@ -1,3 +1,4 @@
+/* global describe, it */
 'use strict'
 //
 // this runs as a separate test in order to make sure that oboe and
