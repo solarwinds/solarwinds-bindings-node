@@ -3,7 +3,7 @@
 const binary = require('@mapbox/node-pre-gyp')
 const path = require('path')
 const pkgpath = path.resolve(path.join(__dirname, './package.json'))
-const binding_path = binary.find(pkgpath)
+const binding_path = binary.find(pkgpath) // eslint-disable-line camelcase
 const bindings = require(binding_path)
 
 module.exports = bindings
@@ -15,7 +15,7 @@ module.exports.init = function (sk) {
 
 try {
   // this is hardcoded as node-pre-gyp doesn't know about multiple targets.
-  const metrics_path = binding_path.replace('apm_bindings.node', 'ao_metrics.node')
+  const metrics_path = binding_path.replace('apm_bindings.node', 'ao_metrics.node') // eslint-disable-line camelcase
   module.exports.metrics = require(metrics_path)
 } catch (e) {
   // eslint-disable-next-line no-console
@@ -34,7 +34,7 @@ const Event = module.exports.Event
 // function.
 //
 Event.makeFromString = function (string) {
-  if (!string || string.length != 60) {
+  if (!string || string.length != 60) { // eslint-disable-line eqeqeq
     return undefined
   }
   const b = Buffer.from(string, 'hex')
