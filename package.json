@@ -48,7 +48,11 @@
     "test": "./test.sh",
     "install": "node setup-liboboe.js && node-pre-gyp install --fallback-to-build",
     "rebuild": "node setup-liboboe.js && node-pre-gyp install --build-from-source",
-    "lint": "eslint . --ext .json,.js,.yml --fix --ignore-pattern working --ignore-pattern bench --ignore-pattern archived"
+    "lint": "eslint . --ext .json,.js,.yml --fix --ignore-pattern working --ignore-pattern bench --ignore-pattern archived",
+    "dev": "dev/start.sh",
+    "dev:oneoff": "dev/oneoff.sh",
+    "dev:repo:reset": "dev/repo/reset.sh",
+    "dev:reinstall": "rm -rf node_modules && npm install --unsafe-perm"
   },
   "dependencies": {
     "@mapbox/node-pre-gyp": "^1.0.0-alpha2",
