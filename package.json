@@ -58,8 +58,7 @@
     "@mapbox/node-pre-gyp": "^1.0.0-alpha2",
     "linux-os-info": "^2.0.0",
     "nan": "^2.14.2",
-    "node-addon-api": "^2.0.0",
-    "node-gyp": "^4.0.0"
+    "node-addon-api": "^2.0.0"
   },
   "devDependencies": {
     "aws-sdk": "^2.802.0",
