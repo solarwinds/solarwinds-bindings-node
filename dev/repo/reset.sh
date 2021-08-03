@@ -48,4 +48,9 @@ for branch in .git/refs/heads/*; do
   init_branch
 done
 
-git push --all origin
+git # in the dev directory. origin set to dev repo
+remote=$(git config --get remote.origin.url)
+if [[ $PWD == *${dev_name} ]] && [[ $remote == *${dev_name}.git ]]; then
+  git push --all origin
+fi
+
