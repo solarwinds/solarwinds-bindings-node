@@ -12,6 +12,8 @@ cleanup() {
     rm -rf dist
     rm -rf build-tmp-napi-v7
     rm -rf build-tmp-napi-v4
+
+    docker rm "$container_id"
 }
 
 set -e
