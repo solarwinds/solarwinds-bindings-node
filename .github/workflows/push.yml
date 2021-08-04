@@ -22,8 +22,8 @@ jobs:
     runs-on: ubuntu-latest # environment job will run in
 
     env:
-      # TODO: move to staging when AO-20147
-      AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }} 
+      AO_TOKEN_STG: ${{ secrets.AO_TOKEN_STG }}
+      AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
 
     steps:
       - name: Checkout ${{ github.ref }}
