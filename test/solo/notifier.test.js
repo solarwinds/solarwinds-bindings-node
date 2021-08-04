@@ -87,7 +87,7 @@ describe('addon.Notifier functions', function () {
 
   it('oboeInit() should successfully complete', function () {
     const details = {}
-    const options = Object.assign({}, { serviceKey, endpoint, traceMetrics: true })
+    const options = Object.assign({}, { serviceKey, endpoint })
     const expected = options
     const result = bindings.oboeInit(options, details)
 
@@ -98,6 +98,9 @@ describe('addon.Notifier functions', function () {
     const keysIn = Object.keys(options)
     const keysOut = Object.keys(details.processed)
     expect(keysIn.length).equal(keysOut.length)
+
+    const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
+    expect(ready).equal(1, `should be connected to ${endpoint} and ready`)
   })
 
   it(`should receive an oboe config message from ${endpoint}`, function (done) {
