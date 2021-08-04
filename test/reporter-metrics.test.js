@@ -1,7 +1,7 @@
 /* global describe, before, it */
 'use strict'
 
-const aob = require('../')
+const bindings = require('../')
 const expect = require('chai').expect
 
 const env = process.env
@@ -13,7 +13,7 @@ describe('reporter-metrics', function () {
 
   before(function () {
     this.timeout(maxIsReadyToSampleWait)
-    const status = aob.oboeInit({ serviceKey })
+    const status = bindings.oboeInit({ serviceKey })
     // oboeInit can return -1 for already initialized or 0 if succeeded.
     // depending on whether this is run as part of a suite or standalone
     // either result is valid.
@@ -21,7 +21,7 @@ describe('reporter-metrics', function () {
       throw new Error('oboeInit() failed')
     }
 
-    const ready = aob.isReadyToSample(maxIsReadyToSampleWait)
+    const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
     const endPoint = env.APPOPTICS_COLLECTOR || 'collector.appoptics.com'
     expect(ready).equal(1, `should be connected to ${endPoint} and ready`)
   })
@@ -37,14 +37,14 @@ describe('reporter-metrics', function () {
 
     for (let i = 0; i < args.length; i++) {
       function test () {
-        aob.Reporter.sendMetrics(args[i])
+        bindings.Reporter.sendMetrics(args[i])
       }
       expect(test).throws('invalid signature for sendMetrics()')
     }
   })
 
   it('should handle an array of zero length', function () {
-    const status = aob.Reporter.sendMetrics([])
+    const status = bindings.Reporter.sendMetrics([])
     expect(status).deep.equal({ errors: [] })
   })
 
@@ -61,7 +61,7 @@ describe('reporter-metrics', function () {
       { name: 'gc.count', count: 1, value: 11235813, tags: ['i am not a plain object'], [x]: 'tags must be plain object' }
     ]
 
-    const results = aob.Reporter.sendMetrics(metrics)
+    const results = bindings.Reporter.sendMetrics(metrics)
     expect(results).not.property('correct')
     expect(results).property('errors').an('array')
     expect(results.errors.length).equal(metrics.length, 'all metrics should be errors')
@@ -94,7 +94,7 @@ describe('reporter-metrics', function () {
     ]
     // make this a noop so that if run following the memory tests that it won't fail
     // due to the memory tests having overloaded oboe.
-    const results = aob.Reporter.sendMetrics(metrics, { testing: true, noop: true })
+    const results = bindings.Reporter.sendMetrics(metrics, { testing: true, noop: true })
     expect(results).property('correct').an('array')
     expect(results.correct.length).equal(metrics.length)
     expect(results).property('errors').an('array')

@@ -1,8 +1,7 @@
 /* global describe, before, it */
 'use strict'
 
-const aob = require('../..')
-const r = aob.Reporter
+const bindings = require('../..')
 const expect = require('chai').expect
 
 const env = process.env
@@ -16,7 +15,7 @@ describe('reporter-metrics-memory', function () {
 
   before(function () {
     this.timeout(maxIsReadyToSampleWait)
-    const status = aob.oboeInit({ serviceKey })
+    const status = bindings.oboeInit({ serviceKey })
     // oboeInit can return -1 for already initialized or 0 if succeeded.
     // depending on whether this is run as part of a suite or standalone
     // either result is valid.
@@ -25,7 +24,7 @@ describe('reporter-metrics-memory', function () {
     }
 
     const start = Date.now()
-    const ready = aob.isReadyToSample(maxIsReadyToSampleWait)
+    const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
     const endPoint = env.APPOPTICS_COLLECTOR || 'collector.appoptics.com'
     // eslint-disable-next-line no-console
     console.log(`[isReadyToSample() took ${Date.now() - start}ms]`)
@@ -62,7 +61,7 @@ describe('reporter-metrics-memory', function () {
         // eslint-disable-next-line no-unused-vars
         start1 = process.memoryUsage().rss
         for (let i = warmup; i > 0; i--) {
-          r.sendMetric('nothing.really', { value: i })
+          bindings.Reporter.sendMetric('nothing.really', { value: i })
         }
         // eslint-disable-next-line no-unused-vars
         done1 = process.memoryUsage().rss
@@ -74,7 +73,7 @@ describe('reporter-metrics-memory', function () {
         // then it's not losing memory for all practical purposes.
         start2 = process.memoryUsage().rss + checkCount
         for (let i = checkCount; i > 0; i--) {
-          r.sendMetric('nothing.really', { value: i, testing: true })
+          bindings.Reporter.sendMetric('nothing.really', { value: i, testing: true })
         }
         // eslint-disable-next-line no-unused-vars
         done2 = process.memoryUsage().rss
@@ -90,7 +89,7 @@ describe('reporter-metrics-memory', function () {
       .then(wait)
       .then(function () {
         for (let i = checkCount; i > 0; i--) {
-          r.sendMetric('nothing.really', { value: i, testing: true })
+          bindings.Reporter.sendMetric('nothing.really', { value: i, testing: true })
         }
         gc(true)
       })
@@ -126,7 +125,7 @@ describe('reporter-metrics-memory', function () {
         // eslint-disable-next-line no-unused-vars
         start1 = process.memoryUsage().rss
         for (let i = warmup; i > 0; i -= batchSize) {
-          r.sendMetrics(metrics)
+          bindings.Reporter.sendMetrics(metrics)
         }
         // eslint-disable-next-line no-unused-vars
         done1 = process.memoryUsage().rss
@@ -138,7 +137,7 @@ describe('reporter-metrics-memory', function () {
         // then it's not losing memory for all practical purposes.
         start2 = process.memoryUsage().rss + checkCount
         for (let i = checkCount; i > 0; i -= batchSize) {
-          r.sendMetrics(metrics)
+          bindings.Reporter.sendMetrics(metrics)
         }
         // eslint-disable-next-line no-unused-vars
         done2 = process.memoryUsage().rss
@@ -154,7 +153,7 @@ describe('reporter-metrics-memory', function () {
       .then(wait)
       .then(function () {
         for (let i = checkCount; i > 0; i -= batchSize) {
-          r.sendMetrics(metrics)
+          bindings.Reporter.sendMetrics(metrics)
         }
         gc(true)
       })

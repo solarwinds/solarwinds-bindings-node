@@ -2,7 +2,6 @@
 'use strict'
 
 const bindings = require('../')
-const aob = bindings
 const expect = require('chai').expect
 
 const evUnsampled = '2B5BD5777CA0077C734B537B64C6B969213358B9F21AA0B1B42979F5C400'
@@ -27,8 +26,8 @@ describe('addon.event', function () {
   })
 
   it('should succeed when called with no arguments', function () {
-    const event = new aob.Event()
-    expect(event).instanceof(aob.Event)
+    const event = new bindings.Event()
+    expect(event).instanceof(bindings.Event)
   })
 
   it('should throw if the constructor is called without an event', function () {
@@ -48,7 +47,7 @@ describe('addon.event', function () {
   it('should construct an event using an event', function () {
     // eslint-disable-next-line space-infix-ops
     const fmt = 1|2|8 // header, task, flags
-    const eventTemplate = aob.Event.makeRandom()
+    const eventTemplate = bindings.Event.makeRandom()
     const event = new bindings.Event(eventTemplate)
     expect(event.toString(fmt)).equal(eventTemplate.toString(fmt))
   })
@@ -56,7 +55,7 @@ describe('addon.event', function () {
   it('should construct an event with or without an edge', function () {
     // eslint-disable-next-line space-infix-ops
     const fmt = 1|2|8 // just compare the header, task, and flags.
-    const event = new aob.Event.makeRandom() // eslint-disable-line new-cap
+    const event = new bindings.Event.makeRandom() // eslint-disable-line new-cap
 
     const tests = [
       { args: [event, false], text: 'no edge' },
@@ -64,15 +63,15 @@ describe('addon.event', function () {
     ]
 
     for (const t of tests) {
-      const ev = new aob.Event(...t.args)
+      const ev = new bindings.Event(...t.args)
       expect(ev.toString(fmt), `with "${t.text}"`).equal(event.toString(fmt))
     }
   })
 
   it('should construct an event using a random template', function () {
-    const random = aob.Event.makeRandom()
+    const random = bindings.Event.makeRandom()
     const headerAndTaskId = random.toString().slice(0, 42)
-    const event = new aob.Event(random)
+    const event = new bindings.Event(random)
     // They should share the same task ID'
     expect(event.toString().slice(0, 42)).equal(headerAndTaskId)
     // they should have different op IDs.
@@ -81,8 +80,8 @@ describe('addon.event', function () {
   })
 
   it('should construct an event with the sample flag set', function () {
-    const ev1 = aob.Event.makeRandom(1)
-    const ev2 = new aob.Event(ev1)
+    const ev1 = bindings.Event.makeRandom(1)
+    const ev2 = new bindings.Event(ev1)
     expect(ev1.toString().slice(-2)).equal('01')
     expect(ev2.toString().slice(-2)).equal('01')
     expect(ev1.getSampleFlag()).equal(true)
@@ -92,25 +91,25 @@ describe('addon.event', function () {
   })
 
   it('shouldn\'t throw when adding a valid KV using addInfo', function () {
-    const event = new aob.Event(aob.Event.makeRandom())
+    const event = new bindings.Event(bindings.Event.makeRandom())
     event.addInfo('key', 'val')
   })
 
   it('shouldn\'t throw when adding an edge from an event', function () {
-    const event = new aob.Event(aob.Event.makeRandom())
-    const edge = new aob.Event(event)
+    const event = new bindings.Event(bindings.Event.makeRandom())
+    const edge = new bindings.Event(event)
     event.addEdge(edge)
   })
 
   it('should add edge from a string', function () {
-    const event = new aob.Event(aob.Event.makeRandom())
+    const event = new bindings.Event(bindings.Event.makeRandom())
     const edge = new bindings.Event(event).toString()
     event.addEdge(edge)
   })
 
   it('should not add edge when task IDs do not match', function () {
-    const event = new aob.Event(aob.Event.makeRandom())
-    const edge = aob.Event.makeRandom()
+    const event = new bindings.Event(bindings.Event.makeRandom())
+    const edge = bindings.Event.makeRandom()
     expect(edge.toString(2)).not.equal(event.toString(2))
 
     // force event to a different task ID because oboe returns "OK"
@@ -128,8 +127,8 @@ describe('addon.event', function () {
   })
 
   it('Event.makeFromString() should work', function () {
-    const ev0 = aob.Event.makeFromString(evUnsampled)
-    const ev1 = aob.Event.makeFromString(evSampled)
+    const ev0 = bindings.Event.makeFromString(evUnsampled)
+    const ev1 = bindings.Event.makeFromString(evSampled)
 
     expect(ev0.getSampleFlag()).equal(false)
     expect(ev0.toString()).equal(evUnsampled)
@@ -138,8 +137,8 @@ describe('addon.event', function () {
   })
 
   it('should serialize an event string', function () {
-    const ev1 = aob.Event.makeFromString(evUnsampled)
-    const ev2 = new aob.Event(ev1)
+    const ev1 = bindings.Event.makeFromString(evUnsampled)
+    const ev2 = new bindings.Event(ev1)
     // task IDs should match
     expect(ev2.toString(2)).equal(ev1.toString(2))
     // op IDs should not match
@@ -151,20 +150,20 @@ describe('addon.event', function () {
   })
 
   it('should create an event with or without adding an edge', function () {
-    const ev1 = new aob.Event(aob.Event.makeRandom(), false)
-    const ev2 = new aob.Event(aob.Event.makeRandom(), true)
-    expect(ev1).instanceof(aob.Event)
-    expect(ev2).instanceof(aob.Event)
+    const ev1 = new bindings.Event(bindings.Event.makeRandom(), false)
+    const ev2 = new bindings.Event(bindings.Event.makeRandom(), true)
+    expect(ev1).instanceof(bindings.Event)
+    expect(ev2).instanceof(bindings.Event)
   })
 
   it('should not crash node when getting the prototype of an event', function () {
-    const event = aob.Event.makeRandom()
+    const event = bindings.Event.makeRandom()
     // eslint-disable-next-line no-unused-vars
     const p = Object.getPrototypeOf(event)
   })
 
   it('should fetch event stats', function () {
-    const stats = aob.Event.getEventStats()
+    const stats = bindings.Event.getEventStats()
     const expectedStats = [
       'totalCreated',
       'totalDestroyed',
@@ -184,24 +183,24 @@ describe('addon.event', function () {
   })
 
   it('makeRandom() should allocate a small event', function () {
-    const event = new aob.Event.makeRandom() // eslint-disable-line new-cap
+    const event = new bindings.Event.makeRandom() // eslint-disable-line new-cap
     const bytes = event.getBytesAllocated()
     expect(bytes).equal(224, 'sizeof(oboe_event_t) should be 224')
   })
 
   it('makeFromString() should allocate a small event', function () {
-    let event = new aob.Event.makeFromString(evUnsampled) // eslint-disable-line new-cap
+    let event = new bindings.Event.makeFromString(evUnsampled) // eslint-disable-line new-cap
     let bytes = event.getBytesAllocated()
     expect(bytes).equal(224, 'sizeof(oboe_event_t) should be 224')
 
-    event = new aob.Event.makeFromString(evSampled) // eslint-disable-line new-cap
+    event = new bindings.Event.makeFromString(evSampled) // eslint-disable-line new-cap
     bytes = event.getBytesAllocated()
     expect(bytes).equal(224, 'sizeof(oboe_event_t) should be 224')
   })
 
   it('new Event() should allocate a full event', function () {
-    const xtraceData = new aob.Event.makeRandom() // eslint-disable-line new-cap
-    const event = new aob.Event(xtraceData)
+    const xtraceData = new bindings.Event.makeRandom() // eslint-disable-line new-cap
+    const event = new bindings.Event(xtraceData)
     const bytes = event.getBytesAllocated()
     expect(bytes).equal(224 + 1024, 'should include a 1024 byte buffer')
   })
