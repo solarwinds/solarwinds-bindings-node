@@ -36,13 +36,23 @@ const goodOptions = {
 }
 
 describe('bindings.oboeInit()', function () {
-  // when only services key is provided the host is set to production by default
+  // Important: when only services key is provided the host is set to production by default
+  // tests here always run against production collector. no way to "override" with settings.
+
   it('should initialize oboe with only a service key', function () {
     const result = bindings.oboeInit({ serviceKey: `${env.AO_TOKEN_PROD}:node-bindings-test` })
-    // kind of funky but -1 is already initialized, 0 is ok. mocha runs
-    // multiple tests in one process so the result is 0 if run standalone
-    // but -1 on all but the first if run as a suite.
+    // oboeInit can return -1 for already initialized or 0 if succeeded.
+    // depending on whether this is run as part of a suite or standalone
+    // either result is valid.
     expect(result).oneOf([-1, 0])
+  })
+
+  it('should check if ready to sample using collector.appoptics.com', function () {
+    this.timeout(maxIsReadyToSampleWait)
+    const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
+    expect(ready).be.a('number')
+
+    expect(ready).equal(1, 'collector.appoptics.com should be ready')
   })
 
   it('should handle good options values', function () {
@@ -123,15 +133,14 @@ describe('bindings.oboeInit()', function () {
   })
 
   it('should throw if not passed an object', function () {
-    expect(bindings.oboeInit).throw(TypeError, 'invalid calling signature')
+    try { bindings.oboeInit() } catch (err) {
+      expect(err.message).eq('invalid calling signature')
+    }
   })
 
-  it('should check if ready to sample', function () {
-    // This will fail if not using a real collector (collector or collector-stg).appoptics.com
-    this.timeout(maxIsReadyToSampleWait)
-    const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
-    expect(ready).be.a('number')
-
-    expect(ready).equal(1, `${env.APPOPTICS_COLLECTOR} should be ready`)
+  it('should throw if passed empty object', function () {
+    try { bindings.oboeInit({}) } catch (err) {
+      expect(err.message).eq('invalid calling signature')
+    }
   })
 })
