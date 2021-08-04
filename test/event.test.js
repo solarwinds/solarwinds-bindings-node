@@ -1,21 +1,31 @@
-/* global describe, it */
+/* global describe, before, it */
 'use strict'
 
 const bindings = require('../')
 const expect = require('chai').expect
 
+const env = process.env
+const maxIsReadyToSampleWait = 60000
+
 const evUnsampled = '2B5BD5777CA0077C734B537B64C6B969213358B9F21AA0B1B42979F5C400'
 const evSampled = '2B4FC9017BA3404828F253638A697DC7CF1A6BB1A4A544D5B98159B55501'
 
 describe('addon.event', function () {
-  const serviceKey = `${process.env.AO_TOKEN_PROD}:node-bindings-test`
+  before(function () {
+    const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_STG}:node-bindings-test`
+    const endpoint = process.env.APPOPTICS_COLLECTOR || 'collector-stg.appoptics.com'
 
-  it('should initialize oboe with only a service key', function () {
-    const status = bindings.oboeInit({ serviceKey })
-    // kind of funky but -1 is already initialized, 0 is ok. mocha runs
-    // multiple tests in one process so the result is 0 if run standalone
-    // but -1 on all but the first if run as a suite.
-    expect(status).oneOf([-1, 0])
+    this.timeout(maxIsReadyToSampleWait)
+    const status = bindings.oboeInit({ serviceKey, endpoint })
+    // oboeInit can return -1 for already initialized or 0 if succeeded.
+    // depending on whether this is run as part of a suite or standalone
+    // either result is valid.
+    if (status !== -1 && status !== 0) {
+      throw new Error('oboeInit() failed')
+    }
+
+    const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
+    expect(ready).equal(1, `should be connected to ${endpoint} and ready`)
   })
 
   it('should throw if the constructor is called without "new"', function () {
