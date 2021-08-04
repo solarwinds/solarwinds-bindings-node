@@ -9,14 +9,11 @@ const EventEmitter = require('events')
 const bindings = require('../..')
 const expect = require('chai').expect
 
-//
-// goodOptions are used in multiple tests so they're declared here
-//
-const key = process.env.AO_TOKEN_PROD || process.env.AO_SWOKEN_PROD
-const goodOptions = {
-  serviceKey: `${key}:node-oboe-notifier`,
-  traceMetrics: true
-}
+const env = process.env
+const maxIsReadyToSampleWait = 60000
+
+const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_STG}:node-bindings-test`
+const endpoint = process.env.APPOPTICS_COLLECTOR || 'collector-stg.appoptics.com'
 
 const notiSocket = '/tmp/ao-notifications'
 let notiServer
@@ -38,13 +35,6 @@ describe('addon.Notifier functions', function () {
     fs.unlink(notiSocket, function () {
       done()
     })
-  })
-
-  before(function (done) {
-    if (!key) {
-      return done(new Error('missing key'))
-    }
-    done()
   })
 
   // before calling oboe init setup the notification server
@@ -97,7 +87,7 @@ describe('addon.Notifier functions', function () {
 
   it('oboeInit() should successfully complete', function () {
     const details = {}
-    const options = Object.assign({}, goodOptions)
+    const options = Object.assign({}, { serviceKey, endpoint, traceMetrics: true })
     const expected = options
     const result = bindings.oboeInit(options, details)
 
@@ -110,10 +100,8 @@ describe('addon.Notifier functions', function () {
     expect(keysIn.length).equal(keysOut.length)
   })
 
-  it('should receive an oboe config message', function (done) {
-    const sk = goodOptions.serviceKey
-    const keyLength = key.length
-    const maskedKey = sk.slice(0, 4) + '...' + sk.slice(keyLength - 4)
+  it(`should receive an oboe config message from ${endpoint}`, function (done) {
+    const maskedKey = serviceKey.slice(0, 4) + '...' + serviceKey.slice(serviceKey.length - 4 - ':node-bindings-test'.length)
     let counter = 0
     const id = setInterval(function () {
       if (messages.length) {
@@ -122,7 +110,7 @@ describe('addon.Notifier functions', function () {
         expect(msg.seqNo).equal(1, 'should have a seqNo of 1')
         expect(msg.source).equal('oboe', 'source didn\'t match')
         expect(msg.type).equal('config', 'oboe message should be type config')
-        expect(msg.hostname).equal('collector.appoptics.com', 'hostname should be production')
+        expect(msg.hostname).equal(endpoint, 'hostname should be what is set')
         expect(msg.port).equal(443, 'port should be 443')
         expect(msg.log).equal('', 'log should be empty')
         expect(msg.clientId).equal(maskedKey, 'service key should match')
