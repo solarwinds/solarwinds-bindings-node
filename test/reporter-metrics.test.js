@@ -5,15 +5,15 @@ const bindings = require('../')
 const expect = require('chai').expect
 
 const env = process.env
-
 const maxIsReadyToSampleWait = 60000
 
 describe('reporter-metrics', function () {
-  const serviceKey = `${env.AO_TOKEN_PROD}:node-bindings-test`
-
   before(function () {
+    const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_STG}:node-bindings-test`
+    const endpoint = process.env.APPOPTICS_COLLECTOR || 'collector-stg.appoptics.com'
+
     this.timeout(maxIsReadyToSampleWait)
-    const status = bindings.oboeInit({ serviceKey })
+    const status = bindings.oboeInit({ serviceKey, endpoint })
     // oboeInit can return -1 for already initialized or 0 if succeeded.
     // depending on whether this is run as part of a suite or standalone
     // either result is valid.
@@ -22,8 +22,7 @@ describe('reporter-metrics', function () {
     }
 
     const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
-    const endPoint = env.APPOPTICS_COLLECTOR || 'collector.appoptics.com'
-    expect(ready).equal(1, `should be connected to ${endPoint} and ready`)
+    expect(ready).equal(1, `should be connected to ${endpoint} and ready`)
   })
 
   it('should require an array argument', function () {
