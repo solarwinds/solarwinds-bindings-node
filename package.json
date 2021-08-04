@@ -55,7 +55,7 @@
     "dev:reinstall": "rm -rf node_modules && npm install --unsafe-perm"
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "^1.0.0-alpha2",
+    "@mapbox/node-pre-gyp": "^1.0.5",
     "linux-os-info": "^2.0.0",
     "nan": "^2.14.2",
     "node-addon-api": "^2.0.0"
