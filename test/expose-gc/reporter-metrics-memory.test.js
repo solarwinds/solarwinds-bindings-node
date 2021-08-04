@@ -5,17 +5,18 @@ const bindings = require('../..')
 const expect = require('chai').expect
 
 const env = process.env
-
 const maxIsReadyToSampleWait = 60000
 
 describe('reporter-metrics-memory', function () {
-  const serviceKey = `${env.AO_TOKEN_PROD}:node-bindings-test`
+  const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_STG}:node-bindings-test`
+  const endpoint = process.env.APPOPTICS_COLLECTOR || 'collector-stg.appoptics.com'
+
   const metrics = []
   const batchSize = 100
 
   before(function () {
     this.timeout(maxIsReadyToSampleWait)
-    const status = bindings.oboeInit({ serviceKey })
+    const status = bindings.oboeInit({ serviceKey, endpoint })
     // oboeInit can return -1 for already initialized or 0 if succeeded.
     // depending on whether this is run as part of a suite or standalone
     // either result is valid.
@@ -25,11 +26,10 @@ describe('reporter-metrics-memory', function () {
 
     const start = Date.now()
     const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
-    const endPoint = env.APPOPTICS_COLLECTOR || 'collector.appoptics.com'
     // eslint-disable-next-line no-console
     console.log(`[isReadyToSample() took ${Date.now() - start}ms]`)
 
-    expect(ready).equal(1, `should be connected to ${endPoint} and ready`)
+    expect(ready).equal(1, `should be connected to ${endpoint} and ready`)
 
     for (let i = 0; i < batchSize; i++) {
       metrics.push({ name: 'node.metrics.batch.test', value: i })
