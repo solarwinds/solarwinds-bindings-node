@@ -4,12 +4,11 @@
 const bindings = require('../')
 const expect = require('chai').expect
 
+const env = process.env
+const maxIsReadyToSampleWait = 60000
+
 const EnvVarOptions = require('./lib/env-var-options')
 const keyMap = require('./lib/env-var-key-map')
-
-const env = process.env
-
-const maxIsReadyToSampleWait = 60000
 
 //
 // goodOptions are used in multiple tests so they're declared here
@@ -37,6 +36,15 @@ const goodOptions = {
 }
 
 describe('bindings.oboeInit()', function () {
+  // when only services key is provided the host is set to production by default
+  it('should initialize oboe with only a service key', function () {
+    const result = bindings.oboeInit({ serviceKey: `${env.AO_TOKEN_PROD}:node-bindings-test` })
+    // kind of funky but -1 is already initialized, 0 is ok. mocha runs
+    // multiple tests in one process so the result is 0 if run standalone
+    // but -1 on all but the first if run as a suite.
+    expect(result).oneOf([-1, 0])
+  })
+
   it('should handle good options values', function () {
     const details = {}
     const options = Object.assign({}, goodOptions)

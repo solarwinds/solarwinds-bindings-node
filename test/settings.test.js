@@ -1,20 +1,28 @@
-/* global describe, it */
+/* global describe, before, it */
 'use strict'
 
-const bindings = require('..')
+const bindings = require('../')
 const expect = require('chai').expect
 
-const serviceKey = `${process.env.AO_TOKEN_PROD}:node-bindings-test`
-
+const env = process.env
 const maxIsReadyToSampleWait = 60000
 
 describe('addon.settings', function () {
-  it('should initialize oboe with only a service key', function () {
+  before(function () {
+    const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_STG}:node-bindings-test`
+    const endpoint = process.env.APPOPTICS_COLLECTOR || 'collector-stg.appoptics.com'
+
     this.timeout(maxIsReadyToSampleWait)
-    const result = bindings.oboeInit({ serviceKey })
-    // either already init'd or success.
-    expect(result).oneOf([-1, 0])
-    bindings.isReadyToSample(maxIsReadyToSampleWait)
+    const status = bindings.oboeInit({ serviceKey, endpoint })
+    // oboeInit can return -1 for already initialized or 0 if succeeded.
+    // depending on whether this is run as part of a suite or standalone
+    // either result is valid.
+    if (status !== -1 && status !== 0) {
+      throw new Error('oboeInit() failed')
+    }
+
+    const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
+    expect(ready).equal(1, `should be connected to ${endpoint} and ready`)
   })
 
   it('should set tracing mode to never', function () {
