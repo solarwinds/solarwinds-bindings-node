@@ -16,15 +16,6 @@ describe('addon.config', function () {
     expect(settings).to.be.a('object')
   })
 
-  it('should get settings object with default values', function () {
-    const settings = bindings.Config.getSettings()
-    expect(Object.keys(settings).length).eq(4)
-    expect(settings).property('tracing_mode', -1)
-    expect(settings).property('sample_rate', -1)
-    expect(settings).property('flag_sample_start', false)
-    expect(settings).property('flag_through_always', false)
-  })
-
   it('should get settings object as per spec', function () {
     const stats = bindings.Config.getSettings()
     expect(stats).to.have.all.keys(
@@ -33,6 +24,15 @@ describe('addon.config', function () {
       'flag_sample_start',
       'flag_through_always'
     )
+  })
+
+  it('should get settings object with default values', function () {
+    const settings = bindings.Config.getSettings()
+    expect(Object.keys(settings).length).eq(4)
+    expect(settings).property('tracing_mode', -1)
+    expect(settings).property('sample_rate', -1)
+    expect(settings).property('flag_sample_start', false)
+    expect(settings).property('flag_through_always', false)
   })
 
   it('should get oboe\'s stats as object', function () {
