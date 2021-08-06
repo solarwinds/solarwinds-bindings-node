@@ -4,12 +4,11 @@
 const bindings = require('../')
 const expect = require('chai').expect
 
+const env = process.env
+const maxIsReadyToSampleWait = 60000
+
 const EnvVarOptions = require('./lib/env-var-options')
 const keyMap = require('./lib/env-var-key-map')
-
-const env = process.env
-
-const maxIsReadyToSampleWait = 60000
 
 //
 // goodOptions are used in multiple tests so they're declared here
@@ -37,6 +36,25 @@ const goodOptions = {
 }
 
 describe('bindings.oboeInit()', function () {
+  // Important: when only services key is provided the host is set to production by default
+  // tests here always run against production collector. no way to "override" with settings.
+
+  it('should initialize oboe with only a service key', function () {
+    const result = bindings.oboeInit({ serviceKey: `${env.AO_TOKEN_PROD}:node-bindings-test` })
+    // oboeInit can return -1 for already initialized or 0 if succeeded.
+    // depending on whether this is run as part of a suite or standalone
+    // either result is valid.
+    expect(result).oneOf([-1, 0])
+  })
+
+  it('should check if ready to sample using collector.appoptics.com', function () {
+    this.timeout(maxIsReadyToSampleWait)
+    const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
+    expect(ready).be.a('number')
+
+    expect(ready).equal(1, 'collector.appoptics.com should be ready')
+  })
+
   it('should handle good options values', function () {
     const details = {}
     const options = Object.assign({}, goodOptions)
@@ -115,15 +133,14 @@ describe('bindings.oboeInit()', function () {
   })
 
   it('should throw if not passed an object', function () {
-    expect(bindings.oboeInit).throw(TypeError, 'invalid calling signature')
+    try { bindings.oboeInit() } catch (err) {
+      expect(err.message).eq('invalid calling signature')
+    }
   })
 
-  it('should check if ready to sample', function () {
-    // This will fail if not using a real collector (collector or collector-stg).appoptics.com
-    this.timeout(maxIsReadyToSampleWait)
-    const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
-    expect(ready).be.a('number')
-
-    expect(ready).equal(1, `${env.APPOPTICS_COLLECTOR} should be ready`)
+  it('should throw if passed empty object', function () {
+    try { bindings.oboeInit({}) } catch (err) {
+      expect(err.message).eq('invalid calling signature')
+    }
   })
 })

@@ -1,22 +1,22 @@
 /* global describe, before, it */
 'use strict'
 
-const aob = require('../..')
-const r = aob.Reporter
+const bindings = require('../..')
 const expect = require('chai').expect
 
 const env = process.env
-
 const maxIsReadyToSampleWait = 60000
 
 describe('reporter-metrics-memory', function () {
-  const serviceKey = `${env.AO_TOKEN_PROD}:node-bindings-test`
+  const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_STG}:node-bindings-test`
+  const endpoint = process.env.APPOPTICS_COLLECTOR || 'collector-stg.appoptics.com'
+
   const metrics = []
   const batchSize = 100
 
   before(function () {
     this.timeout(maxIsReadyToSampleWait)
-    const status = aob.oboeInit({ serviceKey })
+    const status = bindings.oboeInit({ serviceKey, endpoint })
     // oboeInit can return -1 for already initialized or 0 if succeeded.
     // depending on whether this is run as part of a suite or standalone
     // either result is valid.
@@ -25,12 +25,11 @@ describe('reporter-metrics-memory', function () {
     }
 
     const start = Date.now()
-    const ready = aob.isReadyToSample(maxIsReadyToSampleWait)
-    const endPoint = env.APPOPTICS_COLLECTOR || 'collector.appoptics.com'
+    const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
     // eslint-disable-next-line no-console
     console.log(`[isReadyToSample() took ${Date.now() - start}ms]`)
 
-    expect(ready).equal(1, `should be connected to ${endPoint} and ready`)
+    expect(ready).equal(1, `should be connected to ${endpoint} and ready`)
 
     for (let i = 0; i < batchSize; i++) {
       metrics.push({ name: 'node.metrics.batch.test', value: i })
@@ -62,7 +61,7 @@ describe('reporter-metrics-memory', function () {
         // eslint-disable-next-line no-unused-vars
         start1 = process.memoryUsage().rss
         for (let i = warmup; i > 0; i--) {
-          r.sendMetric('nothing.really', { value: i })
+          bindings.Reporter.sendMetric('nothing.really', { value: i })
         }
         // eslint-disable-next-line no-unused-vars
         done1 = process.memoryUsage().rss
@@ -74,7 +73,7 @@ describe('reporter-metrics-memory', function () {
         // then it's not losing memory for all practical purposes.
         start2 = process.memoryUsage().rss + checkCount
         for (let i = checkCount; i > 0; i--) {
-          r.sendMetric('nothing.really', { value: i, testing: true })
+          bindings.Reporter.sendMetric('nothing.really', { value: i, testing: true })
         }
         // eslint-disable-next-line no-unused-vars
         done2 = process.memoryUsage().rss
@@ -90,7 +89,7 @@ describe('reporter-metrics-memory', function () {
       .then(wait)
       .then(function () {
         for (let i = checkCount; i > 0; i--) {
-          r.sendMetric('nothing.really', { value: i, testing: true })
+          bindings.Reporter.sendMetric('nothing.really', { value: i, testing: true })
         }
         gc(true)
       })
@@ -126,7 +125,7 @@ describe('reporter-metrics-memory', function () {
         // eslint-disable-next-line no-unused-vars
         start1 = process.memoryUsage().rss
         for (let i = warmup; i > 0; i -= batchSize) {
-          r.sendMetrics(metrics)
+          bindings.Reporter.sendMetrics(metrics)
         }
         // eslint-disable-next-line no-unused-vars
         done1 = process.memoryUsage().rss
@@ -138,7 +137,7 @@ describe('reporter-metrics-memory', function () {
         // then it's not losing memory for all practical purposes.
         start2 = process.memoryUsage().rss + checkCount
         for (let i = checkCount; i > 0; i -= batchSize) {
-          r.sendMetrics(metrics)
+          bindings.Reporter.sendMetrics(metrics)
         }
         // eslint-disable-next-line no-unused-vars
         done2 = process.memoryUsage().rss
@@ -154,7 +153,7 @@ describe('reporter-metrics-memory', function () {
       .then(wait)
       .then(function () {
         for (let i = checkCount; i > 0; i -= batchSize) {
-          r.sendMetrics(metrics)
+          bindings.Reporter.sendMetrics(metrics)
         }
         gc(true)
       })

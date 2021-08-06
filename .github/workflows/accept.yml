@@ -90,7 +90,7 @@ jobs:
         image: ${{ matrix.image }}
 
     env:
-      # TODO: move to staging when AO-20147
+      AO_TOKEN_STG: ${{ secrets.AO_TOKEN_STG }}
       AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
 
     steps:
@@ -196,7 +196,7 @@ jobs:
         image: ${{ matrix.image }}
 
     env:
-      # TODO: move to staging when AO-20147
+      AO_TOKEN_STG: ${{ secrets.AO_TOKEN_STG }}
       AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
 
     steps:

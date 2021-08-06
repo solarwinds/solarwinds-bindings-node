@@ -2,20 +2,18 @@
 'use strict'
 
 const net = require('net')
-const aob = require('../..')
-const expect = require('chai').expect
 const fs = require('fs')
 const util = require('util')
 const EventEmitter = require('events')
 
-//
-// goodOptions are used in multiple tests so they're declared here
-//
-const key = process.env.AO_TOKEN_PROD || process.env.AO_SWOKEN_PROD
-const goodOptions = {
-  serviceKey: `${key}:node-oboe-notifier`,
-  traceMetrics: true
-}
+const bindings = require('../..')
+const expect = require('chai').expect
+
+const env = process.env
+const maxIsReadyToSampleWait = 60000
+
+const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_STG}:node-bindings-test`
+const endpoint = process.env.APPOPTICS_COLLECTOR || 'collector-stg.appoptics.com'
 
 const notiSocket = '/tmp/ao-notifications'
 let notiServer
@@ -37,13 +35,6 @@ describe('addon.Notifier functions', function () {
     fs.unlink(notiSocket, function () {
       done()
     })
-  })
-
-  before(function (done) {
-    if (!key) {
-      return done(new Error('missing key'))
-    }
-    done()
   })
 
   // before calling oboe init setup the notification server
@@ -78,7 +69,7 @@ describe('addon.Notifier functions', function () {
   })
 
   it('oboeNotifierInit() should work as expected', function (done) {
-    const status = aob.Notifier.init(notiSocket)
+    const status = bindings.Notifier.init(notiSocket)
     expect(status).oneOf([0, -2], 'status must be OK or INITIALIZING')
 
     setTimeout(function () {
@@ -96,9 +87,9 @@ describe('addon.Notifier functions', function () {
 
   it('oboeInit() should successfully complete', function () {
     const details = {}
-    const options = Object.assign({}, goodOptions)
+    const options = Object.assign({}, { serviceKey, endpoint })
     const expected = options
-    const result = aob.oboeInit(options, details)
+    const result = bindings.oboeInit(options, details)
 
     expect(result).lte(0, 'oboeInit() not get a version mismatch')
     expect(details.valid).deep.equal(expected)
@@ -107,12 +98,13 @@ describe('addon.Notifier functions', function () {
     const keysIn = Object.keys(options)
     const keysOut = Object.keys(details.processed)
     expect(keysIn.length).equal(keysOut.length)
+
+    const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
+    expect(ready).equal(1, `should be connected to ${endpoint} and ready`)
   })
 
-  it('should receive an oboe config message', function (done) {
-    const sk = goodOptions.serviceKey
-    const keyLength = key.length
-    const maskedKey = sk.slice(0, 4) + '...' + sk.slice(keyLength - 4)
+  it(`should receive an oboe config message from ${endpoint}`, function (done) {
+    const maskedKey = serviceKey.slice(0, 4) + '...' + serviceKey.slice(serviceKey.length - 4 - ':node-bindings-test'.length)
     let counter = 0
     const id = setInterval(function () {
       if (messages.length) {
@@ -121,7 +113,7 @@ describe('addon.Notifier functions', function () {
         expect(msg.seqNo).equal(1, 'should have a seqNo of 1')
         expect(msg.source).equal('oboe', 'source didn\'t match')
         expect(msg.type).equal('config', 'oboe message should be type config')
-        expect(msg.hostname).equal('collector.appoptics.com', 'hostname should be production')
+        expect(msg.hostname).equal(endpoint, 'hostname should be what is set')
         expect(msg.port).equal(443, 'port should be 443')
         expect(msg.log).equal('', 'log should be empty')
         expect(msg.clientId).equal(maskedKey, 'service key should match')
@@ -165,7 +157,7 @@ describe('addon.Notifier functions', function () {
   })
 
   it('should receive an oboe keep-alive message', function (done) {
-    const version = aob.Config.getVersionString()
+    const version = bindings.Config.getVersionString()
     // if this is a custom build of oboe don't check this. x.x.1
     // sets a giant timeout so no keepalive messages will be sent.
     if ('0123456789'.indexOf(version[0]) < 0) {
@@ -198,11 +190,11 @@ describe('addon.Notifier functions', function () {
       throw new Error(`unexpected message arrived: ${util.format(msg)}`)
     }
 
-    aob.Notifier.stop()
-    expect(aob.Notifier.status()).oneOf([-1, -3], 'status should be disabled or shutting-down')
+    bindings.Notifier.stop()
+    expect(bindings.Notifier.status()).oneOf([-1, -3], 'status should be disabled or shutting-down')
 
     setTimeout(function () {
-      expect(aob.Notifier.status()).equal(-1, 'status should be disabled')
+      expect(bindings.Notifier.status()).equal(-1, 'status should be disabled')
       notiServer.getConnections((e, count) => {
         if (e) {
           throw e
@@ -216,7 +208,7 @@ describe('addon.Notifier functions', function () {
   it('oboeNotifierInit() should work as expected when re-initialized', function (done) {
     messageConsumer = defaultMessageConsumer
     messages.length = 0
-    const status = aob.Notifier.init(notiSocket)
+    const status = bindings.Notifier.init(notiSocket)
     expect(status).oneOf([0, -2], 'status must be OK or INITIALIZING')
 
     setTimeout(function () {
@@ -237,11 +229,11 @@ describe('addon.Notifier functions', function () {
       throw new Error(`unexpected message arrived: ${util.format(msg)}`)
     }
 
-    aob.Notifier.stop()
-    expect(aob.Notifier.status()).oneOf([-3, -1], 'status should be shutting-down or disabled')
+    bindings.Notifier.stop()
+    expect(bindings.Notifier.status()).oneOf([-3, -1], 'status should be shutting-down or disabled')
 
     setTimeout(function () {
-      expect(aob.Notifier.status()).equal(-1, 'status should be disabled')
+      expect(bindings.Notifier.status()).equal(-1, 'status should be disabled')
       notiServer.getConnections((e, count) => {
         if (e) {
           throw e
