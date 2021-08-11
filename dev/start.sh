@@ -19,6 +19,8 @@ cleanup() {
 set -e
 trap cleanup EXIT
 
+# cleanup from past aborted launches
+docker rm -f /dev-bindings
 docker build dev/. -t dev-bindings
 
 # open a shell in detached mode
@@ -28,6 +30,7 @@ container_id=$(docker run -itd \
     --privileged \
     --workdir /usr/src/work \
     -v "$(pwd)":/usr/src/work \
+    -v "$(pwd)/dev/volumes/tmp/appoptics":/tmp/appoptics \
     -v ~/.gitconfig:/root/.gitconfig \
     -v ~/.ssh:/root/.ssh \
     --env-file .env \

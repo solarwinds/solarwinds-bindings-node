@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 SHELL ["/bin/bash", "-c"]
 
-# tools
+# general tools
 RUN apt update \
     && apt -y install \
                 curl \
@@ -10,6 +10,22 @@ RUN apt update \
                 g++ \
                 python \
                 make
+
+# set time zone (for github cli)
+ENV TZ=America/Los_Angeles
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# for github cli
+RUN apt -y install \
+            gnupg \
+            software-properties-common \
+            tzdata
+
+# get and install github cli
+# see: https://github.com/cli/cli/issues/1797#issuecomment-696469523
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0 \
+    && apt-add-repository https://cli.github.com/packages \
+    && apt -y install gh
 
 # install nvm
 ENV NVM_DIR /root/.nvm
