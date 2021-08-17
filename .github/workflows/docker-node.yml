@@ -1,33 +1,40 @@
-name: Prep - Build Docker Images (manual)
+name: Prep - Build Docker Image (on Dockerfile push)
 
+# workflow is for a branch push only and ignores master.
+# push to master (which is also pull request merge) has a more elaborate workflow to run
+# github repo is configured with branch protection on master.
 on:
-  # TODO: revisit.
-  # as of July 2021, there seems to be a GitHub Actions bug causing this workflow to run when a tag is pushed.
-  # adding tags-ignore: causes the workflow to not run at all.
-  # since tag push is used for release trigger, decision was made to build images using manual trigger only.
-
-  # push:
-  #   paths:
-  #     - '.github/docker-node/*.Dockerfile'
+  push:
+    branches-ignore:
+      - 'master'
+    paths:
+      - '.github/docker-node/*.Dockerfile'
 
   workflow_dispatch:
 
 jobs:
   load-docker-node:
+    name: Load Docker Node Config JSON
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-    - name: Checkout ${{ github.ref }}
-      uses: actions/checkout@v2
+    # github actions triggered by on push will be triggered by both branch and tag push.
+    # the paths filter only applies to branch push and as a result the workflow will run on tag push.
+    # adding tags-ignore: filter causes the workflow to not run at all.
+    # add a conditional to prevent tag push runs.
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
-      # comments for: docker-node.json
-    - name: Load build group data
-      id: set-matrix
-      run: .github/scripts/matrix-from-json.sh .github/config/docker-node.json
+    steps:
+      - name: Checkout ${{ github.ref }}
+        uses: actions/checkout@v2
+
+        # comments for: docker-node.json
+      - name: Load build group data
+        id: set-matrix
+        run: .github/scripts/matrix-from-json.sh .github/config/docker-node.json
 
   build-push:
-    name: Build docker images
+    name: Build Docker Images
     runs-on: ubuntu-latest
     needs: load-docker-node
 
@@ -36,7 +43,7 @@ jobs:
       matrix: ${{ fromJson(needs.load-docker-node.outputs.matrix) }}
 
     steps:
-      - name: Checkout repository
+      - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v2
 
       - name: Log in to the Container registry
