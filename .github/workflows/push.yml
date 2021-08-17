@@ -7,8 +7,8 @@ on:
   push:
     branches-ignore:
       - 'master'
-      # any branch with a name ending in -no-build will not trigger this workflow.
-      - '*-no-build'
+      # any branch with a name ending in -no-action will not trigger this workflow.
+      - '*-no-action'
 
   workflow_dispatch:
     inputs: 
