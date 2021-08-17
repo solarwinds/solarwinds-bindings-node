@@ -1,6 +1,6 @@
 FROM centos:7
 
-ENV NODE_VERSION 12.22.1
+ENV NODE_VERSION 12.22.5
 
 # install software required for this OS
 RUN yum -y install \
