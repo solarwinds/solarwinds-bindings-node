@@ -19,6 +19,7 @@ on:
 
 jobs:
   build-single-test:
+    name: Build Single Test
     runs-on: ubuntu-latest # environment job will run in
 
     env:

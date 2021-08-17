@@ -10,20 +10,23 @@ on:
 
 jobs:
   load-build-group:
+    name: Load Build Group Config JSON
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-    - name: Checkout ${{ github.ref }}
-      uses: actions/checkout@v2
 
-      # build with the lowest versions of the OSes supported so the glibc/musl versions # are the oldest/most compatible. 
-      # note: some of those images are no longer supported officially (https://hub.docker.com/_/node)
-    - name: Load build group data
-      id: set-matrix
-      run: .github/scripts/matrix-from-json.sh .github/config/build-group.json
+    steps:
+      - name: Checkout ${{ github.ref }}
+        uses: actions/checkout@v2
+
+        # build with the lowest versions of the OSes supported so the glibc/musl versions # are the oldest/most compatible. 
+        # note: some of those images are no longer supported officially (https://hub.docker.com/_/node)
+      - name: Load build group data
+        id: set-matrix
+        run: .github/scripts/matrix-from-json.sh .github/config/build-group.json
 
   build-group-publish:
+    name: Build Group Publish
     runs-on: ubuntu-latest 
     needs: load-build-group
     strategy:
@@ -76,19 +79,22 @@ jobs:
         run: npx node-pre-gyp publish --s3_host=production
 
   load-target-group:
+    name: Load Target Group Config JSON
     runs-on: ubuntu-latest
     needs: build-group-publish
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-    - name: Checkout ${{ github.ref }}
-      uses: actions/checkout@v2
 
-    - name: Load target group data
-      id: set-matrix
-      run: .github/scripts/matrix-from-json.sh .github/config/target-group.json
+    steps:
+      - name: Checkout ${{ github.ref }}
+        uses: actions/checkout@v2
+
+      - name: Load target group data
+        id: set-matrix
+        run: .github/scripts/matrix-from-json.sh .github/config/target-group.json
 
   target-group-install:
+    name: Target Group Install
     runs-on: ubuntu-latest 
     needs: load-target-group
     strategy:
@@ -117,6 +123,7 @@ jobs:
         run: ls ./dist/napi-v*/apm_bindings.node && ls ./dist/napi-v*/ao_metrics.node
 
   npm-publish:
+    name: NPM Publish
     runs-on: ubuntu-latest 
     # stopgap. we should not get unless there is a tag ref.
     # but there are several triggering issues open for GithHub runner.
