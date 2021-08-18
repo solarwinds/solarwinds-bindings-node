@@ -1,8 +1,10 @@
-# Taken from https://github.com/nodejs/docker-node/blob/ce3bb541693325ee21e38184873ceb4364b3e6f4/16/alpine3.11/Dockerfile
+# Taken from https://raw.githubusercontent.com/nodejs/docker-node/f52a9c90a41f916c213bfb6bad904928e9fdd3b3/16/alpine3.11/Dockerfile
 # Only modification FROM alpine:3.9
+
+# begin copied content
 FROM alpine:3.9
 
-ENV NODE_VERSION 16.5.0
+ENV NODE_VERSION 16.6.1
 
 RUN addgroup -g 1000 node \
     && adduser -u 1000 -G node -s /bin/sh -D node \
@@ -14,7 +16,7 @@ RUN addgroup -g 1000 node \
       && case "${alpineArch##*-}" in \
         x86_64) \
           ARCH='x64' \
-          CHECKSUM="64c1063a622e9620209b6081310036c7b48a4ee9a342dfbb9d015f1781f1444e" \
+          CHECKSUM="9c8438a8d9a1e268153812d1d3f7f63b02283e2082dcd39274674f897496a22a" \
           ;; \
         *) ;; \
       esac \
@@ -98,3 +100,4 @@ COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 CMD [ "node" ]
+# end copied content

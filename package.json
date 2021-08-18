@@ -52,7 +52,7 @@
     "dev": "dev/start.sh",
     "dev:oneoff": "dev/oneoff.sh",
     "dev:repo:reset": "dev/repo/reset.sh",
-    "dev:reinstall": "rm -rf node_modules && npm install --unsafe-perm"
+    "dev:reinstall": "rm -rf node_modules && rm -rf dist && npm install --unsafe-perm"
   },
   "dependencies": {
     "@mapbox/node-pre-gyp": "^1.0.5",
