@@ -48,7 +48,7 @@
     "test": "./test.sh",
     "install": "node setup-liboboe.js && node-pre-gyp install --fallback-to-build",
     "rebuild": "node setup-liboboe.js && node-pre-gyp install --build-from-source",
-    "lint": "eslint . --ext .json,.js,.yml --fix --ignore-pattern working --ignore-pattern bench --ignore-pattern archived",
+    "lint": "eslint . --ext .json,.js,.yml --fix",
     "dev": "dev/start.sh",
     "dev:oneoff": "dev/oneoff.sh",
     "dev:repo:reset": "dev/repo/reset.sh",
@@ -62,8 +62,6 @@
   },
   "devDependencies": {
     "aws-sdk": "^2.802.0",
-    "axios": "^0.21.1",
-    "benchmark": "^2.1.4",
     "chai": "^4.2.0",
     "eslint": "^7.31.0",
     "eslint-config-standard": "^16.0.3",

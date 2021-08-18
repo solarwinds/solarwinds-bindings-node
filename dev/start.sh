@@ -5,6 +5,9 @@
 # no other usage.
 # always WIP.
 
+# check that the docker engine is running
+docker ps > /dev/null || exit
+
 cleanup() {
     # remove artifacts left locally by previous npm install
     rm -rf build
@@ -19,8 +22,9 @@ cleanup() {
 set -e
 trap cleanup EXIT
 
-# cleanup from past aborted launches
-docker rm -f /dev-bindings
+# silently cleanup from past aborted launches
+docker rm -f /dev-bindings &> /dev/null
+
 docker build dev/. -t dev-bindings
 
 # open a shell in detached mode

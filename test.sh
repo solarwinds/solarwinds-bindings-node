@@ -1,5 +1,7 @@
 #!/bin/sh
 
+group_to_run=$1
+
 #
 # script to run tests
 #
@@ -37,6 +39,7 @@ SUITES_SKIPPED=0
 # it's best to start with "test/" and provide as much of the path as possible.
 # notification are disabled for now, so skip testing.
 SKIP="test/a-test-you-might-want-to-skip $SKIP"
+
 
 skipThis() {
   for s in $SKIP
@@ -83,10 +86,11 @@ executeTestGroup() {
             _new_skipped="$_new_skipped $F"
             SUITES_SKIPPED=$((SUITES_SKIPPED + 1))
         else
+            # shellcheck disable=SC2086
             if [ -n "$SIMULATE" ]; then
                 echo "simulating test $F"
                 SUITES_PASSED=$((SUITES_PASSED + 1))
-            elif ! mocha $_options "$F"; then
+            elif ! npx mocha $_options "$F"; then
                 _new_errors="$_new_errors $F"
                 SUITES_FAILED=$((SUITES_FAILED + 1))
             else
@@ -109,22 +113,20 @@ executeTestGroup() {
 # take a long time.
 [ -n "$CI" ] && timeout="--timeout=10000"
 
-
 #
 # run unit tests with the addon enabled
 #
-executeTestGroup "CORE" "test/*.test.js" "$timeout"
+if [ "$group_to_run" = "CORE" ] || [ ! "$group_to_run" ]; then executeTestGroup "CORE" "test/*.test.js" "$timeout"; fi
 
 #
 # run unit tests without the addon disabled
 #
-executeTestGroup "SOLO" "test/solo/*.test.js" "$timeout"
+if [ "$group_to_run" = "SOLO" ]  || [ ! "$group_to_run" ]; then executeTestGroup "SOLO" "test/solo/*.test.js" "$timeout"; fi
 
 #
 # run tests that require gc to be exposed
 #
-executeTestGroup "GC" "test/expose-gc/*.test.js" "--expose-gc $timeout"
-
+if [ "$group_to_run" = "GC" ]  || [ ! "$group_to_run" ]; then executeTestGroup "GC" "test/expose-gc/*.test.js" "--expose-gc $timeout"; fi
 
 #=======================================
 # provide a summary of the test results.
