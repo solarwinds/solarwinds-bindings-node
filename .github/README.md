@@ -227,7 +227,7 @@ There are many platforms that can use the prebuilt add-on but will fail to build
 * Push to master is disabled by branch protection.
 * Push to branch which changes any Dockerfile in the `.github/docker-node/` directory will trigger [docker-node.yml](./workflows/docker-node.yml).
 * Workflow will:
-  - Build all Dockerfiles and create a [single package](https://github.com/appoptics/appoptics-bindings-node/pkgs/container/appoptics-bindings-node%2Fnode) named `node` scoped to `appoptics/appoptics-bindings-node` (the repo). Package has multiple tagged images for each of the dockerfiles from which it was built. For example, the image created from a file named ``10-centos7-build.Dockerfile` has a `10-centos7-build` tag and can pulled from `ghcr.io/appoptics/appoptics-bindings-node/node:10-centos7-build`. Since this repo is public, the images are also public.
+  - Build all Dockerfiles and create a [single package](https://github.com/appoptics/appoptics-bindings-node/pkgs/container/appoptics-bindings-node%2Fnode) named `node` scoped to `appoptics/appoptics-bindings-node` (the repo). Package has multiple tagged images for each of the dockerfiles from which it was built. For example, the image created from a file named `10-centos7-build.Dockerfile` has a `10-centos7-build` tag and can pulled from `ghcr.io/appoptics/appoptics-bindings-node/node:10-centos7-build`. Since this repo is public, the images are also public.
 * Workflow creates (or recreates) images used in other workflows.
 * Manual trigger supported.
 
