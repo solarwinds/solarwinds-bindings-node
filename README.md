@@ -4,4 +4,4 @@ This package provides the native bindings to liboboe for use in [appoptics-apm](
 
 # Developing
 
-See: https://github.com/appoptics/appoptics-bindings-node/blob/master/CONTRIBUTING.md
+See: https://github.com/appoptics/appoptics-bindings-node/blob/master/.github/README.md
