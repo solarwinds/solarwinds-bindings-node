@@ -1,10 +1,10 @@
-# Taken from https://raw.githubusercontent.com/nodejs/docker-node/f52a9c90a41f916c213bfb6bad904928e9fdd3b3/16/alpine3.11/Dockerfile
+# Taken from https://raw.githubusercontent.com/nodejs/docker-node/3047652162a4f83f68260aabfdbb688e58e7b152/16/alpine3.11/Dockerfile
 # Only modification FROM alpine:3.10
 
 # begin copied content
 FROM alpine:3.10
 
-ENV NODE_VERSION 16.6.1
+ENV NODE_VERSION 16.8.0
 
 RUN addgroup -g 1000 node \
     && adduser -u 1000 -G node -s /bin/sh -D node \
@@ -16,7 +16,7 @@ RUN addgroup -g 1000 node \
       && case "${alpineArch##*-}" in \
         x86_64) \
           ARCH='x64' \
-          CHECKSUM="9c8438a8d9a1e268153812d1d3f7f63b02283e2082dcd39274674f897496a22a" \
+          CHECKSUM="0db4ef6dad22a9758017dcac856024b665394688a6c582c604008abdb0c3cff6" \
           ;; \
         *) ;; \
       esac \
