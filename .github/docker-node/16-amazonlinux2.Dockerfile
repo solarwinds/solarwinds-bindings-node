@@ -1,6 +1,6 @@
 FROM amazonlinux:2
 
-ENV NODE_VERSION 16.6.1
+ENV NODE_VERSION 16.8.0
 
 # install software required for this OS
 RUN yum -y install \
