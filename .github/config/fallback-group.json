@@ -13,16 +13,25 @@
       "image": "node:12-stretch"
     },
     {
+      "image": "node:12-bullseye"
+    },
+    {
       "image": "node:14-buster"
     },
     {
       "image": "node:14-stretch"
     },
     {
+      "image": "node:14-bullseye"
+    },
+    {
       "image": "node:16-buster"
     },
     {
       "image": "node:16-stretch"
+    },
+    {
+      "image": "node:16-bullseye"
     }
   ]
 }
