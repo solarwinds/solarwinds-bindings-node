@@ -3,10 +3,10 @@ name: Release - Build & Package, Target Prod Install, NPM Publish (on push tag)
 on: 
   push: 
     tags: 
-      # triggered only by major/minor/patch tags and those specifically tagged alpha. 
+      # triggered only by major/minor/patch tags and those specifically tagged prerelease. 
       # standard prerelease tags do not trigger.
       - 'v[0-9]+.[0-9]+.[0-9]+'
-      - 'v[0-9]+.[0-9]+.[0-9]+-alpha.*'
+      - 'v[0-9]+.[0-9]+.[0-9]+-prerelease.*'
 
 jobs:
   load-build-group:
@@ -154,7 +154,7 @@ jobs:
       # by default any package published to npm registry is tagged with 'latest'. to set other pass --tag. 
       # any pre-release package (has - in version), regardless of name defined with version preid, will be npm tagged with 'prerelease'.
       # package is scoped to organization (@appoptics/apm-binding) set --access public to avoid 402 Payment Required
-      - name: NPM Publish (alpha)
+      - name: NPM Publish (prerelease)
         run: npm publish --tag prerelease --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
