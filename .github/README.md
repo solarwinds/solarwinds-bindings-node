@@ -298,19 +298,19 @@ manual (test?) ──► └┬────────────────�
 * To Release:
   1. On branch run `npm version {major/minor/patch}`(e.g. `npm version patch`) then have the branch pass through the Push/Pull/Merge flow above. 
   2. When ready `git push` origin {tag name} (e.g. `git push origin v11.2.3`).
-* Pushing a semantic versioning tag for a patch/minor/major versions (e.g. `v11.2.3`) or an alpha tagged pre-release (e.g. `v11.2.3-alpha.2`) will trigger [release.yml](./workflows/release.yml). Pushing other pre-release tags (e.g. `v11.2.3-7`) is ignored.
+* Pushing a semantic versioning tag for a patch/minor/major versions (e.g. `v11.2.3`) or an prerelease tagged pre-release (e.g. `v11.2.3-prerelease.2`) will trigger [release.yml](./workflows/release.yml). Pushing other pre-release tags (e.g. `v11.2.3-7`) is ignored.
 * Workflow will: 
   - Build the code pushed in each of the Build Group images. 
   - Package the built code and upload a tarball to the *production* S3 bucket. 
   - Create all Target Group images and install the prebuilt tarball on each.
-  - Publish an NPM package upon successful completion of all steps above. When version tag is `alpha`, package will be NPM tagged same. When it is a release version, package will be NPM tagged `latest`.
+  - Publish an NPM package upon successful completion of all steps above. When version tag is `prerelease`, package will be NPM tagged same. When it is a release version, package will be NPM tagged `latest`.
 * Workflow ensures node-pre-gyp setup is working in *production* for a wide variety of potential customer configurations.
 * Workflow publishing to NPM registry exposes the NPM package (and the prebuilt tarballs in the *production* S3 bucket) to the public.
 * Note: @appoptics/apm-bindings is not meant to be directly consumed. It is developed as a dependency of [appoptics-apm](https://www.npmjs.com/package/appoptics-apm).
 
 ```
 push semver tag ─► ┌────────────────────────────┐ ─► ─► ─►
-push alpha tag     │Build Group Build & Package │ S3 Package
+push prerelease tag     │Build Group Build & Package │ S3 Package
                    └┬───────────────────────────┘ Production
                     │
                     │   ┌────────────────────┐     │
