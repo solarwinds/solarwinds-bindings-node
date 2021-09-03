@@ -210,6 +210,8 @@ The script will:
 
 To start fresh on the dev repo run `npm run dev:repo:reset` again.
 
+When running a [Release](#release---push-version-tag) process with on the dev repo, the package will be published to https://www.npmjs.com/package/@appoptics/apm-bindings-dev. It should be [unpublished](https://docs.npmjs.com/unpublishing-packages-from-the-registry) as soon as possible. Note that because the package is scoped to the organization, the organization admin must temporarily reassign this package to just the dev-internal team; this team has a single member, which is one of the requirements for unpublishing per https://docs.npmjs.com/policies/unpublish#packages-published-more-than-72-hours-ago.
+
 # Development & Release with GitHub Actions 
 
 > **tl;dr** Push to feature branch. Create Pull Request. Merge Pull Request. Push version tag to release.
