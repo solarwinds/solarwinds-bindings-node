@@ -100,6 +100,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.load-target-group.outputs.matrix) }}
+    container:
+        image: ${{ matrix.image }}
 
     steps:
       # See comment at bottom of file.
