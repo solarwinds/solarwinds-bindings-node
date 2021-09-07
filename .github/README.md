@@ -210,6 +210,8 @@ The script will:
 
 To start fresh on the dev repo run `npm run dev:repo:reset` again.
 
+When running a [Release](#release---push-version-tag) process on the dev repo, the package will be published to https://www.npmjs.com/package/@appoptics/apm-bindings-dev. It should be [unpublished](https://docs.npmjs.com/unpublishing-packages-from-the-registry) as soon as possible. Note that because the package is scoped to the organization, the organization admin must temporarily reassign this package to just the dev-internal team; this team has a single member, which is one of the requirements for unpublishing per https://docs.npmjs.com/policies/unpublish#packages-published-more-than-72-hours-ago.
+
 # Development & Release with GitHub Actions 
 
 > **tl;dr** Push to feature branch. Create Pull Request. Merge Pull Request. Push version tag to release.
@@ -245,7 +247,7 @@ manual ──────────► └────────────
   - Build the code pushed on a default image. (`node` image from docker hub).
   - Run the tests against the build.
 * Workflow confirms code is not "broken".
-* Manual trigger supported. Enables to select image from docker hub or local files (e.g. `erbium-buster-slim`) to build code on.
+* Manual trigger supported. Enables to select node version.
 * Naming a branch with `-no-action` ending disables this workflow. Use for documentation branches edited via GitHub UI.
 ```
 push to branch ──► ┌───────────────────┐ ─► ─► ─► ─► ─►
@@ -338,7 +340,7 @@ push prerelease tag     │Build Group Build & Package │ S3 Package
 
 1. Create a docker file with a unique name to be used as a tag. Common is to use: `{node-version}-{os-name-version}` (e.g `16-ubuntu20.04.2.Dockerfile`). If image is a build image suffix with `-build`.
 2. Place a Docker file in the `docker-node` directory.
-3. Due to [GitHub Action issues](https://github.com/actions/runner/issues/1202) Manual trigger of [docker-node.yml] is required.
+3. Push to GitHub.
 
 ### Modifying group lists
 
