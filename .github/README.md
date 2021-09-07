@@ -247,7 +247,7 @@ manual ──────────► └────────────
   - Build the code pushed on a default image. (`node` image from docker hub).
   - Run the tests against the build.
 * Workflow confirms code is not "broken".
-* Manual trigger supported. Enables to node version.
+* Manual trigger supported. Enables to select node version.
 * Naming a branch with `-no-action` ending disables this workflow. Use for documentation branches edited via GitHub UI.
 ```
 push to branch ──► ┌───────────────────┐ ─► ─► ─► ─► ─►
