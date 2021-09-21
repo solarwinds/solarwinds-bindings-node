@@ -214,7 +214,8 @@ When running a [Release](#release---push-version-tag) process on the dev repo, t
 
 # Development & Release with GitHub Actions 
 
-> **tl;dr** Push to feature branch. Create Pull Request. Merge Pull Request. Push version tag to release.
+> **tl;dr** Push to feature branch. Create Pull Request. Merge Pull Request. Push version tag to release. 
+> Package is always released in conjunction with AppOptics APM Agent. See [release proccess](https://github.com/appoptics/appoptics-apm-node/blob/master/docs/release-process.md) for details.
 
 ## Overview
 
@@ -311,17 +312,17 @@ manual (test?) ──► └┬────────────────�
 * Note: @appoptics/apm-bindings is not meant to be directly consumed. It is developed as a dependency of [appoptics-apm](https://www.npmjs.com/package/appoptics-apm).
 
 ```
-push semver tag ─► ┌────────────────────────────┐ ─► ─► ─►
-push prerelease tag     │Build Group Build & Package │ S3 Package
-                   └┬───────────────────────────┘ Production
-                    │
-                    │   ┌────────────────────┐     │
-                    └─► │Target Group Install│ ◄── ▼
-                        └┬───────────────────┘
-                         │
-                         │   ┌───────────┐
-                         └─► │NPM Publish│
-                             └───────────┘
+push semver tag ─►  ┌────────────────────────────┐ ─► ─► ─►
+push prerelease tag │Build Group Build & Package │ S3 Package
+                    └┬───────────────────────────┘ Production
+                     │
+                     │   ┌────────────────────┐     │
+                     └─► │Target Group Install│ ◄── ▼
+                         └┬───────────────────┘
+                          │
+                          │   ┌───────────┐
+                          └─► │NPM Publish│
+                              └───────────┘
 ```
 ## Maintenance
 
