@@ -104,7 +104,8 @@ describe('addon.Notifier functions', function () {
   })
 
   it(`should receive an oboe config message from ${endpoint}`, function (done) {
-    const maskedKey = serviceKey.slice(0, 4) + '...' + serviceKey.slice(serviceKey.length - 4 - ':node-bindings-test'.length)
+    const serviceName = serviceKey.slice(serviceKey.indexOf(':') + 1)
+    const maskedKey = serviceKey.slice(0, 4) + '...' + serviceKey.slice(serviceKey.length - 4 - (':' + serviceName).length)
     let counter = 0
     const id = setInterval(function () {
       if (messages.length) {
