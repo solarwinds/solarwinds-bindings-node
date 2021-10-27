@@ -33,7 +33,8 @@ const goodOptions = {
   eventsFlushBatchSize: 100,
   // oneFilePerEvent: 1,             // not supported by the node agent
   ec2MetadataTimeout: 3000,
-  proxy: 'http://proxy-host:10101'
+  proxy: 'http://proxy-host:10101',
+  mode: 0
 }
 
 describe('init-memory', function (done) {
