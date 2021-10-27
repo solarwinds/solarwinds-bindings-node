@@ -19,6 +19,7 @@ extern "C" {
 #endif
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <inttypes.h>
@@ -88,9 +89,15 @@ extern "C" {
 
 #define OBOE_SAMPLE_RESOLUTION 1000000
 
+#define OBOE_TASK_ID_TRACEPARENT_LEN 16
 #define OBOE_MAX_TASK_ID_LEN 20
 #define OBOE_MAX_OP_ID_LEN 8
 #define OBOE_MAX_METADATA_PACK_LEN 512
+
+#define OBOE_METAFORMAT_XTRACE 0
+#define OBOE_METAFORMAT_TRACEPARENT 1
+
+#define TRACEPARENT_CURRENT_VERSION 0
 
 #define XTR_CURRENT_VERSION 2
 
@@ -134,6 +141,7 @@ typedef struct oboe_ids {
 } oboe_ids_t;
 
 typedef struct oboe_metadata {
+    uint8_t     type;
     uint8_t     version;
     oboe_ids_t  ids;
     size_t      task_len;
@@ -187,6 +195,7 @@ typedef struct oboe_init_options {
     int stdout_clear_nonblocking;           // flag indicating if the O_NONBLOCK flag on stdout should be cleared,
                                             // only used in lambda reporter (off=0, on=1, default off)
     int is_grpc_clean_hack_enabled;         // flag indicating if custom grpc clean hack enabled (default 0)
+    int mode;                               // flag indicating Solarwinds backend (0 = AppOptics; 1 = Nighthawk, default = 0)
 } oboe_init_options_t;
 
 typedef struct oboe_span_params {
@@ -219,6 +228,9 @@ typedef struct oboe_tracing_decisions_in {
     const char *header_options;     // X-Trace-Options HTTP header value
     const char *header_signature;   // X-Trace-Options-Signature HTTP header value
     time_t header_timestamp;        // timestamp from X-Trace-Options header, converted to UNIX timestamp format
+
+    // v3
+    const char *tracestate;         // value part of the parsed `sw` entry in the tracestate header, if any
 } oboe_tracing_decisions_in_t;
 
 typedef struct oboe_tracing_decisions_out {
@@ -272,10 +284,10 @@ int oboe_metadata_copy     (oboe_metadata_t *, const oboe_metadata_t *);
 
 int oboe_metadata_random   (oboe_metadata_t *);
 
-int oboe_metadata_set_lengths   (oboe_metadata_t *, size_t, size_t);
 int oboe_metadata_create_event  (const oboe_metadata_t *, oboe_event_t *);
 
 int oboe_metadata_tostr     (const oboe_metadata_t *, char *, size_t);
+int oboe_metadata_tostr_traceparent2xtrace     (const oboe_metadata_t *, char *, size_t);
 int oboe_metadata_fromstr   (oboe_metadata_t *, const char *, size_t);
 
 int oboe_metadata_is_sampled(oboe_metadata_t *md);
@@ -592,6 +604,7 @@ const char* oboe_get_tracing_decisions_auth_message (int code);
 #define OBOE_INIT_SSL_LOAD_CERT 9
 #define OBOE_INIT_SSL_REPORTER_CREATE 10
 #define OBOE_INIT_SSL_MISSING_KEY 11
+#define OBOE_INIT_INVALID_BACKEND 12
 
 //
 // these codes are returned by oboe_notifier_status()
