@@ -172,7 +172,7 @@ Napi::Value Event::makeFromBuffer(const Napi::CallbackInfo& info) {
 
   Napi::Buffer<uint8_t> b = info[0].As<Napi::Buffer<uint8_t>>();
   if (b.Length() != 26 && b.Length() != 30) {
-    Napi::TypeError::New(env, "buffer must from traceparent (26 bytes) or xtrace 30 (bytes")
+    Napi::TypeError::New(env, "buffer must from traceparent (26 bytes) or xtrace 30 (bytes)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
