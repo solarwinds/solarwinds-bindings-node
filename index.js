@@ -27,24 +27,33 @@ try {
     getMetrics () { return {} }
   }
 }
+
 const Event = module.exports.Event
 
 //
 // augment the c++ event object with a string conversion
 // function.
 //
-Event.makeFromString = function (string) {
-  if (!string || string.length != 60) { // eslint-disable-line eqeqeq
-    return undefined
-  }
-  const b = Buffer.from(string, 'hex')
-  if (b.length !== 30 || b[0] !== 0x2b || b[29] & 0xFE) {
-    return undefined
-  }
-  // an all zero op id is not valid.
-  if (string.startsWith('0'.repeat(16), 42)) {
-    return undefined
-  }
 
-  return Event.makeFromBuffer(b)
+const validXtrace = (xtrace) => {
+  // https://github.com/librato/trace/tree/master/docs/specs
+  const regExp = /\b2B[0-9A-F]{40}[0-9A-F]{16}[0-1]{2}\b/
+  const matches = regExp.exec(xtrace)
+
+  return matches ? matches[0] : ''
+}
+
+const validTraceparent = (traceparent) => {
+  // https://www.w3.org/TR/trace-context/
+  const regExp = /\b00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}\b/
+  const matches = regExp.exec(traceparent)
+
+  return matches
+}
+
+Event.makeFromString = function (string) {
+  if (validXtrace(string)) return Event.makeFromBuffer(Buffer.from(string, 'hex'))
+  if (validTraceparent(string)) return Event.makeFromBuffer(Buffer.from(string.replace(/-/g, ''), 'hex'))
+
+  return undefined
 }
