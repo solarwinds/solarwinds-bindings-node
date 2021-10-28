@@ -98,6 +98,7 @@ Event::Event(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Event>(info) {
     // random op ID for the event. (The op ID can be specified using the 3rd
     // argument but there is no benefit to doing so here.)
     int status = oboe_event_init(&this->event, &omd, NULL);
+
     initialized = status == 0;
     if (!initialized) {
       Napi::Error::New(env, "oboe.event_init: " + std::to_string(status)).ThrowAsJavaScriptException();
@@ -156,8 +157,9 @@ Napi::Value Event::makeRandom(const Napi::CallbackInfo& info) {
 
 //
 // Event factory for non-functional event with metadata from the supplied
-// buffer. This undocumented function requires that a valid xtrace id
-// occupies a buffer with a length of 30 bytes.
+// buffer. This undocumented function requires that
+// a valid xtrace id occupies a buffer with a length of 30 bytes
+// or that a valid traceparent id occupies a buffer with a length of 26 bytes
 //
 Napi::Value Event::makeFromBuffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -167,9 +169,10 @@ Napi::Value Event::makeFromBuffer(const Napi::CallbackInfo& info) {
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
+
   Napi::Buffer<uint8_t> b = info[0].As<Napi::Buffer<uint8_t>>();
-  if (b.Length() != 30) {
-    Napi::TypeError::New(env, "buffer must be length 30")
+  if (b.Length() != 26 && b.Length() != 30) {
+    Napi::TypeError::New(env, "buffer must from traceparent (26 bytes) or xtrace 30 (bytes")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
@@ -180,13 +183,20 @@ Napi::Value Event::makeFromBuffer(const Napi::CallbackInfo& info) {
 
   const uint kHeaderBytes = 1;
   const uint kTaskIdOffset = kHeaderBytes;
-  const uint kOpIdOffset = kTaskIdOffset + OBOE_MAX_TASK_ID_LEN;
+
+  uint kOpIdOffset = kTaskIdOffset + OBOE_MAX_TASK_ID_LEN;
+  uint kMaxTaskIdLen = OBOE_MAX_TASK_ID_LEN;
+  if(b.Length() == 26) {
+    kOpIdOffset = kTaskIdOffset + OBOE_TASK_ID_TRACEPARENT_LEN;
+    kMaxTaskIdLen = OBOE_TASK_ID_TRACEPARENT_LEN;
+  }
+
   const uint kFlagsOffset = kOpIdOffset + OBOE_MAX_OP_ID_LEN;
 
   // copy the bytes from the buffer to the oboe metadata portion
   // of the event.
   oboe_metadata_init(&oe->metadata);
-  for (uint i = 0; i < OBOE_MAX_TASK_ID_LEN; i++) {
+  for (uint i = 0; i < kMaxTaskIdLen; i++) {
     oe->metadata.ids.task_id[i] = b[kTaskIdOffset + i];
   }
   for (uint i = 0; i < OBOE_MAX_OP_ID_LEN; i++) {

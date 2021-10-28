@@ -94,6 +94,7 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   // in defaults
   bool have_metadata = false;
   std::string xtrace("");
+  std::string tracestate("");
   int rate = -1;
   int mode = -1;
   // edge back to supplied metadata unless there is none.
@@ -123,22 +124,19 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     if (v.IsString()) {
       xtrace = v.As<Napi::String>();
 
-      // make sure it's the right length before calling oboe.
-      if (xtrace.length() == 60) {
-        // try to convert it to metadata. if it fails act as if no xtrace was
-        // supplied.
-        oboe_metadata_init(&omd);
-        int status = oboe_metadata_fromstr(&omd, xtrace.c_str(), xtrace.length());
-        // status can be zero with a version other than 2, so check that too.
-        if (status < 0 || omd.version != 2) {
-          xtrace = "";
-        } else {
-          have_metadata = true;
-        }
-      } else {
-        // if it's the wrong length don't pass it to oboe
+      // try to convert it to metadata. if it fails act as if no xtrace was
+      // supplied.
+      int status = oboe_metadata_fromstr(&omd, xtrace.c_str(), xtrace.length());
+      if (status < 0) {
         xtrace = "";
+      } else {
+        have_metadata = true;
       }
+    }
+
+    v = o.Get("tracestate");
+    if (v.IsString()) {
+      tracestate = v.As<Napi::String>();
     }
 
     // now get the much simpler integer values
@@ -180,16 +178,21 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     if (v.IsNumber()) {
       customTriggerMode = v.As<Napi::Number>().Int32Value();
     }
-
-    // debug options
-    //showIn = o.Get("showIn").ToBoolean().Value();
-    //showOut = o.Get("showOut").ToBoolean().Value();
   }
 
   // apply default or user specified values.
-  in.version = 2;
+
+  // for traceparent: type is 1 and version is 0
+  // for xtrace: type is 0 and version is 2
+  if (omd.type == 0) {
+    in.version = 2;
+  } else {
+    in.version = 3;
+  }
+
   in.service_name = "";
   in.in_xtrace = xtrace.c_str();
+  in.tracestate = tracestate.c_str();
   in.custom_sample_rate = rate;
   in.custom_tracing_mode = mode;
 
@@ -199,19 +202,6 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   in.header_options = xtraceOpts.c_str();
   in.header_signature = xtraceOptsSig.c_str();
   in.header_timestamp = xtraceOptsTimestamp;
-
-  //if (showIn) {
-  //  std::cout << "version: " << in.version << std::endl;
-  //  std::cout << "service_name: " << in.service_name << std::endl;
-  //  std::cout << "in_xtrace: " << in.in_xtrace << std::endl;
-  //  std::cout << "custom_sample_rate: " << in.custom_sample_rate << std::endl;
-  //  std::cout << "custom_tracing_mode: " << in.custom_tracing_mode << std::endl;
-  //  std::cout << "custom_trigger_mode: " << in.custom_trigger_mode << std::endl;
-  //  std::cout << "request_type: " << in.request_type << std::endl;
-  //  std::cout << "header_options: " << in.header_options << std::endl;
-  //  std::cout << "header_signature: " << in.header_signature << std::endl;
-  //  std::cout << "header_timestamp: " << in.header_timestamp << std::endl;
-  //}
 
   // ask for oboe's decisions on life, the universe, and everything.
   out.version = 3;
