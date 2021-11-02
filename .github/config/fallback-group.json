@@ -29,6 +29,12 @@
     },
     {
       "image": "node:16-bullseye"
+    },
+    {
+      "image": "node:17-buster"
+    },
+    {
+      "image": "node:17-bullseye"
     }
   ]
 }
