@@ -105,6 +105,6 @@ CMD [ "node" ]
 # install software required for this OS
 RUN apk update && apk add \
   g++ \
-  python2 \
+  python3 \
   make
 
