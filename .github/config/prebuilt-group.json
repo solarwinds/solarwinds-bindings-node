@@ -103,6 +103,9 @@
       "image": "node:16-stretch-slim"
     },
     {
+      "image": "node:16-stretch"
+    },
+    {
       "image": "node:16-bullseye-slim"
     },
     {
