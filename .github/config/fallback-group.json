@@ -28,9 +28,6 @@
       "image": "node:16-buster"
     },
     {
-      "image": "node:16-stretch"
-    },
-    {
       "image": "node:16-bullseye"
     }
   ]
