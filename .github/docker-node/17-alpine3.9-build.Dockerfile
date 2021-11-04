@@ -1,10 +1,10 @@
-# Taken from https://raw.githubusercontent.com/nodejs/docker-node/a70c43d47528213ef0cd58af7c35edf4c1d3e990/14/alpine3.11/Dockerfile
+# Taken from https://raw.githubusercontent.com/nodejs/docker-node/eeed4a818e7cd954dbd4fff34de1afb8555b834f/17/alpine3.12/Dockerfile
 # Only modification FROM alpine:3.9
 
 # begin copied content
 FROM alpine:3.9
 
-ENV NODE_VERSION 14.18.1
+ENV NODE_VERSION 17.0.1
 
 RUN addgroup -g 1000 node \
     && adduser -u 1000 -G node -s /bin/sh -D node \
@@ -16,7 +16,7 @@ RUN addgroup -g 1000 node \
       && case "${alpineArch##*-}" in \
         x86_64) \
           ARCH='x64' \
-          CHECKSUM="8d6d2b71b76dc31bbcf12827b9e60212bc04a556c3498e75708d38f5eb4ae6eb" \
+          CHECKSUM="2fe80ab23de32b91a9f7679725369da1eb7833e778d2e16fdc31049d57cdc098" \
           ;; \
         *) ;; \
       esac \
@@ -101,3 +101,10 @@ ENTRYPOINT ["docker-entrypoint.sh"]
 
 CMD [ "node" ]
 # end copied content
+
+# install software required for this OS
+RUN apk update && apk add \
+  g++ \
+  python3 \
+  make
+

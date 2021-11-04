@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:latest
 SHELL ["/bin/bash", "-c"]
 
 # general tools
@@ -32,11 +32,13 @@ ENV NVM_DIR /root/.nvm
 
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
 
-# these are the stable versions as of July 2021
-# cant use lts alias due to all sorts of Dockerfile limitations.
+# these are the stable versions as of November 2021
+# can't use lts alias due to all sorts of Dockerfile limitations.
 RUN source $NVM_DIR/nvm.sh \
-    && nvm install v14.17.5 \
-    && nvm install v12.22.5 \
+    && nvm install v14.18.1 \
+    && nvm install v17.0.1 \
+    && nvm install v16.13.0 \
+    && nvm install v12.22.7 \
     && nvm install v10.24.1 \
     && nvm install stable
 
@@ -44,5 +46,5 @@ RUN source $NVM_DIR/nvm.sh \
 # stay with 14.
 
 # add node and npm to path so the commands are available
-ENV NODE_PATH $NVM_DIR/v14.17.5/lib/node_modules
-ENV PATH $NVM_DIR/versions/node/v14.17.5/bin:$PATH
+ENV NODE_PATH $NVM_DIR/v14.18.1/lib/node_modules
+ENV PATH $NVM_DIR/versions/node/v14.18.1/bin:$PATH

@@ -1,10 +1,10 @@
-# Taken from https://raw.githubusercontent.com/nodejs/docker-node/3047652162a4f83f68260aabfdbb688e58e7b152/16/alpine3.11/Dockerfile
+# Taken from https://raw.githubusercontent.com/nodejs/docker-node/d146f71011bc87d739c9ed3e2820726af7d75417/16/alpine3.11/Dockerfile
 # Only modification FROM alpine:3.9
 
 # begin copied content
 FROM alpine:3.9
 
-ENV NODE_VERSION 16.8.0
+ENV NODE_VERSION 16.13.0
 
 RUN addgroup -g 1000 node \
     && adduser -u 1000 -G node -s /bin/sh -D node \
@@ -16,7 +16,7 @@ RUN addgroup -g 1000 node \
       && case "${alpineArch##*-}" in \
         x86_64) \
           ARCH='x64' \
-          CHECKSUM="0db4ef6dad22a9758017dcac856024b665394688a6c582c604008abdb0c3cff6" \
+          CHECKSUM="f78b7f49c92559855d7804b67101a0da393ad75950317c9138a15cd05292f7a6" \
           ;; \
         *) ;; \
       esac \
@@ -75,7 +75,7 @@ RUN addgroup -g 1000 node \
   && node --version \
   && npm --version
 
-ENV YARN_VERSION 1.22.5
+ENV YARN_VERSION 1.22.15
 
 RUN apk add --no-cache --virtual .build-deps-yarn curl gnupg tar \
   && for key in \
@@ -105,6 +105,6 @@ CMD [ "node" ]
 # install software required for this OS
 RUN apk update && apk add \
   g++ \
-  python2 \
+  python3 \
   make
 

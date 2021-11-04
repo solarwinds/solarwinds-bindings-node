@@ -1,6 +1,6 @@
 FROM amazonlinux:2
 
-ENV NODE_VERSION 12.22.5
+ENV NODE_VERSION 12.22.7
 
 # install software required for this OS
 RUN yum -y install \

@@ -1,10 +1,10 @@
 FROM centos:7
 
-ENV NODE_VERSION 16.8.0
+ENV NODE_VERSION 16.13.0
 
 # install software required for this OS
 RUN yum -y install \
-  python2 \
+  python3 \
   make
 
 # yum install gcc-c++  will install version 4.8.5
