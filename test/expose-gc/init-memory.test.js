@@ -39,9 +39,9 @@ const goodOptions = {
 describe('init-memory', function (done) {
   it('should oboeInit without losing memory', function (done) {
     this.timeout(120000)
-    const warmup = 1000000
-    const checkCount = 1000000
-    const tolerance = process.env.CI ? checkCount * 2 : checkCount
+    const warmup = 500000
+    const checkCount = 500000
+    const tolerance = checkCount * 2
     const options = Object.assign({}, goodOptions)
 
     // garbage collect if available
