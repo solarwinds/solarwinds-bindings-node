@@ -124,13 +124,20 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     if (v.IsString()) {
       xtrace = v.As<Napi::String>();
 
-      // try to convert it to metadata. if it fails act as if no xtrace was
-      // supplied.
-      int status = oboe_metadata_fromstr(&omd, xtrace.c_str(), xtrace.length());
-      if (status < 0) {
-        xtrace = "";
+      // make sure it's the right length before calling oboe.
+      if (xtrace.length() == 60 || xtrace.length() == 55) {
+        // try to convert it to metadata. if it fails act as if no xtrace was
+        // supplied.
+        int status = oboe_metadata_fromstr(&omd, xtrace.c_str(), xtrace.length());
+        // status can be zero with a version other than 2, so check that too.
+        if (status < 0) {
+          xtrace = "";
+        } else {
+          have_metadata = true;
+        }
       } else {
-        have_metadata = true;
+        // if it's the wrong length don't pass it to oboe
+        xtrace = "";
       }
     }
 
