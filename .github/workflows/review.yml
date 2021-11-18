@@ -68,3 +68,16 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  checksum:
+    name: Checksum Liboboe
+    runs-on: ubuntu-latest 
+    needs: build-group-test
+
+    steps:
+      - name: Checkout ${{ github.ref }}
+        uses: actions/checkout@v2
+
+      - name: Checksum Liboboe
+        run: .github/scripts/liboboe-checksum.sh "liboboe-1.0-x86_64.so.0.0.0 liboboe-1.0-alpine-x86_64.so.0.0.0 liboboe-1.0-lambda-x86_64.so.0.0.0"
+
