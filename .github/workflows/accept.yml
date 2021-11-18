@@ -25,6 +25,9 @@ jobs:
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v2
 
+      - name: Checksum Liboboe
+        run: .github/scripts/liboboe-checksum.sh "liboboe-1.0-x86_64.so.0.0.0 liboboe-1.0-alpine-x86_64.so.0.0.0 liboboe-1.0-lambda-x86_64.so.0.0.0"
+
         # build with the lowest versions of the OSes supported so the glibc/musl versions are the oldest/most compatible. 
         # note: some of those images are no longer supported officially (https://hub.docker.com/_/node)
       - name: Load build group data
