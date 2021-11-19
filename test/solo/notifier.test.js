@@ -12,7 +12,7 @@ const expect = require('chai').expect
 const env = process.env
 const maxIsReadyToSampleWait = 60000
 
-const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_STG}:node-bindings-test`
+const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_NH}:node-bindings-test`
 const endpoint = process.env.APPOPTICS_COLLECTOR || 'collector-stg.appoptics.com'
 
 const notiSocket = '/tmp/ao-notifications'
