@@ -99,9 +99,9 @@ jobs:
         image: ${{ matrix.image }}
 
     env:
-      APPOPTICS_SERVICE_KEY: ${{ secrets.APPOPTICS_SERVICE_KEY }}
-      APPOPTICS_COLLECTOR: ${{ secrets.APPOPTICS_COLLECTOR }}
-      AO_TEST_PROD_SERVICE_KEY: ${{ secrets.AO_TEST_PROD_SERVICE_KEY }}
+      AO_TOKEN_STG: ${{ secrets.AO_TOKEN_STG }}
+      AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
+      APPOPTICS_COLLECTOR_NH: ${{ APPOPTICS_COLLECTOR_NH }}
 
     steps:
       # See comment at bottom of file.
@@ -210,9 +210,9 @@ jobs:
         image: ${{ matrix.image }}
 
     env:
-      APPOPTICS_SERVICE_KEY: ${{ secrets.APPOPTICS_SERVICE_KEY }}
-      APPOPTICS_COLLECTOR: ${{ secrets.APPOPTICS_COLLECTOR }}
-      AO_TEST_PROD_SERVICE_KEY: ${{ secrets.AO_TEST_PROD_SERVICE_KEY }}
+      AO_TOKEN_STG: ${{ secrets.AO_TOKEN_STG }}
+      AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
+      APPOPTICS_COLLECTOR_NH: ${{ APPOPTICS_COLLECTOR_NH }}
 
     steps:
       # See comment at bottom of file.
