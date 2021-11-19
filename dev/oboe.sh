@@ -1,45 +1,17 @@
 #!/bin/sh
 
-ARG=$1
-PARAM=$2
-PARAM2=$3
+ARG=$1 # what to do
+PARAM=$2 # oboe version
+PARAM2=$3 # dryrun
 
 # where to get files: STAGING or PRODUCTION (default)
 SOURCE=${SOURCE:-PRODUCTION}
 
-#a="/$0"; a=${a%/*}; a=${a#/}; a=${a:-.}; BASEDIR=$(cd "$a"; pwd)
-#echo $BASEDIR
-
-Which=$(which "${0#-}")
-
-case $Which in
-    */bin/sh)
-    ;;
-    */bin/bash)
-    ;;
-
-    *)
-        # it's kind of kludgy but all args that involve oboe contain the string
-        # "oboe-version". so if the command doesn't contain oboe-version it must
-        # be sourced
-        if test "${ARG#*oboe-version}" = "$ARG" ; then
-            echo "this script must be sourced so the environment variables can be set."
-            echo "only the '*-oboe-version' commands work correctly when the script is"
-            echo "executed and not sourced."
-            /bin/false
-            return
-        fi
-    ;;
-esac
-
-# define this in all cases.
-if [ "$ARG" = "stg" ]; then
-    [ -z "$AO_TOKEN_STG" ] && echo "Missing AO_TOKEN_STG, aborting" && return 1
-    export APPOPTICS_SERVICE_KEY=${AO_TOKEN_STG}:node-bindings-test
-elif [ "$ARG" = "prod" ]; then
-    [ -z "$AO_TOKEN_PROD" ] && echo "Missing AO_TOKEN_PROD, aborting" && return 1
-    export APPOPTICS_SERVICE_KEY=${AO_TOKEN_PROD}:node-bindings-test
+if [ ! -f /.dockerenv ]; then 
+  echo "Must run from inside the dev container."
+  exit 
 fi
+
 #
 # this function references the implicit parameters $PARAM and $PARAM2
 #
@@ -47,14 +19,9 @@ get_new_oboe() {
     # N.B. if installing a new version of oboe setup-liboboe.js must be
     # run in order to set up symlinks.
     if [ -z "$PARAM" ]; then
+        echo
         echo "Must supply a version (which will be used as the destination"
-        echo "directory). N.B. the script is not bulletproof."
-        echo "example:"
-        echo "$ . env.sh fetch-oboe-version latest"
-        echo "or:"
-        echo "$ . env.sh install-oboe-version 4.1.0"
-        echo "or if wanting to fetch from staging rather than production:"
-        echo "$ SOURCE=STAGING . env.sh install-oboe-version 6.0.0"
+        echo
         return
     fi
     if [ "$(which wget)" ]; then
@@ -162,31 +129,10 @@ get_new_oboe() {
     return 0
 }
 
-if [ -z "$ARG" ]; then
-    echo "source this script with an argument of udp or stg or prod. it"
-    echo "will define environment variables to enable testing with"
-    echo "the specified reporter".
-    echo
-    echo "you may also use the argument debug to define additional"
-    echo "debugging variables"
-    echo
-elif [ "$ARG" = "udp" ]; then
-    export APPOPTICS_REPORTER=udp
-    export APPOPTICS_COLLECTOR=${AO_TEST_COLLECTOR:-localhost:7832}
-elif [ "$ARG" = "stg" ]; then
-    export APPOPTICS_REPORTER=ssl
-    export APPOPTICS_COLLECTOR=${AO_TEST_COLLECTOR:-collector-stg.appoptics.com}
-elif [ "$ARG" = "prod" ]; then
-    export APPOPTICS_REPORTER=ssl
-    export APPOPTICS_COLLECTOR=${AO_TEST_COLLECTOR:-collector.appoptics.com}
-elif [ "$ARG" = "debug" ]; then
-    export APPOPTICS_DEBUG_LEVEL=6
-    export APPOPTICS_SHOW_GYP=1
-elif [ "$ARG" = "fetch-oboe-version" ]; then
+if [ "$ARG" = "fetch" ]; then
     # this version uses the function
     get_new_oboe
-
-elif [ "$ARG" = "install-local-oboe-version" ]; then
+elif [ "$ARG" = "install-local" ]; then
     # promote a downloaded version to the production
     # directory 'oboe'
     if [ ! -d "oboe-$PARAM" ]; then
@@ -199,8 +145,7 @@ elif [ "$ARG" = "install-local-oboe-version" ]; then
         cp -r "oboe-$PARAM" oboe
         echo "[done]"
     fi
-
-elif [ "$ARG" = "install-oboe-version" ]; then
+elif [ "$ARG" = "install" ]; then
     # this downloads the new oboe AND moves it to
     # the oboe directory, elevating it to production.
     if ! get_new_oboe; then
@@ -208,7 +153,6 @@ elif [ "$ARG" = "install-oboe-version" ]; then
         /bin/false
         return
     fi
-
     # get rid of the existing directory
     rm -rf oboe
 
@@ -220,18 +164,15 @@ elif [ "$ARG" = "install-oboe-version" ]; then
     echo "'node setup-liboboe' must be run before building in order to set up"
     echo "the necessary symlinks. 'npm run install' will run 'node setup-liboboe'"
     echo "before building, so the separate step isn't necessary."
-
 else
-    echo "ERROR $ARG invalid"
-    echo "valid arguments are (VERSION like 10.1.0):"
-    echo "  fetch-oboe-version VERSION (downloads a version but doesn't install)"
-    echo "  install-local-oboe-version VERSION (installs an already downloaded version)"
-    echo "  install-oboe-version VERSION (this fetches and installs)"
-    echo "  udp, stg, prod, debug"
+    echo 
+    echo "run this script with an argument of:"
+    echo "* fetch VERSION (downloads a version but doesn't install)"
+    echo "* install-local VERSION (installs an already downloaded version)"
+    echo "* install VERSION (this fetches and installs)"
+    echo 'where VERSION is like 10.1.0'
+    echo
     echo "when fetching SOURCE=STAGING definition will download from oboe staging area;"
     echo "otherwise it will download from the production site."
+    echo 
 fi
-
-
-
-return
