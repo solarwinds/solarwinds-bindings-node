@@ -169,7 +169,7 @@ typedef struct oboe_metric_tag {
 } oboe_metric_tag_t;
 
 typedef struct oboe_init_options {
-    int version;                            // the version of this structure (currently on version 12)
+    int version;                            // the version of this structure (currently on version 12 and 13 (adds w3c mode))
     const char *hostname_alias;             // optional hostname alias
     int log_level;                          // level at which log messages will be written to log file (0-6)
                                             // use LOGLEVEL_DEFAULT for default log level
