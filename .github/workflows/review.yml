@@ -35,6 +35,7 @@ jobs:
     env:
       AO_TOKEN_STG: ${{ secrets.AO_TOKEN_STG }}
       AO_TOKEN_PROD: ${{ secrets.AO_TOKEN_PROD }}
+      APPOPTICS_COLLECTOR_NH: ${{ APPOPTICS_COLLECTOR_NH }}
 
     steps:
       # the working directory is created by the runner and mounted to the container.
