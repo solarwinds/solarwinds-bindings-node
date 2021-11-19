@@ -41,7 +41,7 @@ describe('bindings.oboeInit()', function () {
   // tests here always run against production collector. no way to "override" with settings.
 
   it('should initialize oboe with only a service key', function () {
-    const result = bindings.oboeInit({ serviceKey: `${env.AO_TEST_PROD_SERVICE_KEY}` })
+    const result = bindings.oboeInit({ serviceKey: `${env.AO_TOKEN_NH}:node-bindings-test`, mode: 1})
     // oboeInit can return -1 for already initialized or 0 if succeeded.
     // depending on whether this is run as part of a suite or standalone
     // either result is valid.
