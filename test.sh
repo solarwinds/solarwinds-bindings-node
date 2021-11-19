@@ -39,7 +39,7 @@ SUITES_SKIPPED=0
 # it's best to start with "test/" and provide as much of the path as possible.
 # notification are disabled for now, so skip testing.
 SKIP="test/a-test-you-might-want-to-skip $SKIP"
-
+SKIP="test/solo/notifier.test.js $SKIP"
 
 skipThis() {
   for s in $SKIP
