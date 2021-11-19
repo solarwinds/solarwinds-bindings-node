@@ -13,9 +13,8 @@ error_files=""
 
 for f in $files; do
     # get data from binary file and sha256 file
-
-    echo "Downloading ${url}/${version}/$f.sha256"
     version=$(cat ./oboe/VERSION)
+    echo "Downloading ${url}/${version}/$f.sha256"
     curl -o "./oboe/${f}.sha256" "${url}/${version}/$f.sha256"
 
     correct=$(awk '{print $1}' < "./oboe/$f.sha256")
