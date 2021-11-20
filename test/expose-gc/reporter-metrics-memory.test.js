@@ -8,14 +8,14 @@ const maxIsReadyToSampleWait = 60000
 
 describe('reporter-metrics-memory', function () {
   const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_NH}:node-bindings-test`
-  const endpoint = process.env.APPOPTICS_COLLECTOR || 'collector-stg.appoptics.com'
+  const endpoint = process.env.APPOPTICS_COLLECTOR || `${env.APPOPTICS_COLLECTOR_NH}`
 
   const metrics = []
   const batchSize = 100
 
   before(function () {
     this.timeout(maxIsReadyToSampleWait)
-    const status = bindings.oboeInit({ serviceKey, endpoint })
+    const status = bindings.oboeInit({ serviceKey, endpoint, mode: 1 })
     // oboeInit can return -1 for already initialized or 0 if succeeded.
     // depending on whether this is run as part of a suite or standalone
     // either result is valid.
