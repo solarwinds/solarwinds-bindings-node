@@ -34,7 +34,7 @@ const goodOptions = {
   // oneFilePerEvent: 1,             // not supported by the node agent
   ec2MetadataTimeout: 3000,
   proxy: 'http://proxy-host:10101',
-  mode: 0
+  mode: 1
 }
 
 describe('init-memory', function (done) {
