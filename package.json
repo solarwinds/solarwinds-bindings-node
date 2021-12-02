@@ -56,9 +56,9 @@
     "dev:oboe": "./dev/oboe.sh"
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "^1.0.5",
+    "@mapbox/node-pre-gyp": "^1.0.7",
     "linux-os-info": "^2.0.0",
-    "nan": "^2.14.2",
+    "nan": "^2.15.0",
     "node-addon-api": "^2.0.0"
   },
   "devDependencies": {
