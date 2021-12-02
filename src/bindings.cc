@@ -296,7 +296,6 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   exports = Reporter::Init(env, exports);
   exports = Settings::Init(env, exports);
   exports = Sanitizer::Init(env, exports);
-  exports = Notifier::Init(env, exports);
   exports = Event::Init(env, exports);
   exports = Config::Init(env, exports);
 
