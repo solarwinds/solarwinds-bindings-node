@@ -39,7 +39,6 @@ SUITES_SKIPPED=0
 # it's best to start with "test/" and provide as much of the path as possible.
 # notification are disabled for now, so skip testing.
 SKIP="test/a-test-you-might-want-to-skip $SKIP"
-SKIP="test/solo/notifier.test.js $SKIP"
 
 skipThis() {
   for s in $SKIP
@@ -118,12 +117,6 @@ executeTestGroup() {
 #
 if [ "$group_to_run" = "CORE" ] || [ ! "$group_to_run" ]; then executeTestGroup "CORE" "test/*.test.js" "$timeout"; fi
 
-#
-# run unit tests without the addon disabled
-#
-if [ "$group_to_run" = "SOLO" ]  || [ ! "$group_to_run" ]; then executeTestGroup "SOLO" "test/solo/*.test.js" "$timeout"; fi
-
-#
 # run tests that require gc to be exposed
 #
 if [ "$group_to_run" = "GC" ]  || [ ! "$group_to_run" ]; then executeTestGroup "GC" "test/expose-gc/*.test.js" "--expose-gc $timeout"; fi
