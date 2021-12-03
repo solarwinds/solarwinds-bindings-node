@@ -93,8 +93,8 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
 
   // in defaults
   bool have_metadata = false;
-  std::string xtrace("");
-  std::string tracestate("");
+  std::string xtrace;
+  std::string tracestate;
   int rate = -1;
   int mode = -1;
   // edge back to supplied metadata unless there is none.
@@ -110,8 +110,8 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
 
   // type_requested 0 = normal, 1 = trigger-trace
   int type_requested = 0;
-  std::string xtraceOpts("");
-  std::string xtraceOptsSig("");
+  std::string xtraceOpts;
+  std::string xtraceOptsSig;
   int64_t xtraceOptsTimestamp = 0;
   int customTriggerMode = -1;
 
