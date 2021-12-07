@@ -28,6 +28,7 @@ Napi::Value Event::toString(const Napi::CallbackInfo& info) {
       // the style are the flags and the separator is a dash.
       flags = style;
     }
+
     rc = format(&this->event.metadata, sizeof(buf), buf, flags) ? 0 : -1;
   }
 
@@ -42,7 +43,8 @@ Napi::Value Event::toString(const Napi::CallbackInfo& info) {
 //
 int format(oboe_metadata_t* md, size_t len, char* buffer, uint flags) {
   char* b = buffer;
-  char base = (flags & Event::ff_lowercase ? 'a' : 'A') - 10;
+  // when in type is 1 - everything is lowercase (w3c)
+  char base = (md->type == 1 || flags & Event::ff_lowercase ? 'a' : 'A') - 10;
   const char sep = '-';
 
   auto puthex = [&b, base](uint8_t byte) {
@@ -64,21 +66,10 @@ int format(oboe_metadata_t* md, size_t len, char* buffer, uint flags) {
   const bool separators = flags & Event::ff_separators;
 
   if (flags & Event::ff_header) {
-    if (md->version == 2) {
-      // the encoding of the task and op lengths is kind of silly so
-      // skip it if version two. it seems like using the whole byte for
-      // a major/minor version then tying the length to the version makes
-      // more sense. what's the point of the version if it's not used to
-      // make decisions in the code?
-      b = puthex(0x2b);
+    if (md->type == 1) {
+      b = puthex(0x00);
     } else {
-      // fix up the first byte using arcane length encoding rules.
-      uint task_bits = (md->task_len >> 2) - 1;
-      if (task_bits == 4)
-        task_bits = 3;
-      uint8_t packed =
-          md->version << 4 | ((md->op_len >> 2) - 1) << 3 | task_bits;
-      b = puthex(packed);
+      b = puthex(0x2b);
     }
     // only add a separator if more fields will be output.
     const uint more =
