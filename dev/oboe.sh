@@ -48,7 +48,7 @@ get_new_oboe() {
     # presume production
     URL="https://files.appoptics.com/c-lib"
     if [ "$SOURCE" = "STAGING" ]; then
-        URL="https://s3-us-west-2.amazonaws.com/rc-files-t2/c-lib"
+        URL="https://s3-us-west-2.amazonaws.com/solarwinds-apm-staging/c-lib"
     elif [ "$SOURCE" != "PRODUCTION" ]; then
         echo "Invalid SOURCE value $SOURCE, aborting"
         exit 1
