@@ -29,7 +29,7 @@
     ],
     "module_name": "apm_bindings",
     "module_path": "./dist/{node_napi_label}",
-    "staging_host": "https://rc-files-t2.s3-us-west-2.amazonaws.com",
+    "staging_host": "https://solarwinds-apm-staging.s3-us-west-2.amazonaws.com",
     "production_host": "https://appoptics-binaries.s3.amazonaws.com",
     "host": "",
     "remote_path": "./nodejs/bindings",
