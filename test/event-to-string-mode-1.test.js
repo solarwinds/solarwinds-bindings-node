@@ -9,13 +9,13 @@ const expect = require('chai').expect
 const env = process.env
 const maxIsReadyToSampleWait = 60000
 
-describe('bindings.Event.toString()', function () {
+describe('addon.event.toString() mode 1', function () {
   before(function () {
-    const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_STG}:node-bindings-test`
-    const endpoint = process.env.APPOPTICS_COLLECTOR || 'collector-stg.appoptics.com'
+    const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_NH}:node-bindings-test`
+    const endpoint = process.env.APPOPTICS_COLLECTOR || `${env.APPOPTICS_COLLECTOR_NH}`
 
     this.timeout(maxIsReadyToSampleWait)
-    const status = bindings.oboeInit({ serviceKey, endpoint })
+    const status = bindings.oboeInit({ serviceKey, endpoint, mode: 1 })
     // oboeInit can return -1 for already initialized or 0 if succeeded.
     // depending on whether this is run as part of a suite or standalone
     // either result is valid.
@@ -36,16 +36,20 @@ describe('bindings.Event.toString()', function () {
     const static int ff_flags = 8;
     const static int ff_sample = 16;
     const static int ff_separators = 32;
-    const static int ff_lowercase = 64;
+    const static int ff_lowercase = 64; // in mode 1 everything is always lowervase
 
   */
-  it('should return xtrace when no argument is provided', function () {
+  it('should return traceparent when no argument is provided', function () {
     const xtraceData = new bindings.Event.makeRandom()
     const event = new bindings.Event(xtraceData)
 
-    expect(event.toString().length).equal(60)
-    expect(event.toString().slice(0, 2)).equal('2B')
+    expect(event.toString().length).equal(55)
+    expect(event.toString().slice(0, 2)).equal('00')
     expect(event.toString().slice(-2)).equal('00')
+
+    expect(event.toString().split('-').length).equal(4)
+    expect(event.toString().split('-')[1].length).equal(32)
+    expect(event.toString().split('-')[2].length).equal(16)
   })
 
   // see event-to-string comment
@@ -54,11 +58,11 @@ describe('bindings.Event.toString()', function () {
     const event = new bindings.Event(xtraceData)
     const data = event.toString()
 
-    const taskId = data.slice(2, -18)
-    const opId = data.slice(-18, -2)
-    const flags = data.slice(-2)
+    const taskId = data.split('-')[1]
+    const opId = data.split('-')[2]
+    const flags = data.split('-')[3]
 
-    expect(event.toString(1)).equal(`2b-${taskId.toLowerCase()}-${opId.toLowerCase()}-${flags}`)
+    expect(event.toString(1)).equal(`00-${taskId}-${opId}-${flags}`)
   })
 
   it('should return just task id when argument is 2', function () {
@@ -66,7 +70,7 @@ describe('bindings.Event.toString()', function () {
     const event = new bindings.Event(xtraceData)
     const data = event.toString()
 
-    const taskId = data.slice(2, -18)
+    const taskId = data.split('-')[1]
 
     expect(event.toString(2)).equal(taskId)
   })
@@ -76,7 +80,7 @@ describe('bindings.Event.toString()', function () {
     const event = new bindings.Event(xtraceData)
     const data = event.toString()
 
-    const opId = data.slice(-18, -2)
+    const opId = data.split('-')[2]
 
     expect(event.toString(4)).equal(opId)
   })
@@ -86,7 +90,7 @@ describe('bindings.Event.toString()', function () {
     const event = new bindings.Event(xtraceData)
     const data = event.toString()
 
-    const flags = data.slice(-2)
+    const flags = data.split('-')[3]
 
     expect(event.toString(8)).equal(flags)
   })
@@ -106,7 +110,7 @@ describe('bindings.Event.toString()', function () {
     const event = new bindings.Event(xtraceData)
     const data = event.toString()
 
-    const taskId = data.slice(2, -18)
+    const taskId = data.split('-')[1]
 
     expect(event.toString(66)).equal(taskId.toLowerCase())
   })
@@ -116,7 +120,7 @@ describe('bindings.Event.toString()', function () {
     const event = new bindings.Event(xtraceData)
     const data = event.toString()
 
-    const opId = data.slice(-18, -2)
+    const opId = data.split('-')[2]
 
     expect(event.toString(68)).equal(opId.toLowerCase())
   })
@@ -126,8 +130,8 @@ describe('bindings.Event.toString()', function () {
     const event = new bindings.Event(xtraceData)
     const data = event.toString()
 
-    const opId = data.slice(-18, -2)
-    const flags = data.slice(-2)
+    const opId = data.split('-')[2]
+    const flags = data.split('-')[3]
 
     expect(event.toString(108)).equal(`${opId.toLowerCase()}-${flags}`)
   })
