@@ -1,4 +1,4 @@
-/* global describe, it('should */
+/* global describe, it */
 'use strict'
 
 const bindings = require('../')
@@ -6,7 +6,7 @@ const expect = require('chai').expect
 
 const Sanitizer = bindings.Sanitizer
 
-describe('sanitizer', function () {
+describe('bindings.Sanitizer', function () {
   it('should sanitizes an insert list', function () {
     const sql = "INSERT INTO `queries` (`asdf_id`, `asdf_prices`, `created_at`, `updated_at`, `blue_pill`, `yearly_tax`, `rate`, `steam_id`, `red_pill`, `dimitri`, `origin`) VALUES (19231, 3, 'cat', 'dog', 111.0, 126.0, 116.0, 79.0, 72.0, 73.0, ?, 1, 3, 229.284, ?, ?, 100, ?, 0, 3, 1, ?, NULL, NULL, ?, 4, ?)"
     const result = Sanitizer.sanitize(sql)
@@ -14,9 +14,9 @@ describe('sanitizer', function () {
   })
 
   it('should sanitizes a in list', function () {
-    const sql = "SELECT \"game_types\".* FROM \"game_types\" WHERE \"game_types\".\"game_id\" IN (1162)"
+    const sql = 'SELECT "game_types".* FROM "game_types" WHERE "game_types"."game_id" IN (1162)'
     const result = Sanitizer.sanitize(sql)
-    expect(result).equal("SELECT \"?\".* FROM \"?\" WHERE \"?\".\"?\" IN (0)")
+    expect(result).equal('SELECT "?".* FROM "?" WHERE "?"."?" IN (0)')
   })
 
   it('should sanitizes args in string', function () {
@@ -26,9 +26,9 @@ describe('sanitizer', function () {
   })
 
   it('should sanitizes a in list with option to keep double quoted values', function () {
-    const sql = "SELECT \"game_types\".* FROM \"game_types\" WHERE \"game_types\".\"game_id\" IN (1162)"
+    const sql = 'SELECT "game_types".* FROM "game_types" WHERE "game_types"."game_id" IN (1162)'
     const result = Sanitizer.sanitize(sql, Sanitizer.OBOE_SQLSANITIZE_KEEPDOUBLE)
-    expect(result).equal("SELECT \"game_types\".* FROM \"game_types\" WHERE \"game_types\".\"game_id\" IN (0)")
+    expect(result).equal('SELECT "game_types".* FROM "game_types" WHERE "game_types"."game_id" IN (0)')
   })
 
   it('should sanitizes args in string with option to keep double quoted values', function () {
