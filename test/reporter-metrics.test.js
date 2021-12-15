@@ -7,7 +7,7 @@ const expect = require('chai').expect
 const env = process.env
 const maxIsReadyToSampleWait = 60000
 
-describe('reporter-metrics', function () {
+describe('bindings.Reporter.sendMetrics()', function () {
   before(function () {
     const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_STG}:node-bindings-test`
     const endpoint = process.env.APPOPTICS_COLLECTOR || 'collector-stg.appoptics.com'

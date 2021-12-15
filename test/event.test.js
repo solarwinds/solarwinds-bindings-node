@@ -10,7 +10,7 @@ const maxIsReadyToSampleWait = 60000
 const evUnsampled = '2B5BD5777CA0077C734B537B64C6B969213358B9F21AA0B1B42979F5C400'
 const evSampled = '2B4FC9017BA3404828F253638A697DC7CF1A6BB1A4A544D5B98159B55501'
 
-describe('addon.event', function () {
+describe('bindings.Event', function () {
   before(function () {
     const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_STG}:node-bindings-test`
     const endpoint = process.env.APPOPTICS_COLLECTOR || 'collector-stg.appoptics.com'

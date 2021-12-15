@@ -29,7 +29,7 @@ function defaultMessageConsumer (msg) {
   messageEmitter.emit('message', msg)
 }
 
-describe('addon.Notifier functions', function () {
+describe('bindings.Notifier functions', function () {
   // remove the socket file if it exists.
   before(function (done) {
     fs.unlink(notiSocket, function () {
