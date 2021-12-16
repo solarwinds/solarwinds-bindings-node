@@ -7,10 +7,10 @@ const expect = require('chai').expect
 const env = process.env
 const maxIsReadyToSampleWait = 60000
 
-describe('addon.settings mode 1', function () {
+describe('bindings.Settings mode 1', function () {
   before(function () {
-    const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_NH}:node-bindings-test`
-    const endpoint = process.env.APPOPTICS_COLLECTOR || `${env.APPOPTICS_COLLECTOR_NH}`
+    const serviceKey = process.env.SOLARWINDS_SERVICE_KEY || `${env.AO_TOKEN_NH}:node-bindings-test`
+    const endpoint = process.env.SOLARWINDS_COLLECTOR || `${env.APPOPTICS_COLLECTOR_NH}`
 
     this.timeout(maxIsReadyToSampleWait)
     const status = bindings.oboeInit({ serviceKey, endpoint, mode: 1 })
