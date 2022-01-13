@@ -2,19 +2,7 @@
 {
   "include": [
     {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:10-alpine3.9-build"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:10-centos7-build"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:12-alpine3.9-build"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:12-centos7-build"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:14-alpine3.10-build"
+      "image": "ghcr.io/$GITHUB_REPOSITORY/node:14-alpine3.9-build"
     },
     {
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:14-centos7-build"
