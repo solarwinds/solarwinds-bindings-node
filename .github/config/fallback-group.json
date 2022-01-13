@@ -1,18 +1,6 @@
 {
   "include": [
     {
-      "image": "node:10-buster"
-    },
-    {
-      "image": "node:10-stretch"
-    },
-    {
-      "image": "node:12-buster"
-    },
-    {
-      "image": "node:12-stretch"
-    },
-    {
       "image": "node:12-bullseye"
     },
     {

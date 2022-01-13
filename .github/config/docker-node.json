@@ -1,36 +1,6 @@
 {
   "include": [
     {
-      "tag": "10-alpine3.9-build"
-    },
-    {
-      "tag": "10-centos7-build"
-    },
-    {
-      "tag": "10-amazonlinux2"
-    },
-    {
-      "tag": "10-centos7"
-    },
-    {
-      "tag": "10-centos8"
-    },
-    {
-      "tag": "12-alpine3.9-build"
-    },
-    {
-      "tag": "12-centos7-build"
-    },
-    {
-      "tag": "12-amazonlinux2"
-    },
-    {
-      "tag": "12-centos7"
-    },
-    {
-      "tag": "12-centos8"
-    },
-    {
       "tag": "14-alpine3.9-build"
     },
     {
