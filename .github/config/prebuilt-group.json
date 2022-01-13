@@ -1,69 +1,6 @@
 {
   "include": [
     {
-      "image": "node:10-buster-slim"
-    },
-    {
-      "image": "node:10-stretch-slim"
-    },
-    {
-      "image": "node:10-alpine3.9"
-    },
-    {
-      "image": "node:10-alpine3.10"
-    },
-    {
-      "image": "node:10-alpine3.11"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:10-centos7"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:10-centos8"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:10-amazonlinux2"
-    },
-    {
-      "image": "node:12-buster-slim"
-    },
-    {
-      "image": "node:12-stretch-slim"
-    },
-    {
-      "image": "node:12-bullseye-slim"
-    },
-    {
-      "image": "node:12-alpine3.9"
-    },
-    {
-      "image": "node:12-alpine3.10"
-    },
-    {
-      "image": "node:12-alpine3.11"
-    },
-    {
-      "image": "node:12-alpine3.12"
-    },
-    {
-      "image": "node:12-alpine3.13"
-    },
-    {
-      "image": "node:12-alpine3.14"
-    },
-    {
-      "image": "node:12-alpine3.15"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:12-centos7"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:12-centos8"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:12-amazonlinux2"
-    },
-    {
       "image": "node:14-buster-slim"
     },
     {
