@@ -55,14 +55,14 @@
     "dev:oboe": "./dev/oboe.sh"
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "^1.0.9",
+    "@mapbox/node-pre-gyp": "^1.0.8",
     "linux-os-info": "^2.0.0",
     "nan": "^2.15.0",
     "node-addon-api": "^4.3.0"
   },
   "devDependencies": {
-    "aws-sdk": "^2.1105.0",
-    "chai": "^4.3.6",
+    "aws-sdk": "^2.1057.0",
+    "chai": "^4.2.0",
     "eslint": "^7.31.0",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.25.4",
