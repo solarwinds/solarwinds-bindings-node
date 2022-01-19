@@ -1,9 +1,6 @@
 {
   "include": [
     {
-      "image": "node:12-bullseye"
-    },
-    {
       "image": "node:14-buster"
     },
     {
