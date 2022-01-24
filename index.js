@@ -37,7 +37,7 @@ const Event = module.exports.Event
 
 const validXtrace = (xtrace) => {
   // https://github.com/librato/trace/tree/master/docs/specs
-  const regExp = /\b2B[0-9A-F]{40}[0-9A-F]{16}0[0-1]{1}\b/
+  const regExp = /^2B[0-9A-F]{40}[0-9A-F]{16}0[0-1]{1}$/
   const matches = regExp.exec(xtrace)
 
   return matches
@@ -45,7 +45,7 @@ const validXtrace = (xtrace) => {
 
 const validTraceparent = (traceparent) => {
   // https://www.w3.org/TR/trace-context/
-  const regExp = /\b00-[0-9a-f]{32}-[0-9a-f]{16}-0[0-1]{1}\b/
+  const regExp = /^00-[0-9a-f]{32}-[0-9a-f]{16}-0[0-1]{1}$/
   const matches = regExp.exec(traceparent)
 
   return matches
