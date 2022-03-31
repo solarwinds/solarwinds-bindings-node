@@ -1,13 +1,13 @@
 /**
  * @file oboe.h
  *
- * API header for AppOptics' Oboe application tracing library for use with AppOptics.
+ * API header for liboboe application tracing library.
  *
  * @package             Oboe
- * @author              AppOptics
- * @copyright           Copyright (c) 2016, SolarWinds LLC
+ * @author              liboboe
+ * @copyright           Copyright (c) 2022, SolarWinds inc
  * @license
- * @link                https://appoptics.com
+ * @link
  **/
 
 #ifndef LIBOBOE_H
