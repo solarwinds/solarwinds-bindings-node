@@ -189,9 +189,16 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   // apply default or user specified values.
   in.version = 2;
   in.service_name = "";
-  in.in_xtrace = xtrace.c_str();
   in.custom_sample_rate = rate;
   in.custom_tracing_mode = mode;
+
+  // oboe logs an error for an empty xtrace (and then ignores it)
+  // only set key when existing
+  if(!xtrace.empty()) {
+    in.in_xtrace = xtrace.c_str();
+  } else {
+    in.in_xtrace = nullptr;
+  }
 
   // v2 fields (added for trigger-trace support)
   in.custom_trigger_mode = customTriggerMode;
