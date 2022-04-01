@@ -29,21 +29,6 @@ This is a **Linux Only package** with no Mac or Windows support.
 
 The package implements a low-level interface to `liboboe`, a closed-source library maintained by SolarWinds. `liboboe` implements communications and aggregation functions to enable efficient sampling of traces. Traces are sequences of entry and exit events which capture performance information. 
 
-Each event has a:
-
-```
-label: (string - typically entry or exit)
-span: (string - the name of the span being instrumented)
-timestamp: (integer - unix timestamp)
-hostname: (string)
-X-trace ID: <header><task ID><op ID><flags>
-edge: the previous event's X-trace ID
-```
-
-An X-trace ID (XID) comprises a single byte header with the hex value `2B`, a task ID of 20 bytes that is the same for all events in a trace, an op ID of 8 bytes that is unique for each event in a trace, and a flag byte. In this implementation the XID is manipulated as binary data (via Metadata and Event objects) or as a string of 60 hex digits. As a string, the header is 2 characters, the task ID is 40 characters, the op ID is 16 characters, and the flag byte is 2 characters.
-
-Note: layer is a legacy term for span. It has been replaced in the code but still appears in event messages as Layer and in the liboboe interface.
-
 
 # Local Development
 
@@ -77,7 +62,7 @@ Those are available in the Docker Dev Container.
 ## Docker Dev Container
 
 1. Start the Docker daemon (on a Mac that would be simplest using Docker desktop).
-2. Create a `.env` file and set: `AO_TOKEN_PROD={a valid production token}` and`AO_TOKEN_STG={a valid staging token}`.
+2. Create a `.env` file and set: `APPOPTICS_SERVICE_KEY={a valid service key}`, `APPOPTICS_COLLECTOR={a url of the collector}` and `AO_TEST_PROD_SERVICE_KEY={a valid **production** service key}`.
 3. Run `npm run dev`. This will create a docker container, set it up, and open a shell. Docker container will have all required build tools as well as nano installed, and access to GitHub SSH keys as configured. Repo code is **mounted** to the container.
 4. To open another shell in same container use: `docker exec -it dev-bindings /bin/bash`
 
@@ -103,13 +88,12 @@ At times it may be useful to set a "one off" docker container to test a specific
 
 Test are run using [Mocha](https://github.com/mochajs/mocha).
 
-1. Run `npm test` to run the test suite against the staging server (`collector-stg.appoptics.com`).
+1. Run `npm test` to run the test suite against the collector specified in the `.env` file (`APPOPTICS_COLLECTOR`).
 
-Note: the initial default initialization test will always run against production (`collector.appoptics.com`).
+Note: the initial default initialization test will always run against production collector using `AO_TEST_PROD_SERVICE_KEY` from the .env file.
 
-The `test` script in `package.json` runs `test.sh` which then manages how mocha runs each test file. To run individual tests use `npx mocha`. For example: `npx mocha test/config.test.js` wil run the config tests.
+The `test` script in `package.json` runs `test.sh` which then manages how mocha runs each test file. To run individual tests use `npx mocha`. For example: `npx mocha test/config.test.js` will run the config tests.
 
-To run tests in other configurations use `. env.sh prod` or back to default `. env.sh stg`.
 
 ## Building
 
@@ -378,8 +362,9 @@ push prerelease tag │Build Group Build & Package │ S3 Package
 
 Repo is defined with the following secrets:
 ```
-AO_TOKEN_PROD
-AO_TOKEN_STG
+APPOPTICS_SERVICE_KEY
+APPOPTICS_COLLECTOR
+AO_TEST_PROD_SERVICE_KEY
 STAGING_AWS_ACCESS_KEY_ID
 STAGING_AWS_SECRET_ACCESS_KEY
 PROD_AWS_ACCESS_KEY_ID
