@@ -62,7 +62,9 @@ Those are available in the Docker Dev Container.
 ## Docker Dev Container
 
 1. Start the Docker daemon (on a Mac that would be simplest using Docker desktop).
-2. Create a `.env` file and set: `APPOPTICS_SERVICE_KEY={a valid service key}`, `APPOPTICS_COLLECTOR={a url of the collector}` and `AO_TEST_PROD_SERVICE_KEY={a valid **production** service key}`.
+2. Create a `.env` file and set two sets of keys for both backends:
+- `APPOPTICS_SERVICE_KEY={a valid service key}`, `APPOPTICS_COLLECTOR={a url of the collector}` and `AO_TEST_PROD_SERVICE_KEY={a valid **production** service key}`.
+- `SW_APM_SERVICE_KEY={a valid service key}`, `SW_APM_COLLECTOR={a url of the collector}` and `SW_TEST_PROD_SERVICE_KEY={a valid **production** service key}`.
 3. Run `npm run dev`. This will create a docker container, set it up, and open a shell. Docker container will have all required build tools as well as nano installed, and access to GitHub SSH keys as configured. Repo code is **mounted** to the container.
 4. To open another shell in same container use: `docker exec -it dev-bindings /bin/bash`
 
@@ -365,6 +367,10 @@ Repo is defined with the following secrets:
 APPOPTICS_SERVICE_KEY
 APPOPTICS_COLLECTOR
 AO_TEST_PROD_SERVICE_KEY
+SW_APM_SERVICE_KEY
+SW_APM_COLLECTOR
+SW_TEST_PROD_SERVICE_KEY
+
 STAGING_AWS_ACCESS_KEY_ID
 STAGING_AWS_SECRET_ACCESS_KEY
 PROD_AWS_ACCESS_KEY_ID
