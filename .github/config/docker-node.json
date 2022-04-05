@@ -34,10 +34,10 @@
       "tag": "16-amazonlinux2"
     },
     {
-      "tag": "17-centos7"
+      "tag": "16-centos7"
     },
     {
-      "tag": "17-centos8"
+      "tag": "16-centos8"
     },
     {
       "tag": "17-alpine3.9-build"
