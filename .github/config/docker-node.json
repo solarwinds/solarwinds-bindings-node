@@ -25,7 +25,25 @@
       "tag": "16-amazonlinux2"
     },
     {
-      "tag": "18-alpine3.14-build"
+      "tag": "16-centos7"
+    },
+    {
+      "tag": "16-centos8"
+    },
+    {
+      "tag": "17-alpine3.9-build"
+    },
+    {
+      "tag": "17-centos7-build"
+    },
+    {
+      "tag": "17-alpine3.9"
+    },
+    {
+      "tag": "17-alpine3.10"
+    },
+    {
+      "tag": "17-alpine3.11"
     },
     {
       "tag": "18-rhel8-build"
