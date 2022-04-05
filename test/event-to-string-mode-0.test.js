@@ -8,7 +8,7 @@ const expect = require('chai').expect
 
 const maxIsReadyToSampleWait = 60000
 
-describe('addon.event.toString() mode 0', function () {
+describe('bindings.event.toString() mode 0', function () {
   before(function () {
     const serviceKey = process.env.APPOPTICS_SERVICE_KEY
     const endpoint = process.env.APPOPTICS_COLLECTOR
