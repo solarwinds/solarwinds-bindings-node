@@ -8,8 +8,8 @@ const maxIsReadyToSampleWait = 60000
 
 describe('bindings.Reporter', function () {
   before(function () {
-    const serviceKey = process.env.APPOPTICS_SERVICE_KEY || `${env.AO_TOKEN_NH}:node-bindings-test`
-    const endpoint = process.env.APPOPTICS_COLLECTOR || `${env.APPOPTICS_COLLECTOR_NH}`
+    const serviceKey = `${process.env.AO_TOKEN_NH}:node-bindings-test`
+    const endpoint = `${process.env.APPOPTICS_COLLECTOR_NH}`
 
     this.timeout(maxIsReadyToSampleWait)
     const status = bindings.oboeInit({ serviceKey, endpoint, mode: 1 })
