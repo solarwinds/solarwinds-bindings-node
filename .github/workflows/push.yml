@@ -26,8 +26,9 @@ jobs:
       APPOPTICS_SERVICE_KEY: ${{ secrets.APPOPTICS_SERVICE_KEY }}
       APPOPTICS_COLLECTOR: ${{ secrets.APPOPTICS_COLLECTOR }}
       AO_TEST_PROD_SERVICE_KEY: ${{ secrets.AO_TEST_PROD_SERVICE_KEY }}
-      AO_TOKEN_NH: ${{ secrets.AO_TOKEN_NH }}
-      APPOPTICS_COLLECTOR_NH: ${{ secrets.APPOPTICS_COLLECTOR_NH }}
+      SW_APM_SERVICE_KEY: ${{ secrets.SW_APM_SERVICE_KEY }}
+      SW_APM_COLLECTOR: ${{ secrets.SW_APM_COLLECTOR }}
+      SW_TEST_PROD_SERVICE_KEY: ${{ secrets.SW_TEST_PROD_SERVICE_KEY }}
 
     steps:
       - name: Checkout ${{ github.ref }}
