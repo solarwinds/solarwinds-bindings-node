@@ -4,13 +4,12 @@
 const bindings = require('../')
 const expect = require('chai').expect
 
-const env = process.env
 const maxIsReadyToSampleWait = 60000
 
 describe('bindings.Settings mode 1', function () {
   before(function () {
-    const serviceKey = process.env.SOLARWINDS_SERVICE_KEY || `${env.AO_TOKEN_NH}:node-bindings-test`
-    const endpoint = process.env.SOLARWINDS_COLLECTOR || `${env.APPOPTICS_COLLECTOR_NH}`
+    const serviceKey = process.env.SW_APM_SERVICE_KEY
+    const endpoint = process.env.SW_APM_COLLECTOR
 
     this.timeout(maxIsReadyToSampleWait)
     const status = bindings.oboeInit({ serviceKey, endpoint, mode: 1 })

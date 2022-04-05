@@ -4,7 +4,6 @@
 const bindings = require('../')
 const expect = require('chai').expect
 
-const env = process.env
 const maxIsReadyToSampleWait = 60000
 
 const evUnsampled = '00-5bd5777ca0077c734b537b64c6b96921-1aa0b1b42979f5c4-00'
@@ -12,8 +11,8 @@ const evSampled = '00-4fc9017ba3404828f253638a697dc7cf-a544d5b98159b555-01'
 
 describe('bindings.Event mode 1', function () {
   before(function () {
-    const serviceKey = process.env.SOLARWINDS_SERVICE_KEY || `${env.AO_TOKEN_NH}:node-bindings-test`
-    const endpoint = process.env.SOLARWINDS_COLLECTOR || `${env.APPOPTICS_COLLECTOR_NH}`
+    const serviceKey = process.env.SW_APM_SERVICE_KEY
+    const endpoint = process.env.SW_APM_COLLECTOR
 
     this.timeout(maxIsReadyToSampleWait)
     const status = bindings.oboeInit({ serviceKey, endpoint, mode: 1 })
@@ -26,6 +25,32 @@ describe('bindings.Event mode 1', function () {
 
     const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
     expect(ready).equal(1, `should be connected to ${endpoint} and ready`)
+  })
+
+  it('should throw if the constructor is called without "new"', function () {
+    function badCall () {
+      bindings.Event()
+    }
+    expect(badCall, 'should throw without "new"').throws(TypeError, 'Class constructors cannot be invoked without \'new\'')
+  })
+
+  it('should succeed when called with no arguments', function () {
+    const event = new bindings.Event()
+    expect(event).instanceof(bindings.Event)
+  })
+
+  it('should throw if the constructor is called without an event', function () {
+    const tests = [
+      { args: [1], text: 'non-metadata', e: 'invalid signature' },
+      { args: ['invalid-x-trace-string'], text: 'invalid x-trace', e: 'invalid signature' }
+    ]
+
+    for (const t of tests) {
+      function badCall () {
+        new bindings.Event(...t.args) // eslint-disable-line no-new
+      }
+      expect(badCall, `${t.text} should throw "${t.e}"`).throws(TypeError, t.e)
+    }
   })
 
   it('should construct an event using an event', function () {
