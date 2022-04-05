@@ -7,8 +7,8 @@ const expect = require('chai').expect
 const maxIsReadyToSampleWait = 60000
 
 describe('reporter-metrics-memory', function () {
-  const serviceKey = `${process.env.AO_TOKEN_NH}:node-bindings-test`
-  const endpoint = `${process.env.APPOPTICS_COLLECTOR_NH}`
+  const serviceKey = process.env.SW_APM_SERVICE_KEY
+  const endpoint = process.env.SW_APM_COLLECTOR
 
   const metrics = []
   const batchSize = 100
