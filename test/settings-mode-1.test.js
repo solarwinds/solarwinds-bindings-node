@@ -82,7 +82,7 @@ describe('bindings.Settings mode 1', function () {
     expect(rateUsed).equal(100000)
     // the C++ code cannot ask oboe what rate was in effect. NaN doesn't not
     // change the value because it cannot be compared, so the addon returns -1.
-    // appoptics-apm keeps a local copy of the value and handles this correctly.
+    // agent keeps a local copy of the value and handles this correctly.
     rateUsed = bindings.Settings.setDefaultSampleRate(NaN)
     expect(rateUsed).equal(-1)
   })

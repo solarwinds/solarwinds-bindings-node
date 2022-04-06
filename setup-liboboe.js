@@ -24,8 +24,7 @@ function setupLiboboe (cb) {
   releaseInfo().then(info => {
     if (info.platform !== 'linux') {
       /* eslint-disable no-console */
-      console.log(`AppopticsApm warning: the ${info.platform} platform is not yet supported`)
-      console.log('see: https://docs.appoptics.com/kb/apm_tracing/supported_platforms/')
+      console.log(`warning: the ${info.platform} platform is not yet supported`)
       console.log(' ')
       /* eslint-enable no-console */
       process.exit(1)
