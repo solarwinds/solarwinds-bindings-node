@@ -10,7 +10,7 @@ module.exports = bindings
 
 module.exports.version = require('./package.json').version
 module.exports.init = function (sk) {
-  return module.exports.oboeInit({ serviceKey: sk || process.env.APPOPTICS_SERVICE_KEY })
+  return module.exports.oboeInit({ serviceKey: sk || process.env.SW_APM_SERVICE_KEY })
 }
 
 try {
@@ -19,7 +19,7 @@ try {
   module.exports.metrics = require(metrics_path)
 } catch (e) {
   // eslint-disable-next-line no-console
-  console.warn(`appoptics metrics disabled ${e.message}`)
+  console.warn(`metrics disabled ${e.message}`)
   // return an dummy metrics if this can't be loaded
   module.exports.metrics = {
     start () { return true },
