@@ -35,7 +35,7 @@ container_id=$(docker run -itd \
     --privileged \
     --workdir /usr/src/work \
     -v "$(pwd)":/usr/src/work \
-    -v "$(pwd)/dev/volumes/tmp/appoptics":/tmp/appoptics \
+    -v "$(pwd)/dev/volumes/tmp/solarwinds-apm":/tmp/solarwinds-apm \
     -v ~/.gitconfig:/root/.gitconfig \
     -v ~/.ssh:/root/.ssh \
     --env-file .env \

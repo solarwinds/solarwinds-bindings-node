@@ -1,8 +1,8 @@
-# @appoptics/apm-bindings
+# solarwinds-apm-bindings
 
-[@appoptics/apm-bindings](https://www.npmjs.com/package/@appoptics/apm-bindings) is an NPM package containing a binary node add-on.
+[solarwinds-apm-bindings](https://github.com/solarwindscloud/solarwinds-bindings-node) is an NPM package containing a binary node add-on.
 
-The package is installed as a dependency when the AppOptics APM Agent ([appoptics-apm](https://www.npmjs.com/package/appoptics-apm)) is installed. In any install run, AppOptics APM Agent will first attempt to install a prebuilt add-on using [node-pre-gyp](https://github.com/mapbox/node-pre-gyp) and only if that fails, will it attempt to build the add-on from source using [node-gyp](https://github.com/nodejs/node-gyp).
+The package is installed as a dependency when the SolarWinds APM Agent ([solarwinds-apm](https://www.npmjs.com/package/solarwinds-apm)) is installed. In any install run, SolarWinds APM Agent will first attempt to install a prebuilt add-on using [node-pre-gyp](https://github.com/mapbox/node-pre-gyp) and only if that fails, will it attempt to build the add-on from source using [node-gyp](https://github.com/nodejs/node-gyp).
 
 This is a **Linux Only package** with no Mac or Windows support.
 
@@ -61,8 +61,7 @@ Those are available in the Docker Dev Container.
 ## Docker Dev Container
 
 1. Start the Docker daemon (on a Mac that would be simplest using Docker desktop).
-2. Create a `.env` file and set two sets of keys for both backends:
-- `APPOPTICS_SERVICE_KEY={a valid service key}`, `APPOPTICS_COLLECTOR={a url of the collector}` and `AO_TEST_PROD_SERVICE_KEY={a valid **production** service key}`.
+2. Create a `.env` file and set two sets of keys for the backend:
 - `SW_APM_SERVICE_KEY={a valid service key}`, `SW_APM_COLLECTOR={a url of the collector}` and `SW_TEST_PROD_SERVICE_KEY={a valid **production** service key}`.
 3. Run `npm run dev`. This will create a docker container, set it up, and open a shell. Docker container will have all required build tools as well as nano installed, and access to GitHub SSH keys as configured. Repo code is **mounted** to the container.
 4. To open another shell in same container use: `docker exec -it dev-bindings /bin/bash`
@@ -71,7 +70,7 @@ The setup script ensures a "clean" work place with each run by removing artifact
 
 ## Repo Packages
 
-This repo has a "single" GitHub package named `node` scoped to `appoptics/appoptics-bindings-node` (the repo) which has [multiple tagged images](https://github.com/appoptics/appoptics-bindings-node/pkgs/container/appoptics-bindings-node%2Fnode). 
+This repo has a "single" GitHub package named `node` scoped to `solarwindscloud/solarwinds-bindings-node` (the repo) which has [multiple tagged images](https://github.com/solarwindscloud/solarwinds-bindings-node/pkgs/container/solarwinds-bindings-node%2Fnode).
 
 Those images serve two main purposes:
 
@@ -83,15 +82,15 @@ Those images serve two main purposes:
 At times it may be useful to set a "one off" docker container to test a specific feature or build.
 
 1. Run `npm run dev:oneoff`. This will create a docker container, set it up, and open a shell. Docker container will have access to GitHub SSH keys as configured. Repo code is **copied** to the container.
-2. To specify an image to the "one off" container pass it as argument. For example: run `npm run dev:oneoff node:latest` to get latest official image or `npm run dev:oneoff ghcr.io/appoptics/appoptics-bindings-node/node:14-alpine3.9` to get one of this repo custom images.
+2. To specify an image to the "one off" container pass it as argument. For example: run `npm run dev:oneoff node:latest` to get latest official image or `npm run dev:oneoff ghcr.io/solarwindscloud/solarwinds-bindings-node/node:14-alpine3.9` to get one of this repo custom images.
 
 ## Testing
 
 Test are run using [Mocha](https://github.com/mochajs/mocha).
 
-1. Run `npm test` to run the test suite against the collector specified in the `.env` file (`APPOPTICS_COLLECTOR`).
+1. Run `npm test` to run the test suite against the collector specified in the `.env` file (`SW_APM_COLLECTOR`).
 
-Note: the initial default initialization test will always run against production collector using `AO_TEST_PROD_SERVICE_KEY` from the .env file.
+Note: the initial default initialization test will always run against production collector using `SW_TEST_PROD_SERVICE_KEY` from the .env file.
 
 The `test` script in `package.json` runs `test.sh` which then manages how mocha runs each test file. To run individual tests use `npx mocha`. For example: `npx mocha test/config.test.js` will run the config tests.
 
@@ -113,7 +112,7 @@ First, compile your add-on using `node-pre-gyp` with the `--debug` flag.
 
 `node-pre-gyp --debug configure rebuild`
 
-(The next point about changing the require path doesn't apply to appoptics-bindings because it uses the `bindings` module and that will find the module in `Debug`, `Release`, and other locations.)
+(The next point about changing the require path doesn't apply to solarwinds-apm-bindings because it uses the `bindings` module and that will find the module in `Debug`, `Release`, and other locations.)
 
 Second, if you're still in "playground" mode, you're probably loading your module with something like
 
@@ -147,27 +146,11 @@ If a signal is thrown gdb will stop on the line generating it.
 Finally, here's a link to using output formats (and the whole set of gdb docs) [gdb](http://www.delorie.com/gnu/docs/gdb/gdb_55.html).
 
 
-### Miscellaneous
-
-Note: use `tail` if you only want to see the highest version required, leave it off to see all.
-
-Find the highest version of GLIBCXX is supported in /usr/lib/libstdc++.so.?
-
-`readelf -sV /usr/lib/libstdc++.so.6 | sed -n 's/.*@@GLIBCXX_//p' | sort -u -V | tail -1`
-
-Find the versions of GLIBCXX required by a file
-
-`readelf -sV build/Release/appoptics-bindings.node | sed -n 's/^.*\(@GLIBCXX_[^ ]*\).*$/\1/p' | sort -u -V`
-`objdump -T /lib/x86_64-linux-gnu/libc.so.6 | sed -n 's/^.*\(GLIBCXX_[^ ]*\).*$/\1/p' | sort -u -V`
-
-Dump a `.node` file as asm (build debug for better symbols):
-
-`objdump -CRrS build/Release/ao-metrics.node  > ao-metrics.s`
-
 # Development & Release with GitHub Actions 
 
 > **tl;dr** Push to feature branch. Create Pull Request. Merge Pull Request. Push version tag to release. 
 > Package is always released in conjunction with AppOptics APM Agent. See [release proccess](https://github.com/appoptics/appoptics-apm-node/blob/master/docs/release-process.md) for details.
+
 
 ## Overview
 
@@ -182,7 +165,7 @@ There are many platforms that can use the prebuilt add-on but will fail to build
 * Push to master is disabled by branch protection.
 * Push to branch which changes any Dockerfile in the `.github/docker-node/` directory will trigger [docker-node.yml](./workflows/docker-node.yml).
 * Workflow will:
-  - Build all Dockerfiles and create a [single package](https://github.com/appoptics/appoptics-bindings-node/pkgs/container/appoptics-bindings-node%2Fnode) named `node` scoped to `appoptics/appoptics-bindings-node` (the repo). Package has multiple tagged images for each of the dockerfiles from which it was built. For example, the image created from a file named `10-centos7-build.Dockerfile` has a `10-centos7-build` tag and can pulled from `ghcr.io/appoptics/appoptics-bindings-node/node:10-centos7-build`. Since this repo is public, the images are also public.
+  - Build all Dockerfiles and create a [single package](https://github.com/solarwindscloud/solarwinds-bindings-node/pkgs/container/solarwinds-bindings-node%2Fnode) named `node` scoped to `solarwindscloud/solarwinds-bindings-node` (the repo). Package has multiple tagged images for each of the dockerfiles from which it was built. For example, the image created from a file named `10-centos7-build.Dockerfile` has a `10-centos7-build` tag and can pulled from `ghcr.io/solarwindscloud/solarwinds-bindings-node/node:10-centos7-build`. Since this repo is public, the images are also public.
 * Workflow creates (or recreates) images used in other workflows.
 * Manual trigger supported.
 
@@ -261,7 +244,7 @@ manual (test?) ──► └┬────────────────�
   - Publish an NPM package upon successful completion of all steps above. When version tag is `prerelease`, package will be NPM tagged same. When it is a release version, package will be NPM tagged `latest`.
 * Workflow ensures node-pre-gyp setup is working in *production* for a wide variety of potential customer configurations.
 * Workflow publishing to NPM registry exposes the NPM package (and the prebuilt tarballs in the *production* S3 bucket) to the public.
-* Note: @appoptics/apm-bindings is not meant to be directly consumed. It is developed as a dependency of [appoptics-apm](https://www.npmjs.com/package/appoptics-apm).
+* Note: solarwinds-apm-bindings is not meant to be directly consumed. It is developed as a dependency of [solarwinds-apm](https://www.npmjs.com/package/solarwinds-apm).
 
 ```
 push semver tag ─►  ┌────────────────────────────┐ ─► ─► ─►
@@ -330,9 +313,6 @@ push prerelease tag │Build Group Build & Package │ S3 Package
 
 Repo is defined with the following secrets:
 ```
-APPOPTICS_SERVICE_KEY
-APPOPTICS_COLLECTOR
-AO_TEST_PROD_SERVICE_KEY
 SW_APM_SERVICE_KEY
 SW_APM_COLLECTOR
 SW_TEST_PROD_SERVICE_KEY
