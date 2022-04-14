@@ -31,7 +31,7 @@ Napi::Value setTracingMode(const Napi::CallbackInfo& info) {
 //
 // Set the default sample rate.
 //
-// This rate is used until overridden by the AppOptics servers.  If not set then
+// This rate is used until overridden by the servers.  If not set then
 // oboe supplies a default value (300,000, i.e., 30%) at time of this writing.
 //
 // The rate is interpreted as a ratio out of OBOE_SAMPLE_RESOLUTION (1,000,000).
