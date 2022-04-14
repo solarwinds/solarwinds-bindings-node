@@ -1,11 +1,11 @@
 {
-  "name": "@appoptics/apm-bindings",
+  "name": "solarwinds-apm-bindings",
   "os": [
     "!darwin",
     "!win32"
   ],
   "version": "12.0.0-sw.0",
-  "description": "Bindings for appoptics-apm with pre-built support",
+  "description": "Bindings for solarwinds-apm with pre-built support",
   "contributors": [
     "Stephen Belanger <admin@stephenbelanger.com>",
     "Bruce A. MacNaughton <bruce.macnaughton@solarwinds.com>",
@@ -36,10 +36,10 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/appoptics/appoptics-bindings-node"
+    "url": "https://github.com/solarwindscloud/solarwinds-bindings-node"
   },
   "bugs": {
-    "url": "https://github.com/appoptics/appoptics-bindings-node/issues"
+    "url": "https://github.com/solarwindscloud/solarwinds-bindings-node/issues"
   },
   "scripts": {
     "test": "./test.sh",
