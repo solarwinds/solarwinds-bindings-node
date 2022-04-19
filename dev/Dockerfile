@@ -42,9 +42,6 @@ RUN source $NVM_DIR/nvm.sh \
     && nvm install v10.24.1 \
     && nvm install stable
 
-# currently package-lock lockfileVersion is 1
-# stay with 14.
-
 # add node and npm to path so the commands are available
 ENV NODE_PATH $NVM_DIR/v16.14.2/lib/node_modules
 ENV PATH $NVM_DIR/versions/node/v16.14.2/bin:$PATH
