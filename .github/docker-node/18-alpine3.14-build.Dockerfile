@@ -1,4 +1,4 @@
-FROM node:17-alpine3.12
+FROM node:18-alpine3.14
 
 # install software required for this OS
 RUN apk update && apk add \

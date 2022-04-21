@@ -1,11 +1,6 @@
-FROM amazonlinux:2
+FROM centos:7
 
-ENV NODE_VERSION 17.0.1
-
-# install software required for this OS
-RUN yum -y install \
-    tar \
-    gzip
+ENV NODE_VERSION 18.0.0
 
 # install nvm
 ENV NVM_DIR /root/.nvm
