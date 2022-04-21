@@ -26,10 +26,10 @@
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-centos7-build"
     },
     {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:17-alpine3.12-build"
+      "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-alpine3.14-build"
     },
     {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:17-centos7-build"
+      "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-centos7-build"
     }
   ]
 }
