@@ -148,10 +148,7 @@
       "image": "node:18-alpine3.15"
     },
     {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-centos7"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-centos8"
+      "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-rhel8"
     },
     {
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-amazonlinux2"

@@ -55,12 +55,6 @@
       "tag": "16-amazonlinux2"
     },
     {
-      "tag": "18-centos7"
-    },
-    {
-      "tag": "18-centos8"
-    },
-    {
       "tag": "18-alpine3.14-build"
     },
     {
@@ -70,10 +64,7 @@
       "tag": "18-amazonlinux2"
     },
     {
-      "tag": "18-centos7"
-    },
-    {
-      "tag": "18-centos8"
+      "tag": "18-rhel8"
     }
   ]
 }
