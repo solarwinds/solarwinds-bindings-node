@@ -29,7 +29,7 @@
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-alpine3.14-build"
     },
     {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-centos7-build"
+      "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-rhel8-build"
     }
   ]
 }
