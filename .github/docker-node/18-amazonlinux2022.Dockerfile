@@ -1,4 +1,4 @@
-FROM amazonlinux:2
+FROM amazonlinux:2022
 
 ENV NODE_VERSION 18.0.0
 

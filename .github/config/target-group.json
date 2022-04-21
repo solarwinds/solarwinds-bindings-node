@@ -187,7 +187,7 @@
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-rhel8"
     },
     {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-amazonlinux2"
+      "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-amazonlinux2022"
     }
   ]
 }

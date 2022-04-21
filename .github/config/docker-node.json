@@ -61,7 +61,7 @@
       "tag": "18-rhel8-build"
     },
     {
-      "tag": "18-amazonlinux2"
+      "tag": "18-amazonlinux2022"
     },
     {
       "tag": "18-rhel8"
