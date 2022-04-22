@@ -373,7 +373,7 @@ NPM_AUTH_TOKEN
 ```
 # License
 
-Copyright (c) 2016 - 2021 SolarWinds, LLC
+Copyright (c) 2016 - 2022 SolarWinds, LLC
 
 Released under the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 

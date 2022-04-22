@@ -4,16 +4,17 @@
     "!darwin",
     "!win32"
   ],
-  "version": "11.2.1-ao.0",
+  "version": "11.2.1-prerelease.0",
   "appoptics": {
     "version-suffix": "lambda-1"
   },
   "description": "Bindings for appoptics-apm with pre-built support",
-  "author": "Bruce A. MacNaughton <bruce.macnaughton@solarwinds.com>",
   "contributors": [
     "Stephen Belanger <admin@stephenbelanger.com>",
+    "Bruce A. MacNaughton <bruce.macnaughton@solarwinds.com>",
+    "Ron Ilan <ron.ilan@solarwinds.com>",
     "Silvio Fernandes <silviofernandes.developer@gmail.com",
-    "Ron Ilan <ron.ilan@solarwinds.com>"
+    "Lin Lin <lin.lin@solarwinds.com>"
   ],
   "main": "index.js",
   "files": [
