@@ -31,13 +31,10 @@
       "tag": "12-centos8"
     },
     {
-      "tag": "14-alpine3.9-build"
+      "tag": "14-alpine3.10-build"
     },
     {
       "tag": "14-centos7-build"
-    },
-    {
-      "tag": "14-alpine3.9"
     },
     {
       "tag": "14-amazonlinux2"
@@ -49,49 +46,25 @@
       "tag": "14-centos8"
     },
     {
-      "tag": "16-alpine3.9-build"
+      "tag": "16-alpine3.11-build"
     },
     {
       "tag": "16-centos7-build"
     },
     {
-      "tag": "16-alpine3.9"
-    },
-    {
-      "tag": "16-alpine3.10"
-    },
-    {
       "tag": "16-amazonlinux2"
     },
     {
-      "tag": "17-centos7"
+      "tag": "18-alpine3.14-build"
     },
     {
-      "tag": "17-centos8"
+      "tag": "18-rhel8-build"
     },
     {
-      "tag": "17-alpine3.9-build"
+      "tag": "18-amazonlinux2022"
     },
     {
-      "tag": "17-centos7-build"
-    },
-    {
-      "tag": "17-alpine3.9"
-    },
-    {
-      "tag": "17-alpine3.10"
-    },
-    {
-      "tag": "17-alpine3.11"
-    },
-    {
-      "tag": "17-amazonlinux2"
-    },
-    {
-      "tag": "17-centos7"
-    },
-    {
-      "tag": "17-centos8"
+      "tag": "18-rhel8"
     }
   ]
 }

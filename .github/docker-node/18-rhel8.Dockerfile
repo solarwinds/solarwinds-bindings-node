@@ -1,6 +1,6 @@
-FROM centos:8
+FROM registry.access.redhat.com/ubi8/ubi:8.1
 
-ENV NODE_VERSION 17.0.1
+ENV NODE_VERSION 18.0.0
 
 # install nvm
 ENV NVM_DIR /root/.nvm
@@ -21,4 +21,3 @@ RUN source $NVM_DIR/nvm.sh \
 # add node and npm to path so the commands are available
 ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
 ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
-

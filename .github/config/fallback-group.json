@@ -31,10 +31,10 @@
       "image": "node:16-bullseye"
     },
     {
-      "image": "node:17-buster"
+      "image": "node:18-buster"
     },
     {
-      "image": "node:17-bullseye"
+      "image": "node:18-bullseye"
     }
   ]
 }

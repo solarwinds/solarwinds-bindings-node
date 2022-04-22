@@ -52,6 +52,9 @@
       "image": "node:12-alpine3.14"
     },
     {
+      "image": "node:12-alpine3.15"
+    },
+    {
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:12-centos7"
     },
     {
@@ -70,9 +73,6 @@
       "image": "node:14-bullseye-slim"
     },
     {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:14-alpine3.9"
-    },
-    {
       "image": "node:14-alpine3.10"
     },
     {
@@ -86,6 +86,9 @@
     },
     {
       "image": "node:14-alpine3.14"
+    },
+    {
+      "image": "node:14-alpine3.15"
     },
     {
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:14-centos7"
@@ -109,12 +112,6 @@
       "image": "node:16-bullseye-slim"
     },
     {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-alpine3.9"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-alpine3.10"
-    },
-    {
       "image": "node:16-alpine3.11"
     },
     {
@@ -127,6 +124,9 @@
       "image": "node:16-alpine3.14"
     },
     {
+      "image": "node:14-alpine3.15"
+    },
+    {
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-centos7"
     },
     {
@@ -136,43 +136,22 @@
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-amazonlinux2"
     },
     {
-      "image": "node:17-buster-slim"
+      "image": "node:18-buster-slim"
     },
     {
-      "image": "node:17-stretch-slim"
+      "image": "node:18-bullseye-slim"
     },
     {
-      "image": "node:17-stretch"
+      "image": "node:18-alpine3.14"
     },
     {
-      "image": "node:17-bullseye-slim"
+      "image": "node:18-alpine3.15"
     },
     {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:17-alpine3.9"
+      "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-rhel8"
     },
     {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:17-alpine3.10"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:17-alpine3.11"
-    },
-    {
-      "image": "node:17-alpine3.12"
-    },
-    {
-      "image": "node:17-alpine3.13"
-    },
-    {
-      "image": "node:17-alpine3.14"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:17-centos7"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:17-centos8"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:17-amazonlinux2"
+      "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-amazonlinux2022"
     }
   ]
 }

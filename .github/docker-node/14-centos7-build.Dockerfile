@@ -1,6 +1,6 @@
 FROM centos:7
 
-ENV NODE_VERSION 14.18.1
+ENV NODE_VERSION 14.19.1
 
 # install software required for this OS
 RUN yum -y install \
