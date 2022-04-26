@@ -30,7 +30,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0 \
 # install nvm
 ENV NVM_DIR /root/.nvm
 
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 
 # these are the stable versions as of April 2022
 # can't use lts alias due to all sorts of Dockerfile limitations.

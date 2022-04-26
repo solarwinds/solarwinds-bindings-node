@@ -20,8 +20,8 @@ ENV PATH=/opt/rh/devtoolset-8/root/bin:$PATH
 ENV NVM_DIR /root/.nvm
 
 # install nvm using a pre-vetted script
-COPY nvm-v0.38.0-install.sh /
-RUN bash nvm-v0.38.0-install.sh
+COPY nvm-v0.39.1-install.sh /
+RUN bash nvm-v0.39.1-install.sh
 
 ENV NODE_PATH /root/.nvm/v$NODE_VERSION/lib/node_modules
 ENV PATH /root/.nvm/versions/node/v$NODE_VERSION/bin:$PATH
