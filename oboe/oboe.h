@@ -322,6 +322,15 @@ int oboe_event_add_hostname(oboe_event_t *evt);
  */
 int oboe_event_send(int channel, oboe_event_t *evt, oboe_metadata_t *md);
 
+/**
+ * Send event message using the default reporter. (Only for python otel exporter)
+ * This function won't add Timestamp_u by default
+ * @param channel the channel to send out this message (OBOE_SEND_EVENT or OBOE_SEND_STATUS)
+ * @param evt The event message.
+ * @param md The X-Trace metadata.
+ * @return Length of message sent in bytes on success; otherwise -1.
+ */
+int oboe_event_send_without_timestamp(int channel, oboe_event_t *evt, oboe_metadata_t *md);
 
 // oboe_context
 
