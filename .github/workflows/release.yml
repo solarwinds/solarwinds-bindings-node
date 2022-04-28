@@ -16,10 +16,10 @@ jobs:
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v2
 
-      - name: Setup Node 14
+      - name: Setup Node 16
         uses: actions/setup-node@v2
         with:
-          node-version: '14.x'
+          node-version: '16.x'
 
       - name: Check is pablishable version
         run: .github/scripts/is-publishable.sh ${{ github.event.inputs.releasing }}
