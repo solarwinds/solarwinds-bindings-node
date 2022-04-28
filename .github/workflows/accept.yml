@@ -4,7 +4,7 @@ on:
   push: 
     branches: 
       # triggered by pull request approval triggers which is a merge to default branch
-      - master
+      - main
 
   workflow_dispatch:
     inputs: 
