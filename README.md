@@ -4,4 +4,4 @@ This package provides the native bindings to liboboe for use in [solarwinds-apm]
 
 # Developing
 
-See: https://github.com/solarwindscloud/solarwinds-bindings-node/blob/master/.github/README.md
+See: https://github.com/solarwindscloud/solarwinds-bindings-node/blob/main/.github/README.md

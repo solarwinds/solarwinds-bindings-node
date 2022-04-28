@@ -162,7 +162,7 @@ There are many platforms that can use the prebuilt add-on but will fail to build
 
 ### Prep - Push Dockerfile
 
-* Push to master is disabled by branch protection.
+* Push to main is disabled by branch protection.
 * Push to branch which changes any Dockerfile in the `.github/docker-node/` directory will trigger [docker-node.yml](./workflows/docker-node.yml).
 * Workflow will:
   - Build all Dockerfiles and create a [single package](https://github.com/solarwindscloud/solarwinds-bindings-node/pkgs/container/solarwinds-bindings-node%2Fnode) named `node` scoped to `solarwindscloud/solarwinds-bindings-node` (the repo). Package has multiple tagged images for each of the dockerfiles from which it was built. For example, the image created from a file named `10-centos7-build.Dockerfile` has a `10-centos7-build` tag and can pulled from `ghcr.io/solarwindscloud/solarwinds-bindings-node/node:10-centos7-build`. Since this repo is public, the images are also public.
@@ -177,7 +177,7 @@ manual ──────────► └────────────
 
 ### Develop - Push
 
-* Push to master is disabled by branch protection.
+* Push to main is disabled by branch protection.
 * Push to branch will trigger [push.yml](./workflows/push.yml). 
 * Workflow will:
   - Build the code pushed on a default image. (`node` image from docker hub).
@@ -217,7 +217,7 @@ manual ──────────► └────────────
 * Manual trigger supported. Enables to select running the tests after install (on both Fallback & Prebuilt groups)
 
 ```
-merge to master ─► ┌──────────────────────┐
+merge to main   ─► ┌──────────────────────┐
                    │Fallback Group Install│
 manual (test?) ──► └┬─────────────────────┘
                     │
