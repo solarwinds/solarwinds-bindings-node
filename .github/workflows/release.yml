@@ -210,18 +210,18 @@ jobs:
       # *** IMPORTANT: 
       # by default any package published to npm registry is tagged with 'latest'. to set other pass --tag. 
       # any pre-release package (has - in version), regardless of name defined with version preid, will be npm tagged with 'prerelease'.
-      # package is scoped to organization (@appoptics/apm-binding) set --access public to avoid 402 Payment Required
+      # when package is scoped to organization (e.g. @appoptics/apm-binding) set --access public to avoid 402 Payment Required
       - name: NPM Publish (prerelease)
         run: npm publish --tag prerelease --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-        if: ${{ contains(github.ref, '-') }}
+        if: ${{ contains(github.event.inputs.releasing, '-') }}
 
       - name: NPM Publish (latest)
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-        if: ${{ !contains(github.ref, '-') }}
+        if: ${{ !contains(github.event.inputs.releasing, '-') }}
 
       # Why Change Owner of Container Working Directory?
 
