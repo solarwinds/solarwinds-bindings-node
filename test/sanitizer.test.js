@@ -54,4 +54,21 @@ describe('bindings.Sanitizer', function () {
     const result = Sanitizer.sanitize(sql)
     expect(result).equal("SELECT `users`.* FROM `users` WHERE (mobile IN ('?') AND email IN ('?')) LIMIT 0")
   })
+
+  it('should not remove numbers from column names \'', function () {
+    const sql = 'UPDATE my_table SET col1 = 10, col2 = 20, col3 = 30 WHERE col1 = 1'
+    const result = Sanitizer.sanitize(sql)
+    expect(result).equal('UPDATE my_table SET col1 = 0, col2 = 0, col3 = 0 WHERE col1 = 0')
+  })
+
+  // Note the FSM (as copied from the PHP agent) can NOT handle an escaped value correctly.
+  it('would NOT properly handle escaped \'', function () {
+    const sql = "SELECT * FROM test_table tbl1 WHERE tbl1.name = 'jake\'s' GROUP BY tbl1.name"
+    const result = Sanitizer.sanitize(sql)
+    // below not really what we would expect.
+    // we would expect: SELECT * FROM test_table tbl1 WHERE tbl1.name = ? GROUP BY tbl1.name
+    // however the sanitizer can't handle that. No fix will be implemented as current agent is EOL 
+    // and future version of the agent will use a regex as in the ruby agent.
+    expect(result).equal("SELECT * FROM test_table tbl1 WHERE tbl1.name = '?'s'?")
+  })
 })
