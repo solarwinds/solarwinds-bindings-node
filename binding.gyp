@@ -22,7 +22,6 @@
     #'cflags': ['-w'],
     'sources': [
         'src/bindings.cc',
-        'src/sanitizer.cc',
         'src/settings.cc',
         'src/config.cc',
         'src/event.cc',
