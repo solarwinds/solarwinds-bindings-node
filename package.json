@@ -27,9 +27,9 @@
     ],
     "module_name": "apm_bindings",
     "module_path": "./dist/{node_napi_label}",
-    "staging_host": "https://solarwinds-apm-staging.s3-us-west-2.amazonaws.com",
-    "production_host": "https://appoptics-binaries.s3.amazonaws.com",
-    "host": "",
+    "development_host": "https://ssp-dev-global-binary-blobs.s3.us-east-1.amazonaws.com",
+    "staging_host": "https://ssp-stage-global-binary-blobs.s3.us-east-1.amazonaws.com",
+    "production_host": "https://ssp-prod-global-binary-blobs.s3.us-east-1.amazonaws.com",
     "remote_path": "./nodejs/bindings",
     "package_name": "{module_name}-v{version}-{node_abi}-{node_napi_label}-{libc}-{arch}.tar.gz"
   },
@@ -48,7 +48,7 @@
     "lint": "eslint . --ext .json,.js,.yml --fix",
     "dev": "dev/start.sh",
     "dev:oneoff": "dev/oneoff.sh",
-    "dev:repo:reset": "dev/repo/reset.sh",
+    "dev:repo:reset": " /repo/reset.sh",
     "dev:reinstall": "rm -rf node_modules && rm -rf dist && npm install --unsafe-perm",
     "dev:oboe": "./dev/oboe.sh"
   },
