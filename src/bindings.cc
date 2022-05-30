@@ -295,7 +295,6 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   // classes and objects supplying different namespaces
   exports = Reporter::Init(env, exports);
   exports = Settings::Init(env, exports);
-  exports = Sanitizer::Init(env, exports);
   exports = Event::Init(env, exports);
   exports = Config::Init(env, exports);
 
