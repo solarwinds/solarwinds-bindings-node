@@ -44,10 +44,6 @@ jobs:
     container:
         image:  ${{ matrix.image }}
 
-    env: 
-      AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
-
     steps:
       # See comment at bottom of file.
       - name: Change Owner of Container Working Directory
@@ -68,6 +64,16 @@ jobs:
       # use npm workaround specifying a package name to bypass install script in package.json
       - name: NPM Install dependencies
         run: npm install linux-os-info --unsafe-perm
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.COMMON_ENVS_STAGING_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.COMMON_ENVS_STAGING_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.STAGING_AWS_ROLE_TO_ASSUME }}
+          role-duration-seconds: 1200
+          role-session-name: SolarWinds
 
       - name: Clear Staging for version
         run: npx node-pre-gyp unpublish --s3_host=staging
@@ -140,10 +146,6 @@ jobs:
     container:
         image:  ${{ matrix.image }}
 
-    env: 
-      AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
-
     steps:
       # See comment at bottom of file.
       - name: Change Owner of Container Working Directory
@@ -176,6 +178,16 @@ jobs:
       # artifacts are at:build/stage/nodejs/bindings/
       - name: Package
         run: npx node-pre-gyp package # requires clean rebuild
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.COMMON_ENVS_STAGING_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.COMMON_ENVS_STAGING_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.STAGING_AWS_ROLE_TO_ASSUME }}
+          role-duration-seconds: 1200
+          role-session-name: SolarWinds
 
       # *** IMPORTANT: 
       # always include --s3_host flag regardless of node-pre-gyp defaults.
