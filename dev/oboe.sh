@@ -46,9 +46,9 @@ get_new_oboe() {
     ERRORFILES=
 
     # presume production
-    URL="https://files.appoptics.com/c-lib"
+    URL="https://ssp-prod-global-agent-binaries.s3.amazonaws.com/apm/c-lib"
     if [ "$SOURCE" = "STAGING" ]; then
-        URL="https://s3-us-west-2.amazonaws.com/solarwinds-apm-staging/c-lib"
+        URL="https://ssp-stage-global-agent-binaries.s3.amazonaws.com/apm/c-lib"
     elif [ "$SOURCE" != "PRODUCTION" ]; then
         echo "Invalid SOURCE value $SOURCE, aborting"
         exit 1

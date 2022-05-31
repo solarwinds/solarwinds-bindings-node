@@ -6,7 +6,7 @@
 files="$1"
 
 # hard coded location of sha files
-url="https://files.appoptics.com/c-lib"
+url="https://ssp-prod-global-agent-binaries.s3.amazonaws.com/apm/c-lib"
 
 errors=0
 error_files=""
