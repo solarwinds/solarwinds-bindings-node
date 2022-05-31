@@ -1,7 +1,7 @@
 {
   "include": [
     {
-      "tag": "14-alpine3.10-build"
+      "tag": "14-alpine3.13-build"
     },
     {
       "tag": "14-centos7-build"
@@ -16,10 +16,16 @@
       "tag": "14-centos8"
     },
     {
-      "tag": "16-alpine3.11-build"
+      "tag": "16-alpine3.13-build"
     },
     {
       "tag": "16-centos7-build"
+    },
+    {
+      "tag": "16-centos7"
+    },
+    {
+      "tag": "16-centos8"
     },
     {
       "tag": "16-amazonlinux2"
