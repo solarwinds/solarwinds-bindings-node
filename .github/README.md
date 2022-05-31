@@ -53,7 +53,7 @@ Those are available in the Docker Dev Container.
 `git clone` to start.
 
 * `src` directory contains the C++ code to bind to liboboe. 
-* `oboe` directory contains `liboboe` and its required header files. `liboboe` is downloaded from: https://files.appoptics.com/c-lib. Pre-release versions are at: https://solarwinds-apm-staging.s3-us-west-2.amazonaws.com/c-lib/
+* `oboe` directory contains `liboboe` and its required header files. `liboboe` is downloaded from: https://ssp-prod-global-agent-binaries.s3.amazonaws.com/apm/c-lib. Pre-release versions are at: https://ssp-stage-global-agent-binaries.s3.amazonaws.com/apm/c-lib
 * `test` directory contains the test suite. 
 * `.github` contains the files for github actions.
 * `dev` directory contains anything related to dev environment
