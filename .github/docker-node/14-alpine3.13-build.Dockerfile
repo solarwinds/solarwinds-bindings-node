@@ -1,7 +1,7 @@
-FROM node:16-alpine3.11
+FROM node:14-alpine3.13
 
 # install software required for this OS
 RUN apk update && apk add \
   g++ \
-  python3 \
+  python2 \
   make
