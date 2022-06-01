@@ -133,8 +133,6 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
         // status can be zero with a version other than 2, so check that too.
         if (status < 0) {
           xtrace = "";
-        } else {
-          have_metadata = true;
         }
       } else {
         // if it's the wrong length don't pass it to oboe
