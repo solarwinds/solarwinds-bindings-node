@@ -133,8 +133,6 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
         // status can be zero with a version other than 2, so check that too.
         if (status < 0) {
           xtrace = "";
-        } else {
-          have_metadata = true;
         }
       } else {
         // if it's the wrong length don't pass it to oboe
@@ -199,7 +197,6 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   }
 
   in.service_name = "";
-  in.in_xtrace = xtrace.c_str();
   in.tracestate = tracestate.c_str();
   in.custom_sample_rate = rate;
   in.custom_tracing_mode = mode;
@@ -244,11 +241,10 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     return o;
   }
 
+  have_metadata = in.in_xtrace != nullptr;
+
   // if an x-trace was not used by oboe to make the decision then
-  // create metadata. oboe sets sample_source to -1 when it was a
-  // "continue" decision, i.e., the trace was continued using the
-  // supplied x-trace (no trace decision was made).
-  have_metadata = out.sample_source == OBOE_SAMPLE_RATE_SOURCE_CONTINUED;
+  // there is need to create metadata.
   if (!have_metadata) {
     edge = false;
     oboe_metadata_init(&omd);

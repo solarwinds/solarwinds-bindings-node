@@ -4,7 +4,7 @@
     "!darwin",
     "!win32"
   ],
-  "version": "12.0.0-nh.1",
+  "version": "12.0.0-nh.2",
   "appoptics": {
     "version-suffix": "lambda-1"
   },
