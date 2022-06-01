@@ -50,7 +50,7 @@ describe('bindings.Reporter', function () {
     expect(finalTxName).equal('unknown')
 
     finalTxName = r.sendNonHttpSpan({
-      domain: domain
+      domain
     })
     expect(finalTxName).equal(domain + '/')
 
@@ -62,7 +62,7 @@ describe('bindings.Reporter', function () {
 
     finalTxName = r.sendNonHttpSpan({
       txname: customName,
-      domain: domain,
+      domain,
       duration: 1234
     })
     expect(finalTxName).equal(domain + '/' + customName)
@@ -76,30 +76,30 @@ describe('bindings.Reporter', function () {
     const method = 'GET'
 
     let finalTxName = r.sendHttpSpan({
-      url: url,
-      status: status,
-      method: method,
+      url,
+      status,
+      method,
       duration: 1111
     })
     expect(finalTxName).equal(url)
 
     finalTxName = r.sendHttpSpan({
-      url: url,
-      domain: domain
+      url,
+      domain
     })
     expect(finalTxName).equal(domain + url)
 
     finalTxName = r.sendHttpSpan({
       txname: customName,
-      url: url,
+      url,
       duration: 1234
     })
     expect(finalTxName).equal(customName)
 
     finalTxName = r.sendHttpSpan({
       txname: customName,
-      url: url,
-      domain: domain,
+      url,
+      domain,
       duration: 1236
     })
     expect(finalTxName).equal(domain + '/' + customName)
