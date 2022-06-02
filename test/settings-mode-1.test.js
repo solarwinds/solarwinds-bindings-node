@@ -98,6 +98,17 @@ describe('bindings.Settings mode 1', function () {
     expect(settings.metadata.toString()).equal(xtrace)
   })
 
+  // NOTE: order of tests here changes results. flakiness abound.
+  it('should use a valid xtrace with sample flag no matter what tracestate is (Downstream request) and ignoring the sample flag making new decision instead', function () {
+    const ev0 = bindings.Event.makeRandom(1)
+    const event = new bindings.Event(ev0)
+    const xtrace = event.toString()
+    const settings = bindings.Settings.getTraceSettings({ xtrace, tracestate: '' })
+    expect(settings).property('message', 'ok')
+    expect(settings).property('status', 0) // -1 means non-sampled xtrace
+    expect(settings.metadata.toString().slice(0, -1)).equal(xtrace.slice(0, -1))
+  })
+
   it('should get verification that a request should be sampled', function (done) {
     bindings.Settings.setTracingMode(bindings.TRACE_ALWAYS)
     bindings.Settings.setDefaultSampleRate(bindings.MAX_SAMPLE_RATE)
