@@ -242,22 +242,7 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     return o;
   }
 
-  // oboe sets sample_source to -1 when it was a
-  // "continue" decision OR when it is a trigger trace.
-
-  // for a continued trace (that has metadata) oboe will set
-  // out->sample_rate = -1;
-  // out->sample_source = -1;
-  // out->token_bucket_rate = -1;
-  // out->token_bucket_capacity = -1;
-
-  // for a trigger trace (that DOES NOT have metadata) oboe will set
-  // out->sample_source = -1;
-
-  // the conditional four represent a continued trace which has metadata.
-  // alternatively there there may an incoming xtrace (traceparent) that is to be sampled
-  // TODO: this is a "stop gap" until liboboe api fix
-  have_metadata = (in.in_xtrace) || (out.sample_rate == -1 && out.sample_source == -1 && out.token_bucket_rate == -1 && out.token_bucket_capacity == -1);
+  have_metadata = in.in_xtrace != nullptr;
 
   // if an x-trace was not used by oboe to make the decision then
   // there is need to create metadata.
