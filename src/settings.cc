@@ -197,7 +197,6 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   }
 
   in.service_name = "";
-  in.in_xtrace = xtrace.c_str();
   in.tracestate = tracestate.c_str();
   in.custom_sample_rate = rate;
   in.custom_tracing_mode = mode;
