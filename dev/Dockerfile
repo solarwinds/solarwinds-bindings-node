@@ -9,7 +9,8 @@ RUN apt update \
                 nano \
                 g++ \
                 python \
-                make
+                make \
+                flawfinder
 
 # set time zone (for github cli)
 ENV TZ=America/Los_Angeles
