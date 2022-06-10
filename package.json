@@ -27,7 +27,6 @@
     ],
     "module_name": "apm_bindings",
     "module_path": "./dist/{node_napi_label}",
-    "development_host": "https://ssp-dev-global-binary-blobs.s3.us-east-1.amazonaws.com",
     "staging_host": "https://ssp-stage-global-binary-blobs.s3.us-east-1.amazonaws.com",
     "production_host": "https://ssp-prod-global-binary-blobs.s3.us-east-1.amazonaws.com",
     "remote_path": "./nodejs/bindings",
