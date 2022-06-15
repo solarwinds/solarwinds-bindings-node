@@ -1,15 +1,6 @@
 {
   "include": [
     {
-      "image": "node:14-buster-slim"
-    },
-    {
-      "image": "node:14-stretch-slim"
-    },
-    {
-      "image": "node:14-bullseye-slim"
-    },
-    {
       "image": "node:14-alpine3.13"
     },
     {
@@ -28,16 +19,7 @@
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:14-amazonlinux2"
     },
     {
-      "image": "node:16-buster-slim"
-    },
-    {
-      "image": "node:16-stretch-slim"
-    },
-    {
       "image": "node:16-stretch"
-    },
-    {
-      "image": "node:16-bullseye-slim"
     },
     {
       "image": "node:16-alpine3.13"
@@ -56,12 +38,6 @@
     },
     {
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-amazonlinux2"
-    },
-    {
-      "image": "node:18-buster-slim"
-    },
-    {
-      "image": "node:18-bullseye-slim"
     },
     {
       "image": "node:18-alpine3.14"
