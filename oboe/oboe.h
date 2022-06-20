@@ -519,7 +519,6 @@ void oboe_shutdown();
 
 // Value for "SampleSource" info key
 // where was the sample rate specified? (oboe settings, config file, hard-coded default, etc)
-#define OBOE_SAMPLE_RATE_SOURCE_CONTINUED -1
 #define OBOE_SAMPLE_RATE_SOURCE_FILE 1
 #define OBOE_SAMPLE_RATE_SOURCE_DEFAULT 2
 #define OBOE_SAMPLE_RATE_SOURCE_OBOE 3
@@ -535,6 +534,8 @@ void oboe_shutdown();
 #define OBOE_TRACE_ALWAYS  1    // deprecated: do not use, only here for backward compatibility
 #define OBOE_TRACE_DISABLED   0
 #define OBOE_TRACE_ENABLED  1
+#define OBOE_TRIGGER_DISABLED   0
+#define OBOE_TRIGGER_ENABLED  1
 
 #define OBOE_SEND_EVENT 0
 #define OBOE_SEND_STATUS 1
