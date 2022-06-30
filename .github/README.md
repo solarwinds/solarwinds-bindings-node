@@ -17,7 +17,6 @@ This is a **Linux Only package** with no Mac or Windows support.
   * [Testing](#testing)
   * [Building](#building)
   * [Debugging](#debugging)
-  * [Dev Repo](#dev-repo)
 - [Development & Release with GitHub Actions](#development--release-with-github-actions)
   * [Overview](#overview)
   * [Usage](#usage)
@@ -164,39 +163,6 @@ Find the versions of GLIBCXX required by a file
 Dump a `.node` file as asm (build debug for better symbols):
 
 `objdump -CRrS build/Release/ao-metrics.node  > ao-metrics.s`
-
-## Dev Repo
-
-The dev repo setup allows to run end-to-end `node-pre-gyp` and npm release process in a development environment.
-It also greatly simplifies creating and testing CI integrations such as GitHub Actions.
-
-It contains:
-  - dev repo: https://github.com/appoptics/appoptics-bindings-node-dev (private, permissions via AppOptics Organization admin)
-  - staging S3 bucket: https://apm-appoptics-bindings-node-dev-staging.s3.us-east-1.amazonaws.com (public, write permissions via SolarWinds admin)
-  - production S3 bucket: https://apm-appoptics-bindings-node-dev-production.s3.amazonaws.com (public, write permissions via SolarWinds admin)
-
-The dev repo was cloned from the main repo and setup with the appropriate secrets.
-
-To set the main repo to work with the dev repo:
-
-1. `git remote -v`
-2. `git remote add dev git@github.com:appoptics/appoptics-bindings-node-dev.git`
-3. `npm run dev:repo:reset`
-
-The script will:
-  - Force push all branches and tags to dev repo.
-  - Remove the local dev repo and clone a fresh one into a sibling directory. 
-  - Modify package.json:
-  ```
-  "name": "@appoptics/apm-binding-dev",
-  "staging_host": "https://apm-appoptics-bindings-node-dev-staging.s3.us-east-1.amazonaws.com",
-  "production_host": "https://apm-appoptics-bindings-node-dev-production.s3.amazonaws.com",
-  ```
-  - Commit updated `package.json` to `master` all branches.
-
-To start fresh on the dev repo run `npm run dev:repo:reset` again.
-
-When running a [Release](#release---push-version-tag) process on the dev repo, the package will be published to https://www.npmjs.com/package/@appoptics/apm-bindings-dev. It should be [unpublished](https://docs.npmjs.com/unpublishing-packages-from-the-registry) as soon as possible. Note that because the package is scoped to the organization, the organization admin must temporarily reassign this package to just the dev-internal team; this team has a single member, which is one of the requirements for unpublishing per https://docs.npmjs.com/policies/unpublish#packages-published-more-than-72-hours-ago.
 
 # Development & Release with GitHub Actions 
 

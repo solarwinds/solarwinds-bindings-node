@@ -51,7 +51,6 @@
     "lint": "eslint . --ext .json,.js,.yml --fix",
     "dev": "dev/start.sh",
     "dev:oneoff": "dev/oneoff.sh",
-    "dev:repo:reset": "dev/repo/reset.sh",
     "dev:reinstall": "rm -rf node_modules && rm -rf dist && npm install --unsafe-perm",
     "dev:oboe": "./dev/oboe.sh"
   },
