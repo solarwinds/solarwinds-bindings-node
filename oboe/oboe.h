@@ -398,7 +398,6 @@ int oboe_reporter_destroy(oboe_reporter_t *rep);    /* DEPRECATE: Use oboe_shutd
 
 ssize_t oboe_reporter_udp_send(void *desc, const char *data, size_t len);   /* DEPRECATE - Use oboe_event_send() */
 
-
 /* Oboe initialization and reporter management */
 
 /**
@@ -458,6 +457,14 @@ int oboe_reporter_flush();
  * get the reporter type used
  */
 const char* oboe_get_reporter_type();
+
+/**
+ * Get reporter default_endpoint
+ * It returns static information from each reporter class and doesn't require oboe_init before calling it
+ * @param reporter_type const char* e.g. SSL, UDP, FILE, ...
+ * @param default_endpoint const char* <empty> means no default endpoint
+ */
+const char* oboe_get_reporter_default_endpoint(const char* reporter_type);
 
 /**
  * Check if system is AWS Lambda
