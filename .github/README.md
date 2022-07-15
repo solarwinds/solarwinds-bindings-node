@@ -148,8 +148,8 @@ Finally, here's a link to using output formats (and the whole set of gdb docs) [
 
 # Development & Release with GitHub Actions 
 
-> **tl;dr** Push to feature branch. Create Pull Request. Merge Pull Request. Push version tag to release. 
-> Package is always released in conjunction with AppOptics APM Agent. See [release proccess](https://github.com/appoptics/appoptics-apm-node/blob/master/docs/release-process.md) for details.
+> **tl;dr** Push to feature branch. Create Pull Request. Merge Pull Request. Manual release. 
+> Package is always released in conjunction with SolarWinds APM Agent. See [release proccess](https://github.com/solarwindscloud/solarwinds-apm-node/blob/master/docs/release-process.md) for details.
 
 
 ## Overview
@@ -230,13 +230,12 @@ manual (test?) ──► └┬────────────────�
                              └──────────────────────┘
 ```
 
-### Release - Push Version Tag
+### Release - Manual
 
-* Release process is `npm` and `git` triggered.
+* Release process is `npm` and GitHub Actions triggered.
 * To Release:
   1. On branch run `npm version {major/minor/patch}`(e.g. `npm version patch`) then have the branch pass through the Push/Pull/Merge flow above. 
-  2. When ready `git push` origin {tag name} (e.g. `git push origin v11.2.3`).
-* Pushing a semantic versioning tag for a patch/minor/major versions (e.g. `v11.2.3`) or an prerelease tagged pre-release (e.g. `v11.2.3-prerelease.2`) will trigger [release.yml](./workflows/release.yml). Pushing other pre-release tags (e.g. `v11.2.3-7`) is ignored.
+  2. When ready - manually trigger the Release workflow.
 * Workflow will: 
   - Build the code pushed in each of the Build Group images. 
   - Package the built code and upload a tarball to the *production* S3 bucket. 
@@ -246,19 +245,24 @@ manual (test?) ──► └┬────────────────�
 * Workflow publishing to NPM registry exposes the NPM package (and the prebuilt tarballs in the *production* S3 bucket) to the public.
 * Note: solarwinds-apm-bindings is not meant to be directly consumed. It is developed as a dependency of [solarwinds-apm](https://www.npmjs.com/package/solarwinds-apm).
 
+```               ┌───────────────────┐
+manual ──────────►│Confirm Publishable│
+                  └┬──────────────────┘
+                   │
+                   │  ┌────────────────────────────┐ ─► ─► ─►
+                   └► │Build Group Build & Package │ S3 Package
+                      └┬───────────────────────────┘ Production
+                       │
+                       │   ┌────────────────────┐     │
+                       └─► │Target Group Install│ ◄── ▼
+                           └┬───────────────────┘
+                            │
+                            │   ┌───────────┐
+                            └─► │NPM Publish│
+                                └───────────┘
+
 ```
-push semver tag ─►  ┌────────────────────────────┐ ─► ─► ─►
-push prerelease tag │Build Group Build & Package │ S3 Package
-                    └┬───────────────────────────┘ Production
-                     │
-                     │   ┌────────────────────┐     │
-                     └─► │Target Group Install│ ◄── ▼
-                         └┬───────────────────┘
-                          │
-                          │   ┌───────────┐
-                          └─► │NPM Publish│
-                              └───────────┘
-```
+
 ## Maintenance
 
 > **tl;dr** There is no need to modify workflows. All data used is externalized.
