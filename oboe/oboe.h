@@ -1,13 +1,13 @@
 /**
  * @file oboe.h
  *
- * API header for AppOptics' Oboe application tracing library for use with AppOptics.
+ * API header for liboboe application tracing library.
  *
  * @package             Oboe
- * @author              AppOptics
- * @copyright           Copyright (c) 2016, SolarWinds LLC
+ * @author              liboboe
+ * @copyright           Copyright (c) 2022, SolarWinds inc
  * @license
- * @link                https://appoptics.com
+ * @link
  **/
 
 #ifndef LIBOBOE_H
@@ -19,6 +19,7 @@ extern "C" {
 #endif
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <inttypes.h>
@@ -88,9 +89,15 @@ extern "C" {
 
 #define OBOE_SAMPLE_RESOLUTION 1000000
 
+#define OBOE_TASK_ID_TRACEPARENT_LEN 16
 #define OBOE_MAX_TASK_ID_LEN 20
 #define OBOE_MAX_OP_ID_LEN 8
 #define OBOE_MAX_METADATA_PACK_LEN 512
+
+#define OBOE_METAFORMAT_XTRACE 0
+#define OBOE_METAFORMAT_TRACEPARENT 1
+
+#define TRACEPARENT_CURRENT_VERSION 0
 
 #define XTR_CURRENT_VERSION 2
 
@@ -134,6 +141,7 @@ typedef struct oboe_ids {
 } oboe_ids_t;
 
 typedef struct oboe_metadata {
+    uint8_t     type;
     uint8_t     version;
     oboe_ids_t  ids;
     size_t      task_len;
@@ -161,7 +169,7 @@ typedef struct oboe_metric_tag {
 } oboe_metric_tag_t;
 
 typedef struct oboe_init_options {
-    int version;                            // the version of this structure (currently on version 12)
+    int version;                            // the version of this structure (currently on version 12 and 13 (adds w3c mode))
     const char *hostname_alias;             // optional hostname alias
     int log_level;                          // level at which log messages will be written to log file (0-6)
                                             // use LOGLEVEL_DEFAULT for default log level
@@ -187,6 +195,7 @@ typedef struct oboe_init_options {
     int stdout_clear_nonblocking;           // flag indicating if the O_NONBLOCK flag on stdout should be cleared,
                                             // only used in lambda reporter (off=0, on=1, default off)
     int is_grpc_clean_hack_enabled;         // flag indicating if custom grpc clean hack enabled (default 0)
+    int mode;                               // flag indicating Solarwinds backend (0 = AppOptics; 1 = Nighthawk, default = 0)
 } oboe_init_options_t;
 
 typedef struct oboe_span_params {
@@ -219,6 +228,9 @@ typedef struct oboe_tracing_decisions_in {
     const char *header_options;     // X-Trace-Options HTTP header value
     const char *header_signature;   // X-Trace-Options-Signature HTTP header value
     time_t header_timestamp;        // timestamp from X-Trace-Options header, converted to UNIX timestamp format
+
+    // v3
+    const char *tracestate;         // value part of the parsed `sw` entry in the tracestate header, if any
 } oboe_tracing_decisions_in_t;
 
 typedef struct oboe_tracing_decisions_out {
@@ -272,10 +284,10 @@ int oboe_metadata_copy     (oboe_metadata_t *, const oboe_metadata_t *);
 
 int oboe_metadata_random   (oboe_metadata_t *);
 
-int oboe_metadata_set_lengths   (oboe_metadata_t *, size_t, size_t);
 int oboe_metadata_create_event  (const oboe_metadata_t *, oboe_event_t *);
 
 int oboe_metadata_tostr     (const oboe_metadata_t *, char *, size_t);
+int oboe_metadata_tostr_traceparent2xtrace     (const oboe_metadata_t *, char *, size_t);
 int oboe_metadata_fromstr   (oboe_metadata_t *, const char *, size_t);
 
 int oboe_metadata_is_sampled(oboe_metadata_t *md);
@@ -289,7 +301,6 @@ int oboe_event_init     (oboe_event_t *, const oboe_metadata_t *, const uint8_t*
 int oboe_event_destroy  (oboe_event_t *);
 
 int oboe_event_add_info (oboe_event_t *, const char *, const char *);
-int oboe_event_add_info_binary (oboe_event_t *, const char *, const char *, size_t);
 int oboe_event_add_info_int64 (oboe_event_t *, const char *, const int64_t);
 int oboe_event_add_info_double (oboe_event_t *, const char *, const double);
 int oboe_event_add_info_bool (oboe_event_t *, const char *, const int);
@@ -310,6 +321,15 @@ int oboe_event_add_hostname(oboe_event_t *evt);
  */
 int oboe_event_send(int channel, oboe_event_t *evt, oboe_metadata_t *md);
 
+/**
+ * Send event message using the default reporter. (Only for python otel exporter)
+ * This function won't add Timestamp_u by default
+ * @param channel the channel to send out this message (OBOE_SEND_EVENT or OBOE_SEND_STATUS)
+ * @param evt The event message.
+ * @param md The X-Trace metadata.
+ * @return Length of message sent in bytes on success; otherwise -1.
+ */
+int oboe_event_send_without_timestamp(int channel, oboe_event_t *evt, oboe_metadata_t *md);
 
 // oboe_context
 
@@ -378,7 +398,6 @@ int oboe_reporter_destroy(oboe_reporter_t *rep);    /* DEPRECATE: Use oboe_shutd
 
 ssize_t oboe_reporter_udp_send(void *desc, const char *data, size_t len);   /* DEPRECATE - Use oboe_event_send() */
 
-
 /* Oboe initialization and reporter management */
 
 /**
@@ -440,6 +459,14 @@ int oboe_reporter_flush();
 const char* oboe_get_reporter_type();
 
 /**
+ * Get reporter default_endpoint
+ * It returns static information from each reporter class and doesn't require oboe_init before calling it
+ * @param reporter_type const char* e.g. SSL, UDP, FILE, ...
+ * @param default_endpoint const char* <empty> means no default endpoint
+ */
+const char* oboe_get_reporter_default_endpoint(const char* reporter_type);
+
+/**
  * Check if system is AWS Lambda
  */
 int oboe_is_lambda();
@@ -499,7 +526,6 @@ void oboe_shutdown();
 
 // Value for "SampleSource" info key
 // where was the sample rate specified? (oboe settings, config file, hard-coded default, etc)
-#define OBOE_SAMPLE_RATE_SOURCE_CONTINUED -1
 #define OBOE_SAMPLE_RATE_SOURCE_FILE 1
 #define OBOE_SAMPLE_RATE_SOURCE_DEFAULT 2
 #define OBOE_SAMPLE_RATE_SOURCE_OBOE 3
@@ -515,6 +541,8 @@ void oboe_shutdown();
 #define OBOE_TRACE_ALWAYS  1    // deprecated: do not use, only here for backward compatibility
 #define OBOE_TRACE_DISABLED   0
 #define OBOE_TRACE_ENABLED  1
+#define OBOE_TRIGGER_DISABLED   0
+#define OBOE_TRIGGER_ENABLED  1
 
 #define OBOE_SEND_EVENT 0
 #define OBOE_SEND_STATUS 1
@@ -592,6 +620,7 @@ const char* oboe_get_tracing_decisions_auth_message (int code);
 #define OBOE_INIT_SSL_LOAD_CERT 9
 #define OBOE_INIT_SSL_REPORTER_CREATE 10
 #define OBOE_INIT_SSL_MISSING_KEY 11
+#define OBOE_INIT_INVALID_BACKEND 12
 
 //
 // these codes are returned by oboe_notifier_status()

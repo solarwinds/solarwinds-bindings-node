@@ -32,7 +32,8 @@ const goodOptions = {
   eventsFlushBatchSize: 100,
   // oneFilePerEvent: 1,             // not supported by the node agent
   ec2MetadataTimeout: 3000,
-  proxy: 'http://proxy-host:10101'
+  proxy: 'http://proxy-host:10101',
+  mode: 0
 }
 
 describe('bindings.oboeInit()', function () {
@@ -40,19 +41,19 @@ describe('bindings.oboeInit()', function () {
   // tests here always run against production collector. no way to "override" with settings.
 
   it('should initialize oboe with only a service key', function () {
-    const result = bindings.oboeInit({ serviceKey: `${env.AO_TEST_PROD_SERVICE_KEY}` })
+    const result = bindings.oboeInit({ serviceKey: `${env.SW_TEST_PROD_SERVICE_KEY}`, mode: 1 })
     // oboeInit can return -1 for already initialized or 0 if succeeded.
     // depending on whether this is run as part of a suite or standalone
     // either result is valid.
     expect(result).oneOf([-1, 0])
   })
 
-  it('should check if ready to sample using collector.appoptics.com', function () {
+  it('should check if ready to sample using collector', function () {
     this.timeout(maxIsReadyToSampleWait)
     const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
     expect(ready).be.a('number')
 
-    expect(ready).equal(1, 'collector.appoptics.com should be ready')
+    expect(ready).equal(1, 'collector should be ready')
   })
 
   it('should handle good options values', function () {
@@ -110,7 +111,7 @@ describe('bindings.oboeInit()', function () {
 
   it('should handle the environment variable values', function () {
     const details = {}
-    const envVars = new EnvVarOptions('APPOPTICS_')
+    const envVars = new EnvVarOptions('SW_APM_')
     const options = envVars.getConverted(keyMap)
 
     const result = bindings.oboeInit(options, details)

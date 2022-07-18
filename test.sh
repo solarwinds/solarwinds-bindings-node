@@ -40,7 +40,6 @@ SUITES_SKIPPED=0
 # notification are disabled for now, so skip testing.
 SKIP="test/a-test-you-might-want-to-skip $SKIP"
 
-
 skipThis() {
   for s in $SKIP
   do
@@ -90,7 +89,7 @@ executeTestGroup() {
             if [ -n "$SIMULATE" ]; then
                 echo "simulating test $F"
                 SUITES_PASSED=$((SUITES_PASSED + 1))
-            elif ! npx mocha $_options "$F"; then
+            elif ! npx mocha --exit $_options "$F"; then
                 _new_errors="$_new_errors $F"
                 SUITES_FAILED=$((SUITES_FAILED + 1))
             else
@@ -118,15 +117,9 @@ executeTestGroup() {
 #
 if [ "$group_to_run" = "CORE" ] || [ ! "$group_to_run" ]; then executeTestGroup "CORE" "test/*.test.js" "$timeout"; fi
 
-#
-# run unit tests without the addon disabled
-#
-if [ "$group_to_run" = "SOLO" ]  || [ ! "$group_to_run" ]; then executeTestGroup "SOLO" "test/solo/*.test.js" "$timeout"; fi
-
-#
 # run tests that require gc to be exposed
 #
-if [ "$group_to_run" = "GC" ]  || [ ! "$group_to_run" ]; then executeTestGroup "GC" "test/expose-gc/*.test.js" "--expose-gc $timeout"; fi
+if [ "$group_to_run" = "GC" ]  || [ ! "$group_to_run" ]; then executeTestGroup "GC" "test/expose-gc/*.test.js" "$timeout"; fi
 
 #=======================================
 # provide a summary of the test results.

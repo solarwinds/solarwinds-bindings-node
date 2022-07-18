@@ -15,7 +15,7 @@ on:
       node:
         required: false
         description: 'A node version (e.g 10.16.0)'
-        default: '14' # TODO: update to 16 when support is added
+        default: '16'
 
 jobs:
   build-single-test:
@@ -23,18 +23,18 @@ jobs:
     runs-on: ubuntu-latest # environment job will run in
 
     env:
-      APPOPTICS_SERVICE_KEY: ${{ secrets.APPOPTICS_SERVICE_KEY }}
-      APPOPTICS_COLLECTOR: ${{ secrets.APPOPTICS_COLLECTOR }}
-      AO_TEST_PROD_SERVICE_KEY: ${{ secrets.AO_TEST_PROD_SERVICE_KEY }}
+      SW_APM_SERVICE_KEY: ${{ secrets.SW_APM_SERVICE_KEY }}
+      SW_APM_COLLECTOR: ${{ secrets.SW_APM_COLLECTOR }}
+      SW_TEST_PROD_SERVICE_KEY: ${{ secrets.SW_TEST_PROD_SERVICE_KEY }}
 
     steps:
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v2
 
-      - name: Setup Node ${{ github.event.inputs.node || '14' }}
+      - name: Setup Node ${{ github.event.inputs.node || '16' }}
         uses: actions/setup-node@v2
         with:
-          node-version: ${{ github.event.inputs.node || '14' }}
+          node-version: ${{ github.event.inputs.node || '16' }}
 
       - name: Show Environment Info
         run: |

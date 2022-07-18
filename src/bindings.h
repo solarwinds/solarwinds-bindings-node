@@ -124,19 +124,6 @@ namespace Reporter {
 }
 
 //
-// Sanitizer provides the sanitize function.
-//
-namespace Sanitizer {
-  Napi::Object Init(Napi::Env, Napi::Object);
-}
-
-//
-// Notifier provides asynchronous notifications from oboe
-//
-namespace Notifier {
-  Napi::Object Init(Napi::Env, Napi::Object);
-}
-//
 // Config provides the getVersionString function.
 //
 namespace Config {

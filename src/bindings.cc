@@ -30,7 +30,7 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
 
     // setup oboe's options structure
     oboe_init_options_t options;
-    options.version = 11;
+    options.version = 13;
 
     int setDefaultsStatus = oboe_init_options_set_defaults(&options);
     if (setDefaultsStatus > 0) {
@@ -215,6 +215,14 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
         options.stdout_clear_nonblocking = stdoutClearNonblocking.ToNumber().Int32Value();
       }
     }
+    if (o.Has("mode")) {
+      Napi::Value mode = o.Get("mode");
+      processed.Set("mode", mode);
+      if (mode.IsNumber()) {
+        valid.Set("mode", mode);
+        options.mode = mode.ToNumber().Int32Value();
+      }
+    }
 
     if (skipInit) {
       return env.Null();
@@ -287,8 +295,6 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   // classes and objects supplying different namespaces
   exports = Reporter::Init(env, exports);
   exports = Settings::Init(env, exports);
-  exports = Sanitizer::Init(env, exports);
-  exports = Notifier::Init(env, exports);
   exports = Event::Init(env, exports);
   exports = Config::Init(env, exports);
 

@@ -1,115 +1,16 @@
 {
   "include": [
     {
-      "image": "node:10-buster"
-    },
-    {
-      "image": "node:10-buster-slim"
-    },
-    {
-      "image": "node:10-stretch"
-    },
-    {
-      "image": "node:10-stretch-slim"
-    },
-    {
-      "image": "node:10-alpine3.9"
-    },
-    {
-      "image": "node:10-alpine3.10"
-    },
-    {
-      "image": "node:10-alpine3.11"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:10-centos7"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:10-centos8"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:10-amazonlinux2"
-    },
-    {
-      "image": "node:12-buster"
-    },
-    {
-      "image": "node:12-buster-slim"
-    },
-    {
-      "image": "node:12-stretch"
-    },
-    {
-      "image": "node:12-bullseye"
-    },
-    {
-      "image": "node:12-stretch-slim"
-    },
-    {
-      "image": "node:12-bullseye-slim"
-    },
-    {
-      "image": "node:12-alpine3.9"
-    },
-    {
-      "image": "node:12-alpine3.10"
-    },
-    {
-      "image": "node:12-alpine3.11"
-    },
-    {
-      "image": "node:12-alpine3.12"
-    },
-    {
-      "image": "node:12-alpine3.13"
-    },
-    {
-      "image": "node:12-alpine3.14"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:12-centos7"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:12-centos8"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:12-amazonlinux2"
-    },
-    {
-      "image": "node:14-buster"
-    },
-    {
-      "image": "node:14-buster-slim"
-    },
-    {
-      "image": "node:14-stretch"
-    },
-    {
-      "image": "node:14-bullseye"
-    },
-    {
-      "image": "node:14-stretch-slim"
-    },
-    {
-      "image": "node:14-bullseye-slim"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:14-alpine3.9"
-    },
-    {
-      "image": "node:14-alpine3.10"
-    },
-    {
-      "image": "node:14-alpine3.11"
-    },
-    {
-      "image": "node:14-alpine3.12"
-    },
-    {
       "image": "node:14-alpine3.13"
     },
     {
       "image": "node:14-alpine3.14"
+    },
+    {
+      "image": "node:14-alpine3.15"
+    },
+    {
+      "image": "node:14-alpine3.16"
     },
     {
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:14-centos7"
@@ -121,40 +22,19 @@
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:14-amazonlinux2"
     },
     {
-      "image": "node:16-buster"
-    },
-    {
-      "image": "node:16-buster-slim"
-    },
-    {
       "image": "node:16-stretch"
-    },
-    {
-      "image": "node:16-bullseye"
-    },
-    {
-      "image": "node:16-stretch-slim"
-    },
-    {
-      "image": "node:16-bullseye-slim"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-alpine3.9"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-alpine3.10"
-    },
-    {
-      "image": "node:16-alpine3.11"
-    },
-    {
-      "image": "node:16-alpine3.12"
     },
     {
       "image": "node:16-alpine3.13"
     },
     {
       "image": "node:16-alpine3.14"
+    },
+    {
+      "image": "node:14-alpine3.15"
+    },
+    {
+      "image": "node:14-alpine3.16"
     },
     {
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-centos7"
@@ -166,28 +46,40 @@
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:16-amazonlinux2"
     },
     {
-      "image": "node:18-buster"
-    },
-    {
-      "image": "node:18-buster-slim"
-    },
-    {
-      "image": "node:18-bullseye"
-    },
-    {
-      "image": "node:18-bullseye-slim"
-    },
-    {
       "image": "node:18-alpine3.14"
     },
     {
       "image": "node:18-alpine3.15"
     },
     {
+      "image": "node:18-alpine3.16"
+    },
+    {
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-rhel8"
     },
     {
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-amazonlinux2022"
+    },
+    {
+      "image": "node:14-buster"
+    },
+    {
+      "image": "node:14-stretch"
+    },
+    {
+      "image": "node:14-bullseye"
+    },
+    {
+      "image": "node:16-buster"
+    },
+    {
+      "image": "node:16-bullseye"
+    },
+    {
+      "image": "node:18-buster"
+    },
+    {
+      "image": "node:18-bullseye"
     }
   ]
 }

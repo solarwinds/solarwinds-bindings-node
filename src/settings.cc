@@ -31,7 +31,7 @@ Napi::Value setTracingMode(const Napi::CallbackInfo& info) {
 //
 // Set the default sample rate.
 //
-// This rate is used until overridden by the AppOptics servers.  If not set then
+// This rate is used until overridden by the servers.  If not set then
 // oboe supplies a default value (300,000, i.e., 30%) at time of this writing.
 //
 // The rate is interpreted as a ratio out of OBOE_SAMPLE_RESOLUTION (1,000,000).
@@ -93,7 +93,8 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
 
   // in defaults
   bool have_metadata = false;
-  std::string xtrace("");
+  std::string xtrace;
+  std::string tracestate;
   int rate = -1;
   int mode = -1;
   // edge back to supplied metadata unless there is none.
@@ -109,8 +110,8 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
 
   // type_requested 0 = normal, 1 = trigger-trace
   int type_requested = 0;
-  std::string xtraceOpts("");
-  std::string xtraceOptsSig("");
+  std::string xtraceOpts;
+  std::string xtraceOptsSig;
   int64_t xtraceOptsTimestamp = 0;
   int customTriggerMode = -1;
 
@@ -124,21 +125,24 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
       xtrace = v.As<Napi::String>();
 
       // make sure it's the right length before calling oboe.
-      if (xtrace.length() == 60) {
+      if (xtrace.length() == 60 || xtrace.length() == 55) {
         // try to convert it to metadata. if it fails act as if no xtrace was
         // supplied.
         oboe_metadata_init(&omd);
         int status = oboe_metadata_fromstr(&omd, xtrace.c_str(), xtrace.length());
         // status can be zero with a version other than 2, so check that too.
-        if (status < 0 || omd.version != 2) {
+        if (status < 0) {
           xtrace = "";
-        } else {
-          have_metadata = true;
         }
       } else {
         // if it's the wrong length don't pass it to oboe
         xtrace = "";
       }
+    }
+
+    v = o.Get("tracestate");
+    if (v.IsString()) {
+      tracestate = v.As<Napi::String>();
     }
 
     // now get the much simpler integer values
@@ -180,15 +184,20 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     if (v.IsNumber()) {
       customTriggerMode = v.As<Napi::Number>().Int32Value();
     }
-
-    // debug options
-    //showIn = o.Get("showIn").ToBoolean().Value();
-    //showOut = o.Get("showOut").ToBoolean().Value();
   }
 
   // apply default or user specified values.
-  in.version = 2;
+
+  // for traceparent: type is 1 and version is 0
+  // for xtrace: type is 0 and version is 2
+  if (omd.type == 0) {
+    in.version = 2;
+  } else {
+    in.version = 3;
+  }
+
   in.service_name = "";
+  in.tracestate = tracestate.c_str();
   in.custom_sample_rate = rate;
   in.custom_tracing_mode = mode;
 
@@ -206,19 +215,6 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   in.header_options = xtraceOpts.c_str();
   in.header_signature = xtraceOptsSig.c_str();
   in.header_timestamp = xtraceOptsTimestamp;
-
-  //if (showIn) {
-  //  std::cout << "version: " << in.version << std::endl;
-  //  std::cout << "service_name: " << in.service_name << std::endl;
-  //  std::cout << "in_xtrace: " << in.in_xtrace << std::endl;
-  //  std::cout << "custom_sample_rate: " << in.custom_sample_rate << std::endl;
-  //  std::cout << "custom_tracing_mode: " << in.custom_tracing_mode << std::endl;
-  //  std::cout << "custom_trigger_mode: " << in.custom_trigger_mode << std::endl;
-  //  std::cout << "request_type: " << in.request_type << std::endl;
-  //  std::cout << "header_options: " << in.header_options << std::endl;
-  //  std::cout << "header_signature: " << in.header_signature << std::endl;
-  //  std::cout << "header_timestamp: " << in.header_timestamp << std::endl;
-  //}
 
   // ask for oboe's decisions on life, the universe, and everything.
   out.version = 3;
@@ -245,11 +241,10 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
     return o;
   }
 
+  have_metadata = in.in_xtrace != nullptr;
+
   // if an x-trace was not used by oboe to make the decision then
-  // create metadata. oboe sets sample_source to -1 when it was a
-  // "continue" decision, i.e., the trace was continued using the
-  // supplied x-trace (no trace decision was made).
-  have_metadata = out.sample_source == OBOE_SAMPLE_RATE_SOURCE_CONTINUED;
+  // there is need to create metadata.
   if (!have_metadata) {
     edge = false;
     oboe_metadata_init(&omd);

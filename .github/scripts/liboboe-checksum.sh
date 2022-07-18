@@ -6,7 +6,7 @@
 files="$1"
 
 # hard coded location of sha files
-url="https://files.appoptics.com/c-lib"
+url="https://agent-binaries.cloud.solarwinds.com/apm/c-lib"
 
 errors=0
 error_files=""
