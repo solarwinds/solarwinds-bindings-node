@@ -149,7 +149,7 @@ Finally, here's a link to using output formats (and the whole set of gdb docs) [
 # Development & Release with GitHub Actions 
 
 > **tl;dr** Push to feature branch. Create Pull Request. Merge Pull Request. Manual release. 
-> Package is always released in conjunction with SolarWinds APM Agent. See [release proccess](https://github.com/solarwindscloud/solarwinds-apm-node/blob/master/docs/release-process.md) for details.
+> Package is always released in conjunction with SolarWinds APM Agent. See [release process](https://github.com/solarwindscloud/solarwinds-apm-node/blob/main/docs/release-process.md) for details.
 
 
 ## Overview
