@@ -94,9 +94,6 @@ extern "C" {
 #define OBOE_MAX_OP_ID_LEN 8
 #define OBOE_MAX_METADATA_PACK_LEN 512
 
-#define OBOE_METAFORMAT_XTRACE 0
-#define OBOE_METAFORMAT_TRACEPARENT 1
-
 #define TRACEPARENT_CURRENT_VERSION 0
 
 #define XTR_CURRENT_VERSION 2
@@ -132,6 +129,10 @@ extern "C" {
      #endif
 #endif
 
+#if !defined(PID_T_DEF)
+#define PID_T_DEF
+typedef int pid_t;
+#endif //PID_T_DEF
 
 // structs
 
@@ -141,7 +142,6 @@ typedef struct oboe_ids {
 } oboe_ids_t;
 
 typedef struct oboe_metadata {
-    uint8_t     type;
     uint8_t     version;
     oboe_ids_t  ids;
     size_t      task_len;
@@ -169,7 +169,7 @@ typedef struct oboe_metric_tag {
 } oboe_metric_tag_t;
 
 typedef struct oboe_init_options {
-    int version;                            // the version of this structure (currently on version 12 and 13 (adds w3c mode))
+    int version;                            // the version of this structure (currently on version 14)
     const char *hostname_alias;             // optional hostname alias
     int log_level;                          // level at which log messages will be written to log file (0-6)
                                             // use LOGLEVEL_DEFAULT for default log level
@@ -195,7 +195,8 @@ typedef struct oboe_init_options {
     int stdout_clear_nonblocking;           // flag indicating if the O_NONBLOCK flag on stdout should be cleared,
                                             // only used in lambda reporter (off=0, on=1, default off)
     int is_grpc_clean_hack_enabled;         // flag indicating if custom grpc clean hack enabled (default 0)
-    int mode;                               // flag indicating Solarwinds backend (0 = AppOptics; 1 = Nighthawk, default = 0)
+    int mode;                               // depreciated; value is ignored
+    int metric_format;                      // flag indicating the format of metric (0 = Both; 1 = TransactionResponseTime only; 2 = ResponseTime only; default = 0)
 } oboe_init_options_t;
 
 typedef struct oboe_span_params {
@@ -309,6 +310,7 @@ int oboe_event_add_edge (oboe_event_t *, const oboe_metadata_t *);
 int oboe_event_add_edge_fromstr(oboe_event_t *, const char *, size_t);
 
 int oboe_event_add_timestamp(oboe_event_t *evt);
+int oboe_event_add_tid(oboe_event_t* evt);
 int oboe_event_add_hostname(oboe_event_t *evt);
 
 /**
@@ -620,36 +622,6 @@ const char* oboe_get_tracing_decisions_auth_message (int code);
 #define OBOE_INIT_SSL_LOAD_CERT 9
 #define OBOE_INIT_SSL_REPORTER_CREATE 10
 #define OBOE_INIT_SSL_MISSING_KEY 11
-#define OBOE_INIT_INVALID_BACKEND 12
-
-//
-// these codes are returned by oboe_notifier_status()
-//
-#define OBOE_NOTIFIER_SHUTTING_DOWN -3
-#define OBOE_NOTIFIER_INITIALIZING -2
-#define OBOE_NOTIFIER_DISABLED -1
-#define OBOE_NOTIFIER_OK 0
-#define OBOE_NOTIFIER_SOCKET_PATH_TOO_LONG 1
-#define OBOE_NOTIFIER_SOCKET_CREATE 2
-#define OBOE_NOTIFIER_SOCKET_CONNECT 3
-#define OBOE_NOTIFIER_SOCKET_WRITE_FULL 4
-#define OBOE_NOTIFIER_SOCKET_WRITE_ERROR 5
-#define OBOE_NOTIFIER_SHUTDOWN_TIMED_OUT 6
-
-//
-// these codes are used for testing the notifier using oboe_notifier_test()
-//
-#define OBOE_NOTIFIER_TEST_KEEPALIVE 0
-#define OBOE_NOTIFIER_TEST_LOG 1
-#define OBOE_NOTIFIER_TEST_REMOTE_WARNING 2
-#define OBOE_NOTIFIER_TEST_REMOTE_CONFIG 3
-
-//
-// interval (in seconds) at which the notifier sends a keep-alive msg,
-// note that a keep-alive is only sent if no other message made it through
-// within the interval time
-//
-#define OBOE_NOTIFIER_KEEP_ALIVE_INTERVAL_SEC 10
 
 //
 // these codes are returned by oboe_custom_metric_summary() and oboe_custom_metric_increment()
@@ -1171,12 +1143,8 @@ int oboe_regex_match(const char* string, void* expression);
 /* oboe internal stats for agents to consume */
 oboe_internal_stats_t* oboe_get_internal_stats();
 
-/* notifier related functions */
-int oboe_notifier_init(const char *socket_path);
-int oboe_notifier_stop(int blocking);
-int oboe_notifier_status();
-int oboe_notifier_test(int test_case, const char *test_str);
-
+// Random
+void oboe_random_bytes(uint8_t bytes[], size_t sz);
 
 #ifdef __cplusplus
 } // extern "C"

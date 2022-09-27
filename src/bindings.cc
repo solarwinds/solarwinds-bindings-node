@@ -30,7 +30,7 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
 
     // setup oboe's options structure
     oboe_init_options_t options;
-    options.version = 13;
+    options.version = 14;
 
     int setDefaultsStatus = oboe_init_options_set_defaults(&options);
     if (setDefaultsStatus > 0) {
@@ -215,12 +215,12 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
         options.stdout_clear_nonblocking = stdoutClearNonblocking.ToNumber().Int32Value();
       }
     }
-    if (o.Has("mode")) {
-      Napi::Value mode = o.Get("mode");
-      processed.Set("mode", mode);
-      if (mode.IsNumber()) {
-        valid.Set("mode", mode);
-        options.mode = mode.ToNumber().Int32Value();
+    if (o.Has("metricFormat")) {
+      Napi::Value metricFormat = o.Get("metricFormat");
+      processed.Set("metricFormat", metricFormat);
+      if (metricFormat.IsNumber()) {
+        valid.Set("metricFormat", metricFormat);
+        options.metric_format = metricFormat.ToNumber().Int32Value();
       }
     }
 
