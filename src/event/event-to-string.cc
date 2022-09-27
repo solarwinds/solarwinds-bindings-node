@@ -23,7 +23,7 @@ Napi::Value Event::toString(const Napi::CallbackInfo& info) {
     // useful.
     if (style == 1) {
       flags = Event::ff_header | Event::ff_task | Event::ff_op |
-              Event::ff_flags | Event::ff_separators | Event::ff_lowercase;
+              Event::ff_flags | Event::ff_separators;
     } else {
       // the style are the flags and the separator is a dash.
       flags = style;
@@ -44,7 +44,7 @@ Napi::Value Event::toString(const Napi::CallbackInfo& info) {
 int format(oboe_metadata_t* md, size_t len, char* buffer, uint flags) {
   char* b = buffer;
   // when in type is 1 - everything is lowercase (w3c)
-  char base = (md->type == 1 || flags & Event::ff_lowercase ? 'a' : 'A') - 10;
+  char base = 'a' - 10;
   const char sep = '-';
 
   auto puthex = [&b, base](uint8_t byte) {
@@ -66,11 +66,7 @@ int format(oboe_metadata_t* md, size_t len, char* buffer, uint flags) {
   const bool separators = flags & Event::ff_separators;
 
   if (flags & Event::ff_header) {
-    if (md->type == 1) {
-      b = puthex(0x00);
-    } else {
-      b = puthex(0x2b);
-    }
+    b = puthex(0x00);
     // only add a separator if more fields will be output.
     const uint more =
         Event::ff_task | Event::ff_op | Event::ff_flags | Event::ff_sample;

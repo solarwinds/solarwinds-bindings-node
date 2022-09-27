@@ -35,7 +35,6 @@ describe('bindings.Event.toString() mode 1', function () {
     const static int ff_flags = 8;
     const static int ff_sample = 16;
     const static int ff_separators = 32;
-    const static int ff_lowercase = 64; // in mode 1 everything is always lowervase
 
   */
   it('should return traceparent when no argument is provided', function () {

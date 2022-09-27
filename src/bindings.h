@@ -70,11 +70,10 @@ private:
   const static int ff_flags = 8;
   const static int ff_sample = 16;
   const static int ff_separators = 32;
-  const static int ff_lowercase = 64;
 
   // predefined formats
   const static int fmtHuman =
-      ff_header | ff_task | ff_op | ff_flags | ff_separators | ff_lowercase;
+      ff_header | ff_task | ff_op | ff_flags | ff_separators;
   const static int fmtLog = ff_task | ff_sample | ff_separators;
 
   // size needed to format is the size needed + 3 for delimiters to split the
