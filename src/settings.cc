@@ -96,6 +96,7 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   std::string xtrace;
   std::string tracestate;
   int rate = -1;
+  int mode = -1;
   // edge back to supplied metadata unless there is none.
   bool edge = true;
 
@@ -150,6 +151,11 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
       rate = v.As<Napi::Number>().Int64Value();
     }
 
+    v = o.Get("mode");
+    if (v.IsNumber()) {
+      mode = v.As<Napi::Number>().Int64Value();
+    }
+
     // allow overriding the edge setting. it's not clear why
     // this might need to be done but it does add some control
     // for testing or unforseen cases.
@@ -186,6 +192,7 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
   in.service_name = "";
   in.tracestate = tracestate.c_str();
   in.custom_sample_rate = rate;
+  in.custom_tracing_mode = mode;
 
   // oboe logs an error for an empty xtrace (and then ignores it)
   // only set key when existing
