@@ -34,3 +34,4 @@ oboe/liboboe-1.0.so.0
 oboe/liboboe.so
 oboe/*ChangeLog
 .nyc_output/
+.vscode/
