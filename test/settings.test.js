@@ -1,23 +1,23 @@
 /* global describe, before, it */
 'use strict'
 
-const bindings = require('../')
+const bindings = require('..')
 const expect = require('chai').expect
 
 const maxIsReadyToSampleWait = 60000
 
-describe('bindings.Settings mode 1', function () {
+describe('bindings.Settings', function () {
   before(function () {
     const serviceKey = process.env.SW_APM_SERVICE_KEY
     const endpoint = process.env.SW_APM_COLLECTOR
 
     this.timeout(maxIsReadyToSampleWait)
-    const status = bindings.oboeInit({ serviceKey, endpoint, mode: 1 })
+    const status = bindings.oboeInit({ serviceKey, endpoint, metricFormat: 0 })
     // oboeInit can return -1 for already initialized or 0 if succeeded.
     // depending on whether this is run as part of a suite or standalone
     // either result is valid.
     if (status !== -1 && status !== 0) {
-      throw new Error('oboeInit() failed')
+      throw new Error(`oboeInit() failed: ${status}`)
     }
 
     const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
@@ -91,7 +91,7 @@ describe('bindings.Settings mode 1', function () {
     const ev0 = bindings.Event.makeRandom(0)
     const event = new bindings.Event(ev0)
     const xtrace = event.toString()
-    const settings = bindings.Settings.getTraceSettings({ xtrace, tracestate: `${xtrace.split('-')[2]}-${xtrace.split('-')[3]}` })
+    const settings = bindings.Settings.getTraceSettings({ xtrace, tracestate: xtrace.split('-').slice(2).join('-') })
     expect(settings).property('message', 'ok')
     expect(settings).property('status', -1) // -1 means non-sampled xtrace
     expect(settings).property('doSample', false)
@@ -121,7 +121,7 @@ describe('bindings.Settings mode 1', function () {
     // poll to give time for the SSL connection to complete. it should have
     // been waited on in before() but it's possible for the connection to break.
     const id = setInterval(function () {
-      const settings = bindings.Settings.getTraceSettings({ xtrace, tracestate: `${xtrace.split('-')[2]}-${xtrace.split('-')[3]}` })
+      const settings = bindings.Settings.getTraceSettings({ xtrace, tracestate: xtrace.split('-').slice(2).join('-') })
       if (--counter <= 0 || typeof settings === 'object' && settings.source !== (negative ? -1 : 2)) { // eslint-disable-line no-mixed-operators
         clearInterval(id)
         expect(settings).property('status', 0)

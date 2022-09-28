@@ -182,7 +182,7 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
 
   // apply default or user specified values.
 
-  in.version = 0;
+  in.version = 3;
   in.service_name = "";
   in.tracestate = tracestate.c_str();
   in.custom_sample_rate = rate;

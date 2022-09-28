@@ -12,12 +12,12 @@ describe('bindings.Reporter.sendMetrics()', function () {
     const endpoint = process.env.SW_APM_COLLECTOR
 
     this.timeout(maxIsReadyToSampleWait)
-    const status = bindings.oboeInit({ serviceKey, endpoint, mode: 1 })
+    const status = bindings.oboeInit({ serviceKey, endpoint, metricFormat: 0 })
     // oboeInit can return -1 for already initialized or 0 if succeeded.
     // depending on whether this is run as part of a suite or standalone
     // either result is valid.
     if (status !== -1 && status !== 0) {
-      throw new Error('oboeInit() failed')
+      throw new Error(`oboeInit() failed: ${status}`)
     }
 
     const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
