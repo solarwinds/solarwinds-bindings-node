@@ -4,7 +4,7 @@
     "!darwin",
     "!win32"
   ],
-  "version": "13.0.0-pre.1",
+  "version": "13.0.0-prerelease.1",
   "description": "Bindings for solarwinds-apm with pre-built support",
   "contributors": [
     "Stephen Belanger <admin@stephenbelanger.com>",
