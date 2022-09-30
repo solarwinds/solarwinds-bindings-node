@@ -188,14 +188,7 @@ Napi::Value getTraceSettings(const Napi::CallbackInfo& info) {
 
   // apply default or user specified values.
 
-  // for traceparent: type is 1 and version is 0
-  // for xtrace: type is 0 and version is 2
-  if (omd.type == 0) {
-    in.version = 2;
-  } else {
-    in.version = 3;
-  }
-
+  in.version = 3;
   in.service_name = "";
   in.tracestate = tracestate.c_str();
   in.custom_sample_rate = rate;

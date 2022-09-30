@@ -3,23 +3,23 @@
 
 /* eslint-disable new-cap  */
 
-const bindings = require('../')
+const bindings = require('..')
 const expect = require('chai').expect
 
 const maxIsReadyToSampleWait = 60000
 
-describe('bindings.Event.toString() mode 1', function () {
+describe('bindings.Event.toString()', function () {
   before(function () {
     const serviceKey = process.env.SW_APM_SERVICE_KEY
     const endpoint = process.env.SW_APM_COLLECTOR
 
     this.timeout(maxIsReadyToSampleWait)
-    const status = bindings.oboeInit({ serviceKey, endpoint, mode: 1 })
+    const status = bindings.oboeInit({ serviceKey, endpoint, metricFormat: 0 })
     // oboeInit can return -1 for already initialized or 0 if succeeded.
     // depending on whether this is run as part of a suite or standalone
     // either result is valid.
     if (status !== -1 && status !== 0) {
-      throw new Error('oboeInit() failed')
+      throw new Error(`oboeInit() failed: ${status}`)
     }
 
     const ready = bindings.isReadyToSample(maxIsReadyToSampleWait)
@@ -35,7 +35,6 @@ describe('bindings.Event.toString() mode 1', function () {
     const static int ff_flags = 8;
     const static int ff_sample = 16;
     const static int ff_separators = 32;
-    const static int ff_lowercase = 64; // in mode 1 everything is always lowervase
 
   */
   it('should return traceparent when no argument is provided', function () {

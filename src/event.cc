@@ -171,8 +171,8 @@ Napi::Value Event::makeFromBuffer(const Napi::CallbackInfo& info) {
   }
 
   Napi::Buffer<uint8_t> b = info[0].As<Napi::Buffer<uint8_t>>();
-  if (b.Length() != 26 && b.Length() != 30) {
-    Napi::TypeError::New(env, "buffer must from traceparent (26 bytes) or xtrace 30 (bytes)")
+  if (b.Length() != 26) {
+    Napi::TypeError::New(env, "buffer must from traceparent (26 bytes)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
@@ -183,20 +183,13 @@ Napi::Value Event::makeFromBuffer(const Napi::CallbackInfo& info) {
 
   const uint kHeaderBytes = 1;
   const uint kTaskIdOffset = kHeaderBytes;
-
-  uint kOpIdOffset = kTaskIdOffset + OBOE_MAX_TASK_ID_LEN;
-  uint kMaxTaskIdLen = OBOE_MAX_TASK_ID_LEN;
-  if(b.Length() == 26) {
-    kOpIdOffset = kTaskIdOffset + OBOE_TASK_ID_TRACEPARENT_LEN;
-    kMaxTaskIdLen = OBOE_TASK_ID_TRACEPARENT_LEN;
-  }
-
+  const uint kOpIdOffset = kTaskIdOffset + OBOE_TASK_ID_TRACEPARENT_LEN;
   const uint kFlagsOffset = kOpIdOffset + OBOE_MAX_OP_ID_LEN;
 
   // copy the bytes from the buffer to the oboe metadata portion
   // of the event.
   oboe_metadata_init(&oe->metadata);
-  for (uint i = 0; i < kMaxTaskIdLen; i++) {
+  for (uint i = 0; i < OBOE_TASK_ID_TRACEPARENT_LEN; i++) {
     oe->metadata.ids.task_id[i] = b[kTaskIdOffset + i];
   }
   for (uint i = 0; i < OBOE_MAX_OP_ID_LEN; i++) {

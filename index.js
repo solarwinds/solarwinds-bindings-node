@@ -35,14 +35,6 @@ const Event = module.exports.Event
 // function.
 //
 
-const validXtrace = (xtrace) => {
-  // https://github.com/librato/trace/tree/master/docs/specs
-  const regExp = /^2B[0-9A-F]{40}[0-9A-F]{16}0[0-1]{1}$/
-  const matches = regExp.exec(xtrace)
-
-  return matches
-}
-
 const validTraceparent = (traceparent) => {
   // https://www.w3.org/TR/trace-context/
   const regExp = /^00-[0-9a-f]{32}-[0-9a-f]{16}-0[0-1]{1}$/
@@ -52,7 +44,6 @@ const validTraceparent = (traceparent) => {
 }
 
 Event.makeFromString = function (string) {
-  if (validXtrace(string)) return Event.makeFromBuffer(Buffer.from(string, 'hex'))
   if (validTraceparent(string)) return Event.makeFromBuffer(Buffer.from(string.replace(/-/g, ''), 'hex'))
 
   return undefined
