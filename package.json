@@ -4,12 +4,13 @@
     "!darwin",
     "!win32"
   ],
-  "version": "13.0.0-prerelease.1",
+  "version": "13.0.0",
   "description": "Bindings for solarwinds-apm with pre-built support",
   "contributors": [
     "Stephen Belanger <admin@stephenbelanger.com>",
     "Bruce A. MacNaughton <bruce.macnaughton@solarwinds.com>",
     "Ron Ilan <ron.ilan@solarwinds.com>",
+    "Raphaël Thériault <raphael.theriault@solarwinds.com>",
     "Silvio Fernandes <silviofernandes.developer@gmail.com",
     "Lin Lin <lin.lin@solarwinds.com>"
   ],
