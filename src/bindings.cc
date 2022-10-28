@@ -30,7 +30,7 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
 
     // setup oboe's options structure
     oboe_init_options_t options;
-    options.version = 14;
+    options.version = 15;
 
     int setDefaultsStatus = oboe_init_options_set_defaults(&options);
     if (setDefaultsStatus > 0) {
@@ -136,13 +136,13 @@ Napi::Value oboeInit(const Napi::CallbackInfo& info) {
         options.service_key = holdKeys[kix].c_str();
       }
     }
-    if (o.Has("trustedPath")) {
-      Napi::Value trustedPath = o.Get("trustedPath");
-      processed.Set("trustedPath", trustedPath);
-      if (trustedPath.IsString()) {
-        valid.Set("trustedPath", trustedPath);
-        holdKeys[++kix] = trustedPath.ToString();
-        options.trusted_path = holdKeys[kix].c_str();
+    if (o.Has("certificates")) {
+      Napi::Value certificates = o.Get("certificates");
+      processed.Set("certificates", certificates);
+      if (certificates.IsString()) {
+        valid.Set("certificates", certificates);
+        holdKeys[++kix] = certificates.ToString();
+        options.certificates = holdKeys[kix].c_str();
       }
     }
     if (o.Has("bufferSize")) {
