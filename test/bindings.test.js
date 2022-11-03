@@ -15,7 +15,6 @@ const keyMap = require('./lib/env-var-key-map')
 //
 const goodOptions = {
   serviceKey: 'magical-service-key',
-  trustedPath: 'secret-garden',
   hostnameAlias: 'incognito',
   logLevel: 3,
   reporter: 'udp',
@@ -74,7 +73,7 @@ describe('bindings.oboeInit()', function () {
   it('should handle bad options values', function () {
     const badOptions = {
       serviceKey: null,
-      trustedPath: null,
+      certificates: null,
       hostnameAlias: null,
       logLevel: 'a',
       reporter: null,

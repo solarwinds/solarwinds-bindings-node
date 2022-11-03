@@ -4,7 +4,6 @@
 const keyMap = {
   // these have been documented for end-users; the names should not be changed
   SERVICE_KEY: { name: 'serviceKey', type: 's' },
-  TRUSTEDPATH: { name: 'trustedPath', type: 's' },
   HOSTNAME_ALIAS: { name: 'hostnameAlias', type: 's' },
   DEBUG_LEVEL: { name: 'logLevel', type: 'i' },
 

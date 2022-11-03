@@ -16,7 +16,6 @@ const bindings = require('../..')
 //
 const goodOptions = {
   serviceKey: 'magical-service-key',
-  trustedPath: 'secret-garden',
   hostnameAlias: 'incognito',
   logLevel: 3,
   reporter: 'udp',
