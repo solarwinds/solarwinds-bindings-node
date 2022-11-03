@@ -169,7 +169,7 @@ typedef struct oboe_metric_tag {
 } oboe_metric_tag_t;
 
 typedef struct oboe_init_options {
-    int version;                            // the version of this structure (currently on version 14)
+    int version;                            // the version of this structure (currently on version 15)
     const char *hostname_alias;             // optional hostname alias
     int log_level;                          // level at which log messages will be written to log file (0-6)
                                             // use LOGLEVEL_DEFAULT for default log level
@@ -182,7 +182,7 @@ typedef struct oboe_init_options {
     const char *reporter;                   // the reporter to be used (ssl, upd, file, null, lambda)
     const char *host;                       // collector endpoint (reporter=ssl), udp address (reporter=udp), or file path (reporter=file)
     const char *service_key;                // the service key
-    const char *trusted_path;               // path to the SSL certificate (only for ssl)
+    const char *certificates;               // content of SSL certificates, passed to gRPC::SslCredentialsOptions() for collector connection verification
     int buffer_size;                        // size of the message buffer
     int trace_metrics;                      // flag indicating if trace metrics reporting should be enabled (default) or disabled
     int histogram_precision;                // the histogram precision (only for ssl)
@@ -194,8 +194,6 @@ typedef struct oboe_init_options {
     const char *proxy;                      // HTTP proxy address and port to be used for the gRPC connection
     int stdout_clear_nonblocking;           // flag indicating if the O_NONBLOCK flag on stdout should be cleared,
                                             // only used in lambda reporter (off=0, on=1, default off)
-    int is_grpc_clean_hack_enabled;         // flag indicating if custom grpc clean hack enabled (default 0)
-    int mode;                               // depreciated; value is ignored
     int metric_format;                      // flag indicating the format of metric (0 = Both; 1 = TransactionResponseTime only; 2 = ResponseTime only; default = 0)
 } oboe_init_options_t;
 
