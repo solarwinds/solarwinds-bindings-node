@@ -34,9 +34,10 @@ get_new_oboe() {
     fi
     # pretend to download for testing by adding any extra parameter
     PRETEND=$PARAM2
-    PAIRS="liboboe-1.0-x86_64.so.0.0.0  liboboe-1.0-alpine-x86_64.so.0.0.0 liboboe-1.0-lambda-x86_64.so.0.0.0"
-    # add the libressl version if we are using it again.
+    PAIRS="liboboe-1.0-x86_64.so.0.0.0 liboboe-1.0-alpine-x86_64.so.0.0.0 liboboe-1.0-aarch64.so.0.0.0 liboboe-1.0-alpine-aarch64.so.0.0.0"
+    # add the libressl & lambda versions if we are using it again.
     # PAIRS="$PAIRS liboboe-1.0-alpine-libressl-x86_64.so.0.0.0"
+    # PAIRS="$PAIRS  liboboe-1.0-lambda-x86_64.so.0.0.0"
     # a short window of oboe versions don't have multiple versions for alpine.
     # OKMISSING needs a leading blank due to the concatenation to ERRORFILES.
     OKMISSING=" liboboe-1.0-alpine-libressl-x86_64.so.0.0.0"
