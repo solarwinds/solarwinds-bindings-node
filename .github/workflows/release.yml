@@ -53,7 +53,7 @@ jobs:
           cat /etc/os-release
 
       - name: NPM Install dependencies
-        run: npm ci
+        run: npm install
 
       # runs: node build.js for the current node version
       - name: Build from source for Node ${{ matrix.node }}
