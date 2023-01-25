@@ -116,6 +116,40 @@ jobs:
       - name: Run tests
         run: npm test
 
+  # we should find a way to properly test on arm hardware
+  arm-test:
+    name: ARMv8 Test
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        image: ['node:18-alpine', 'node:18-slim']
+
+    steps:
+      - name: Checkout ${{ github.ref }}
+        uses: actions/checkout@v3
+
+      - name: Download Node 18 packages
+        uses: actions/download-artifact@v3
+        with:
+          name: npm-18
+          path: npm/
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Run tests in ARM container using QEMU
+        run: |
+          sudo docker run \
+            --platform linux/arm64 \
+            -e CI=$CI \
+            -e SW_APM_SERVICE_KEY=${{ secrets.SW_APM_SERVICE_KEY }} \
+            -e SW_APM_COLLECTOR=${{ secrets.SW_APM_COLLECTOR }} \
+            -e SW_TEST_PROD_SERVICE_KEY=${{ secrets.SW_TEST_PROD_SERVICE_KEY }} \
+            -v $(pwd):/work \
+            --rm ${{ matrix.image }} \
+            -- 'cat /etc/os-release && cd /work && npm install && npm test'
+
   checksum:
     name: Checksum Liboboe
     runs-on: ubuntu-latest
