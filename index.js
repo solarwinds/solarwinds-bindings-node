@@ -26,7 +26,11 @@ try {
   try {
     bindings = require(`solarwinds-apm-bindings-${p}/bindings.node`)
     metrics = require(`solarwinds-apm-bindings-${p}/metrics.node`)
-
+  } catch {
+    console.warn(`platform ${p} not supported`)
+  }
+} finally {
+  if (bindings && metrics) {
     module.exports = bindings
 
     module.exports.version = require('./package.json').version
@@ -44,7 +48,7 @@ try {
     //
 
     const validTraceparent = (traceparent) => {
-      // https://www.w3.org/TR/trace-context/
+    // https://www.w3.org/TR/trace-context/
       const regExp = /^00-[0-9a-f]{32}-[0-9a-f]{16}-0[0-1]{1}$/
       const matches = regExp.exec(traceparent)
 
@@ -54,7 +58,5 @@ try {
     Event.makeFromString = function (string) {
       if (validTraceparent(string)) return Event.makeFromBuffer(Buffer.from(string.replace(/-/g, ''), 'hex'))
     }
-  } catch {
-    console.warn(`platform ${p} not supported`)
   }
 }

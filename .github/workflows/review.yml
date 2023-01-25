@@ -42,6 +42,7 @@ jobs:
         with:
           name: npm-${{ matrix.node }}
           path: npm/*
+          retention-days: 1
 
   load-group:
     name: Load Prebuilt Group Config JSON
