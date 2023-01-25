@@ -142,6 +142,7 @@ jobs:
       - name: Run tests in ARM container using QEMU
         run: |
           sudo docker run \
+            --entrypoint /bin/sh \
             --platform linux/arm64 \
             -e CI=$CI \
             -e SW_APM_SERVICE_KEY=${{ secrets.SW_APM_SERVICE_KEY }} \
@@ -149,7 +150,7 @@ jobs:
             -e SW_TEST_PROD_SERVICE_KEY=${{ secrets.SW_TEST_PROD_SERVICE_KEY }} \
             -v $(pwd):/work \
             --rm ${{ matrix.image }} \
-            -- 'cat /etc/os-release && cd /work && npm install && npm test'
+            -c 'cat /etc/os-release && cd /work && npm install && npm test'
 
   checksum:
     name: Checksum Liboboe
