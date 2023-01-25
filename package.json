@@ -30,7 +30,8 @@
     "dev": "dev/start.sh",
     "dev:oneoff": "dev/oneoff.sh",
     "dev:reinstall": "rm -rf node_modules && rm -rf dist && npm install --unsafe-perm",
-    "dev:oboe": "./dev/oboe.sh"
+    "dev:oboe": "./dev/oboe.sh",
+    "version": "node version.js && git add package.json package-lock.json"
   },
   "devDependencies": {
     "aws-sdk": "^2.1174.0",

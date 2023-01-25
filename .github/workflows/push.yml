@@ -15,7 +15,7 @@ on:
       node:
         required: false
         description: 'A node version (e.g 10.16.0)'
-        default: '16'
+        default: '18'
 
 jobs:
   build-single-test:
@@ -29,29 +29,27 @@ jobs:
 
     steps:
       - name: Checkout ${{ github.ref }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Setup Node ${{ github.event.inputs.node || '16' }}
-        uses: actions/setup-node@v2
+      - name: Setup Node ${{ github.event.inputs.node || '18' }}
+        uses: actions/setup-node@v3
         with:
-          node-version: ${{ github.event.inputs.node || '16' }}
+          node-version: ${{ github.event.inputs.node || '18' }}
+          cache: 'npm'
 
       - name: Show Environment Info
         run: |
           printenv
           node --version
-          npm --version 
+          npm --version
           cat /etc/os-release
 
-      # must install specific dependencies before a build
-      # can't call npm install. doing so may fallback-to-build if package has yet to be published (double build)
-      # use npm workaround specifying a package name to bypass install script in package.json
       - name: NPM Install dependencies
-        run: npm install linux-os-info --unsafe-perm
+        run: npm ci
 
-      # runs: node setup-liboboe.js && node-pre-gyp install --build-from-source
-      - name: NPM Install with Rebuild from source
-        run: npm run rebuild
+      # runs: node build.js for the current node version
+      - name: Build from source
+        run: npm run build
 
       - name: Run tests
         run: npm test

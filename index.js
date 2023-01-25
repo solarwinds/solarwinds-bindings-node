@@ -20,12 +20,12 @@ let bindings
 let metrics
 
 try {
-  bindings = require(`solarwinds-apm-bindings-${p}/bindings.node`)
-  metrics = require(`solarwinds-apm-bindings-${p}/metrics.node`)
+  bindings = require(`./npm/${p}/bindings.node`)
+  metrics = require(`./npm/${p}/metrics.node`)
 } catch {
   try {
-    bindings = require(`./npm/${p}/bindings.node`)
-    metrics = require(`./npm/${p}/metrics.node`)
+    bindings = require(`solarwinds-apm-bindings-${p}/bindings.node`)
+    metrics = require(`solarwinds-apm-bindings-${p}/metrics.node`)
 
     module.exports = bindings
 
