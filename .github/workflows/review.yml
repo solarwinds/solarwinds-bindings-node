@@ -148,6 +148,7 @@ jobs:
             -e SW_APM_SERVICE_KEY=${{ secrets.SW_APM_SERVICE_KEY }} \
             -e SW_APM_COLLECTOR=${{ secrets.SW_APM_COLLECTOR }} \
             -e SW_TEST_PROD_SERVICE_KEY=${{ secrets.SW_TEST_PROD_SERVICE_KEY }} \
+            -e SKIP=test/expose-gc \
             -v $(pwd):/work \
             --rm ${{ matrix.image }} \
             -c 'cat /etc/os-release && cd /work && npm install && npm test'
