@@ -124,7 +124,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        image: ['node:18-alpine', 'node:18-slim']
+        image: ['node:18', 'node:18-alpine']
 
     steps:
       - name: Checkout ${{ github.ref }}
