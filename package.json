@@ -46,7 +46,7 @@
     "mocha": "^10.0.0",
     "nan": "^2.17.0",
     "node-addon-api": "^5.1.0",
-    "zig-build": "^0.1.0"
+    "zig-build": "^0.1.1"
   },
   "optionalDependencies": {
     "solarwinds-apm-bindings-arm64-linux-gnu-14": "14.1.0",
