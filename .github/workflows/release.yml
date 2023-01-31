@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Checksum Liboboe
-        run: .github/scripts/liboboe-checksum.sh "liboboe-1.0-x86_64.so.0.0.0 liboboe-1.0-alpine-x86_64.so.0.0.0 liboboe-1.0-aarch64.so.0.0.0 liboboe-1.0-alpine-aarch64.so.0.0.0"
+        run: .github/scripts/liboboe-checksum.sh "liboboe-1.0-x86_64.so liboboe-1.0-alpine-x86_64.so liboboe-1.0-aarch64.so liboboe-1.0-alpine-aarch64.so"
 
       - name: Setup Node 18
         uses: actions/setup-node@v3
@@ -80,8 +80,8 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  load-target-group:
-    name: Load Target Group Config JSON
+  load-x64-group:
+    name: Load x64 Group Config JSON
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -90,17 +90,17 @@ jobs:
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v3
 
-      - name: Load target group data
+      - name: Load x64 group data
         id: set-matrix
-        run: .github/scripts/matrix-from-json.sh .github/config/target-group.json
+        run: .github/scripts/matrix-from-json.sh .github/config/x64-group.json
 
-  target-group-install:
-    name: Target Group Install
+  x64-group-install:
+    name: x64 Group Install
     runs-on: ubuntu-latest 
-    needs: [load-target-group, build-publish-prebuilt]
+    needs: [load-x64-group, build-publish-prebuilt]
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.load-target-group.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.load-x64-group.outputs.matrix) }}
     container:
         image: ${{ matrix.image }}
 
@@ -131,7 +131,7 @@ jobs:
   npm-publish:
     name: NPM Publish
     runs-on: ubuntu-latest 
-    needs: target-group-install
+    needs: x64-group-install
 
     steps:
       - name: Checkout ${{ github.ref }}

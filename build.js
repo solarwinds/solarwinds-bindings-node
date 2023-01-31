@@ -47,7 +47,7 @@ const targets = [
     target: 'x86_64-linux-gnu',
     glibc: '2.24',
     cpu: 'sandybridge',
-    oboe: 'liboboe-1.0-x86_64.so.0.0.0',
+    oboe: 'liboboe-1.0-x86_64.so',
     npm: {
       cpu: ['x64'],
       os: ['linux'],
@@ -59,7 +59,7 @@ const targets = [
     name: `x64-linux-musl-${version}`,
     target: 'x86_64-linux-musl',
     cpu: 'sandybridge',
-    oboe: 'liboboe-1.0-alpine-x86_64.so.0.0.0',
+    oboe: 'liboboe-1.0-alpine-x86_64.so',
     npm: {
       cpu: ['x64'],
       os: ['linux'],
@@ -72,7 +72,7 @@ const targets = [
     target: 'aarch64-linux-gnu',
     glibc: '2.24',
     cpu: 'baseline',
-    oboe: 'liboboe-1.0-aarch64.so.0.0.0',
+    oboe: 'liboboe-1.0-aarch64.so',
     npm: {
       cpu: ['arm64'],
       os: ['linux'],
@@ -84,7 +84,7 @@ const targets = [
     name: `arm64-linux-musl-${version}`,
     target: 'aarch64-linux-musl',
     cpu: 'baseline',
-    oboe: 'liboboe-1.0-alpine-aarch64.so.0.0.0',
+    oboe: 'liboboe-1.0-alpine-aarch64.so',
     npm: {
       cpu: ['arm64'],
       os: ['linux'],
@@ -142,14 +142,6 @@ async function prepare () {
   }))
 }
 
-async function finalise () {
-  await Promise.all(targets.map((target) => fs.rename(
-    `npm/${target.name}/liboboe.so`,
-    `npm/${target.name}/liboboe-1.0.so.0`
-  )))
-}
-
 prepare()
   .then(() => build({ ...bindingsTargets, ...metricsTargets }))
-  .then(() => finalise())
   .catch((err) => console.error(err))
