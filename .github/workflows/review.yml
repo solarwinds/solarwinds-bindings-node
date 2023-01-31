@@ -26,7 +26,9 @@ jobs:
       - name: Cache zig-build
         uses: actions/cache@v3
         with:
-          path: ~/.zig-build
+          path: |
+            ~/.zig-build
+            ~/.cache/zig
           key: zig-build-${{ matrix.node }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             zig-build-${{ matrix.node }}-
@@ -82,15 +84,6 @@ jobs:
       SW_TEST_PROD_SERVICE_KEY: ${{ secrets.SW_TEST_PROD_SERVICE_KEY }}
 
     steps:
-      # the working directory is created by the runner and mounted to the container.
-      # container user is root and the runner is not a user in the container.
-      # this is a github actions design flaw.
-      # when npm 7 is run as root, scripts are always run with the effective uid and gid of the working directory owner.
-      # node 16 can't install under default setup.
-      # specifying workdir for container and path for checkout does not work due to bug.
-      - name: Change Owner of Container Working Directory
-        run: chown root:root .
-
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v3
 
