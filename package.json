@@ -1,9 +1,5 @@
 {
   "name": "solarwinds-apm-bindings",
-  "os": [
-    "!darwin",
-    "!win32"
-  ],
   "version": "14.1.0",
   "description": "Bindings for solarwinds-apm with pre-built support",
   "contributors": [
@@ -16,23 +12,8 @@
   ],
   "main": "index.js",
   "files": [
-    "src",
-    "oboe",
-    "setup-liboboe.js",
-    "binding.gyp"
+    "index.js"
   ],
-  "gypfile": true,
-  "binary": {
-    "napi_versions": [
-      4
-    ],
-    "module_name": "apm_bindings",
-    "module_path": "./dist/{node_napi_label}",
-    "staging_host": "https://ssp-stage-global-binary-blobs.s3.us-east-1.amazonaws.com",
-    "production_host": "https://ssp-prod-global-binary-blobs.s3.us-east-1.amazonaws.com",
-    "remote_path": "./nodejs/bindings",
-    "package_name": "{module_name}-v{version}-{node_abi}-{node_napi_label}-{libc}-{arch}.tar.gz"
-  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -42,20 +23,15 @@
     "url": "https://github.com/solarwindscloud/solarwinds-bindings-node/issues"
   },
   "scripts": {
+    "build": "node build.js",
+    "build:all": "docker compose -f dev/docker-compose.build.yml up node-14 && docker compose -f dev/docker-compose.build.yml up node-16 && docker compose -f dev/docker-compose.build.yml up node-18 ; docker compose -f dev/docker-compose.build.yml down",
     "test": "./test.sh",
-    "install": "node setup-liboboe.js && node-pre-gyp install --fallback-to-build",
-    "rebuild": "node setup-liboboe.js && node-pre-gyp install --build-from-source",
     "lint": "eslint . --ext .json,.js,.yml --fix",
     "dev": "dev/start.sh",
     "dev:oneoff": "dev/oneoff.sh",
     "dev:reinstall": "rm -rf node_modules && rm -rf dist && npm install --unsafe-perm",
-    "dev:oboe": "./dev/oboe.sh"
-  },
-  "dependencies": {
-    "@mapbox/node-pre-gyp": "^1.0.9",
-    "linux-os-info": "^2.0.0",
-    "nan": "^2.15.0",
-    "node-addon-api": "^5.0.0"
+    "dev:oboe": "./dev/oboe.sh",
+    "version": "node version.js && git add package.json package-lock.json"
   },
   "devDependencies": {
     "aws-sdk": "^2.1174.0",
@@ -67,6 +43,23 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-yaml": "^0.5.0",
-    "mocha": "^10.0.0"
+    "mocha": "^10.0.0",
+    "nan": "^2.17.0",
+    "node-addon-api": "^5.1.0",
+    "zig-build": "^0.1.1"
+  },
+  "optionalDependencies": {
+    "solarwinds-apm-bindings-arm64-linux-gnu-14": "14.1.0",
+    "solarwinds-apm-bindings-arm64-linux-gnu-16": "14.1.0",
+    "solarwinds-apm-bindings-arm64-linux-gnu-18": "14.1.0",
+    "solarwinds-apm-bindings-arm64-linux-musl-14": "14.1.0",
+    "solarwinds-apm-bindings-arm64-linux-musl-16": "14.1.0",
+    "solarwinds-apm-bindings-arm64-linux-musl-18": "14.1.0",
+    "solarwinds-apm-bindings-x64-linux-gnu-14": "14.1.0",
+    "solarwinds-apm-bindings-x64-linux-gnu-16": "14.1.0",
+    "solarwinds-apm-bindings-x64-linux-gnu-18": "14.1.0",
+    "solarwinds-apm-bindings-x64-linux-musl-14": "14.1.0",
+    "solarwinds-apm-bindings-x64-linux-musl-16": "14.1.0",
+    "solarwinds-apm-bindings-x64-linux-musl-18": "14.1.0"
   }
 }
