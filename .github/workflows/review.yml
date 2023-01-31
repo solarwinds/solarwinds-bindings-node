@@ -23,6 +23,14 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: 'npm'
 
+      - name: Cache zig-build
+        uses: actions/cache@v3
+        with:
+          path: ~/.zig-build
+          key: zig-build-${{ matrix.node }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            zig-build-${{ matrix.node }}-
+
       - name: Show Environment Info
         run: |
           printenv
@@ -64,7 +72,7 @@ jobs:
     needs: [load-x64-group, build]
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.load-group.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.load-x64-group.outputs.matrix) }}
     container:
       image: ${{ matrix.image }}
 
