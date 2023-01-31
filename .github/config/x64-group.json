@@ -88,9 +88,6 @@
       "image": "registry.access.redhat.com/ubi9/nodejs-18"
     },
     {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-ubuntu18.04"
-    },
-    {
       "image": "ghcr.io/$GITHUB_REPOSITORY/node:18-amazonlinux2022"
     }
   ]

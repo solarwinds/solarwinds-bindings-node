@@ -13,9 +13,6 @@
       "tag": "16-amazonlinux2"
     },
     {
-      "tag": "18-ubuntu18.04"
-    },
-    {
       "tag": "18-amazonlinux2022"
     }
   ]
