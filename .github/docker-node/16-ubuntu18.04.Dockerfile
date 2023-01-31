@@ -2,6 +2,9 @@ FROM ubuntu:18.04
 
 ENV NODE_VERSION 16.19.0
 
+# install software required for this OS
+RUN apt-get update && apt-get install -y curl
+
 # install nvm
 ENV NVM_DIR /root/.nvm
 
@@ -13,7 +16,7 @@ ENV NODE_PATH /root/.nvm/v$NODE_VERSION/lib/node_modules
 ENV PATH /root/.nvm/versions/node/v$NODE_VERSION/bin:$PATH
 
 # install node and npm
-RUN source $NVM_DIR/nvm.sh \
+RUN . $NVM_DIR/nvm.sh \
     && nvm install $NODE_VERSION \
     && nvm alias default $NODE_VERSION \
     && nvm use default
