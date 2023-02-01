@@ -1,46 +1,19 @@
 {
   "include": [
     {
-      "tag": "14-alpine3.13-build"
-    },
-    {
-      "tag": "14-centos7-build"
+      "tag": "14-ubuntu18.04"
     },
     {
       "tag": "14-amazonlinux2"
     },
     {
-      "tag": "14-centos7"
-    },
-    {
-      "tag": "14-centos8"
-    },
-    {
-      "tag": "16-alpine3.13-build"
-    },
-    {
-      "tag": "16-centos7-build"
-    },
-    {
-      "tag": "16-centos7"
-    },
-    {
-      "tag": "16-centos8"
+      "tag": "16-ubuntu18.04"
     },
     {
       "tag": "16-amazonlinux2"
     },
     {
-      "tag": "18-alpine3.14-build"
-    },
-    {
-      "tag": "18-rhel8-build"
-    },
-    {
       "tag": "18-amazonlinux2022"
-    },
-    {
-      "tag": "18-rhel8"
     }
   ]
 }

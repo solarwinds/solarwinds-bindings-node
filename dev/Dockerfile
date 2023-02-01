@@ -1,23 +1,15 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 SHELL ["/bin/bash", "-c"]
 
 # general tools
-RUN apt update \
-    && apt -y install \
-                curl \
-                git \
-                nano \
-                g++ \
-                python \
-                make \
-                flawfinder
+RUN apt-get update && apt-get -y install curl git
 
 # set time zone (for github cli)
-ENV TZ=America/Los_Angeles
+ENV TZ=America/Vancouver
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # for github cli
-RUN apt -y install \
+RUN apt-get -y install \
             gnupg \
             software-properties-common \
             tzdata
@@ -32,16 +24,16 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
 # install nvm
 ENV NVM_DIR /root/.nvm
 
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
 
 # these are the stable versions as of January 2022
 # can't use lts alias due to all sorts of Dockerfile limitations.
 RUN source $NVM_DIR/nvm.sh \
-    && nvm install v18.0.0 \
-    && nvm install v16.14.2 \
-    && nvm install v14.19.1 \
+    && nvm install v18.13.0 \
+    && nvm install v16.19.0 \
+    && nvm install v14.21.2 \
     && nvm install stable
 
 # add node and npm to path so the commands are available
-ENV NODE_PATH $NVM_DIR/v16.14.2/lib/node_modules
-ENV PATH $NVM_DIR/versions/node/v16.14.2/bin:$PATH
+ENV NODE_PATH $NVM_DIR/v18.13.0/lib/node_modules
+ENV PATH $NVM_DIR/versions/node/v18.13.0/bin:$PATH

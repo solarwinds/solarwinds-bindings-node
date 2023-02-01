@@ -34,13 +34,13 @@ get_new_oboe() {
     fi
     # pretend to download for testing by adding any extra parameter
     PRETEND=$PARAM2
-    PAIRS="liboboe-1.0-x86_64.so.0.0.0 liboboe-1.0-alpine-x86_64.so.0.0.0 liboboe-1.0-aarch64.so.0.0.0 liboboe-1.0-alpine-aarch64.so.0.0.0"
+    PAIRS="liboboe-1.0-x86_64.so liboboe-1.0-alpine-x86_64.so liboboe-1.0-aarch64.so liboboe-1.0-alpine-aarch64.so"
     # add the libressl & lambda versions if we are using it again.
-    # PAIRS="$PAIRS liboboe-1.0-alpine-libressl-x86_64.so.0.0.0"
-    # PAIRS="$PAIRS  liboboe-1.0-lambda-x86_64.so.0.0.0"
+    # PAIRS="$PAIRS liboboe-1.0-alpine-libressl-x86_64.so"
+    # PAIRS="$PAIRS  liboboe-1.0-lambda-x86_64.so"
     # a short window of oboe versions don't have multiple versions for alpine.
     # OKMISSING needs a leading blank due to the concatenation to ERRORFILES.
-    OKMISSING=" liboboe-1.0-alpine-libressl-x86_64.so.0.0.0"
+    OKMISSING=" liboboe-1.0-alpine-libressl-x86_64.so"
     # add the static files if using them.
     #PAIRS="$PAIRS liboboe-static-alpine-x86_64.gz liboboe-static-x86_64.gz"
     ERRORS=0
@@ -162,9 +162,6 @@ elif [ "$ARG" = "install" ]; then
 
     [ -n "$PRETEND" ] && echo "PRETEND THAT"
     echo "a new version of oboe ($PARAM) has been placed in the oboe directory"
-    echo "'node setup-liboboe' must be run before building in order to set up"
-    echo "the necessary symlinks. 'npm run install' will run 'node setup-liboboe'"
-    echo "before building, so the separate step isn't necessary."
 else
     echo 
     echo "run this script with an argument of:"

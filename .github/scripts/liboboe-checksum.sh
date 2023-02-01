@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # input is a space delimited string of files to checksum
-# e.g. "liboboe-1.0-x86_64.so.0.0.0 liboboe-1.0-alpine-x86_64.so.0.0.0 liboboe-1.0-lambda-x86_64.so.0.0.0"
+# e.g. "liboboe-1.0-x86_64.so liboboe-1.0-alpine-x86_64.so liboboe-1.0-lambda-x86_64.so"
 # we assume each file has a matching .sha256 file.
 files="$1"
 
