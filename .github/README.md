@@ -141,7 +141,7 @@ The library previously used `node-pre-gyp`, allowing the dependents to build it 
 
 ```
 push Dockerfile ─► ┌───────────────────┐ ─► ─► ─► ─► ─►
-                    │Build Docker Images│ build & publish
+                   │Build Docker Images│ build & publish
 manual ──────────► └───────────────────┘     
 ```
 
@@ -157,7 +157,7 @@ manual ──────────► └────────────
 * Naming a branch with `-no-action` ending disables this workflow. Use for documentation branches edited via GitHub UI.
 ```
 push to branch ──► ┌───────────────────┐ ─► ─► ─► ─► ─►
-                    │Single Build & Test│ contained build
+                   │Single Build & Test│ contained build
 manual (image?) ─► └───────────────────┘ ◄── ◄── ◄── ◄──
 ```
 
@@ -171,7 +171,7 @@ manual (image?) ─► └──────────────────
 * Manual trigger supported. 
 ```
 pull request ────► ┌──────────────────┐ ─► ─► ─► ─► ─►
-                    │Group Build & Test│ contained build
+                   │Group Build & Test│ contained build
 manual ──────────► └──────────────────┘ ◄── ◄── ◄── ◄──
 ```
 
@@ -191,19 +191,19 @@ manual ──────────► └────────────
 * Note: solarwinds-apm-bindings is not meant to be directly consumed. It is developed as a dependency of [solarwinds-apm](https://www.npmjs.com/package/solarwinds-apm).
 
 ```               ┌───────────────────┐
-manual ─────────►│Confirm Publishable│
+manual ──────────►│Confirm Publishable│
                   └┬──────────────────┘
                    │
                    │  ┌──────────────────────────────────┐
-                   └►│Platform-specific build & publish │ ─► npmjs
+                   └─►│Platform-specific build & publish │ ─► npmjs
                       └┬─────────────────────────────────┘
-                       │                                         │
-                       │   ┌────────────────────┐                │
-                       └─►│Group Install & Test│◄──────────────┘
+                       │                                        │
+                       │   ┌────────────────────┐               │
+                       └──►│Group Install & Test│◄──────────────┘
                            └┬───────────────────┘
                             │
                             │   ┌───────────┐
-                            └─►│NPM Publish│
+                            └──►│NPM Publish│
                                 └───────────┘
 
 ```
