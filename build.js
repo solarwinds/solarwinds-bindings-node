@@ -45,7 +45,7 @@ const targets = [
   {
     name: `x64-linux-gnu-${version}`,
     target: 'x86_64-linux-gnu',
-    glibc: '2.24',
+    glibc: '2.27',
     cpu: 'sandybridge',
     oboe: 'liboboe-1.0-x86_64.so',
     npm: {
@@ -70,7 +70,7 @@ const targets = [
   {
     name: `arm64-linux-gnu-${version}`,
     target: 'aarch64-linux-gnu',
-    glibc: '2.24',
+    glibc: '2.27',
     cpu: 'baseline',
     oboe: 'liboboe-1.0-aarch64.so',
     npm: {
