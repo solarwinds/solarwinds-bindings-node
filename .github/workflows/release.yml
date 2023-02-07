@@ -183,19 +183,19 @@ jobs:
           registry-url: 'https://registry.npmjs.org' # Setup .npmrc file to unpublish from npm
 
       - name: Unpublish arm64-linux-gnu-${{ matrix.node }}
-        run: npm unpublish arm64-linux-gnu-${{ matrix.node }}@${{ github.event.inputs.releasing }}
+        run: npm unpublish solarwinds-apm-bindings-arm64-linux-gnu-${{ matrix.node }}@${{ github.event.inputs.releasing }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Unpublish arm64-linux-musl-${{ matrix.node }}
-        run: npm unpublish arm64-linux-musl-${{ matrix.node }}@${{ github.event.inputs.releasing }}
+        run: npm unpublish solarwinds-apm-bindings-arm64-linux-musl-${{ matrix.node }}@${{ github.event.inputs.releasing }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Unpublish x64-linux-gnu-${{ matrix.node }}
-        run: npm unpublish x64-linux-gnu-${{ matrix.node }}@${{ github.event.inputs.releasing }}
+        run: npm unpublish solarwinds-apm-bindings-x64-linux-gnu-${{ matrix.node }}@${{ github.event.inputs.releasing }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Unpublish x64-linux-gnu-${{ matrix.node }}
-        run: npm unpublish x64-linux-musl-${{ matrix.node }}@${{ github.event.inputs.releasing }}
+        run: npm unpublish solarwinds-apm-bindings-x64-linux-musl-${{ matrix.node }}@${{ github.event.inputs.releasing }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
