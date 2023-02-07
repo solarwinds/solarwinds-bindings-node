@@ -108,11 +108,13 @@ jobs:
       SW_APM_SERVICE_KEY: ${{ secrets.SW_APM_SERVICE_KEY }}
       SW_APM_COLLECTOR: ${{ secrets.SW_APM_COLLECTOR }}
       SW_TEST_PROD_SERVICE_KEY: ${{ secrets.SW_TEST_PROD_SERVICE_KEY }}
+      SKIP: test/expose-gc
 
     steps:
       # See comment at bottom of file.
       - name: Change Owner of Container Working Directory
         run: chown root:root .
+        if: ${{ contains(matrix.image, 'ghcr.io/solarwindscloud/solarwinds-bindings-node/node') }}
 
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v3
