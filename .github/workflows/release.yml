@@ -63,22 +63,22 @@ jobs:
         run: npm publish
         working-directory: npm/arm64-linux-gnu-${{ matrix.node }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
       - name: Publish arm64-linux-musl-${{ matrix.node }}
         run: npm publish
         working-directory: npm/arm64-linux-musl-${{ matrix.node }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
       - name: Publish x64-linux-gnu-${{ matrix.node }}
         run: npm publish
         working-directory: npm/x64-linux-gnu-${{ matrix.node }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Publish x64-linux-gnu-${{ matrix.node }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+      - name: Publish x64-linux-musl-${{ matrix.node }}
         run: npm publish
         working-directory: npm/x64-linux-musl-${{ matrix.node }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
   load-x64-group:
     name: Load x64 Group Config JSON
@@ -104,10 +104,17 @@ jobs:
     container:
         image: ${{ matrix.image }}
 
+    env:
+      SW_APM_SERVICE_KEY: ${{ secrets.SW_APM_SERVICE_KEY }}
+      SW_APM_COLLECTOR: ${{ secrets.SW_APM_COLLECTOR }}
+      SW_TEST_PROD_SERVICE_KEY: ${{ secrets.SW_TEST_PROD_SERVICE_KEY }}
+      SKIP: test/expose-gc
+
     steps:
       # See comment at bottom of file.
       - name: Change Owner of Container Working Directory
         run: chown root:root .
+        if: ${{ contains(matrix.image, 'ghcr.io/solarwindscloud/solarwinds-bindings-node/node') }}
 
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v3
@@ -174,6 +181,7 @@ jobs:
     strategy:
       matrix:
         node: ['14', '16', '18']
+      fail-fast: false
 
     steps:
       - name: Setup Node ${{ matrix.node }}
@@ -185,19 +193,19 @@ jobs:
       - name: Unpublish arm64-linux-gnu-${{ matrix.node }}
         run: npm unpublish solarwinds-apm-bindings-arm64-linux-gnu-${{ matrix.node }}@${{ github.event.inputs.releasing }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
       - name: Unpublish arm64-linux-musl-${{ matrix.node }}
         run: npm unpublish solarwinds-apm-bindings-arm64-linux-musl-${{ matrix.node }}@${{ github.event.inputs.releasing }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
       - name: Unpublish x64-linux-gnu-${{ matrix.node }}
         run: npm unpublish solarwinds-apm-bindings-x64-linux-gnu-${{ matrix.node }}@${{ github.event.inputs.releasing }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Unpublish x64-linux-gnu-${{ matrix.node }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+      - name: Unpublish x64-linux-musl-${{ matrix.node }}
         run: npm unpublish solarwinds-apm-bindings-x64-linux-musl-${{ matrix.node }}@${{ github.event.inputs.releasing }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
       # Why Change Owner of Container Working Directory?
 
