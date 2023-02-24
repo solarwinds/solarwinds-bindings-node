@@ -161,7 +161,7 @@ jobs:
     needs: [arm64-launch, build]
     strategy:
       matrix:
-        image: [node:18, node:18-alpine]
+        image: ["node:18", "node:18-alpine"]
       fail-fast: false
     container:
       image: ${{ matrix.image }}
