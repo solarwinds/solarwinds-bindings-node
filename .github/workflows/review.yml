@@ -201,6 +201,7 @@ jobs:
     name: Terminate arm64 test runners
     runs-on: ubuntu-latest
     needs: [arm64-launch, arm64-test]
+    if: always()
     steps:
       - uses: aws-actions/configure-aws-credentials@v1
         with:
