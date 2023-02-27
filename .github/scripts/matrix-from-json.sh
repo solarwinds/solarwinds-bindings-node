@@ -16,5 +16,10 @@ for env_var in $(printenv); do
   JSON="${JSON//\$${arr[0]}/"${arr[1]}"}"
 done
 
+JSON_WITH_ARCH=$(echo "$JSON" | jq -c '.include = [.include[] | .+{ arch: ["arm64", "x64"][] }]')
+IMAGES=$(echo "$JSON" | jq -r '.include[].image')
+
 # return a value
 echo "matrix=$JSON" >> $GITHUB_OUTPUT
+echo "matrix-with-arch=$JSON_WITH_ARCH" >> $GITHUB_OUTPUT
+echo "images=$IMAGES" >> $GITHUB_OUTPUT
