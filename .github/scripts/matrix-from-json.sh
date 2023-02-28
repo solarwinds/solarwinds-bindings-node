@@ -16,5 +16,15 @@ for env_var in $(printenv); do
   JSON="${JSON//\$${arr[0]}/"${arr[1]}"}"
 done
 
+JSON_WITH_ARCH=$(echo "$JSON" | jq -c '.include = [.include[] | .+{ arch: ["arm64", "x64"][] }]')
+# temporary fix for gha not supporting old arm64 alpine whatsoever
+JSON_WITH_ARCH=$(echo "$JSON_WITH_ARCH" | jq -c '.include = [.include[] | select((.arch == "arm64") and (.image | contains("alpine")) and (.image | endswith("alpine") | not) | not)]')
+
+ARM64_IMAGES=$(echo "$JSON_WITH_ARCH" | jq -r '.include[] | select(.arch == "arm64") | .image')
+
 # return a value
 echo "matrix=$JSON" >> $GITHUB_OUTPUT
+echo "matrix-with-arch=$JSON_WITH_ARCH" >> $GITHUB_OUTPUT
+echo "arm64-images<<EOF" >> $GITHUB_OUTPUT
+echo "$ARM64_IMAGES" >> $GITHUB_OUTPUT
+echo "EOF" >> $GITHUB_OUTPUT

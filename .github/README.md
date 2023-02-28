@@ -128,6 +128,8 @@ The version should be bumped prior to starting the release workflow using `npm v
 
 The library previously used `node-pre-gyp`, allowing the dependents to build it themselves if no prebuilt package was available for their platform. However this is no longer the case, as we already publish prebuilt packages for every supported platform, this change simply makes this policy more explicit.
 
+Some workflows necessitate testing on arm64 platforms. These workflows have two additional steps that are implied in the following descriptions, to launch and terminate EC2 runners which will run the jobs using our [custom action](https://github.com/solarwindscloud/ec2-runner-action).
+
 ## Usage
 
 ### Prep - Push Dockerfile
@@ -166,7 +168,8 @@ manual (image?) ─► └──────────────────
 * Creating a pull request will trigger [review.yml](./workflows/review.yml). 
 * Workflow will:
   - Build the code for all supported platforms and Node versions.
-  - Run the tests on each platform in the x64 group.
+  - Start EC2 runners for testing on arm64 platforms.
+  - Run the tests on each platform in the test group for both x64 and arm64.
 * Workflow confirms code can be built in each of the required variations.
 * Manual trigger supported. 
 ```
@@ -184,7 +187,7 @@ manual ──────────► └────────────
 * Workflow will: 
   - Build the code for all supported platforms and Node versions.
   - Publish each platform-specific packages generated in the `npm` directory.
-  - Run the tests on each platform in the x64 group using the published packages.
+  - Run the tests on each platform in the test group for both x64 and arm64 using the published packages.
   - Publish the `solarwinds-apm-bindings` NPM package upon successful completion of all steps above. When version tag is `prerelease`, package will be NPM tagged same. When it is a release version, package will be NPM tagged `latest`.
 * Workflow ensures `optionalDependencies` setup is working in *production* for a wide variety of potential customer configurations.
 * Workflow publishing to NPM registry exposes the NPM package to the public.
@@ -214,7 +217,7 @@ manual ──────────►│Confirm Publishable│
 
 ### Definitions
 * Local images are defined in [docker-node](./docker-node).
-* [x64 Group](./config/x64.json) images include a wide variety of x64 (x86_64) OS and Node version combinations.
+* [Test Group](./config/test-group.json) images include a wide variety of OS and Node version combinations.
 
 ### Adding an image to GitHub Container Registry
 
