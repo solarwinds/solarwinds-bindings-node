@@ -123,6 +123,13 @@ jobs:
       - name: Change Owner of Container Working Directory
         run: chown root:root .
         if: ${{ contains(matrix.image, 'ghcr.io/solarwindscloud/solarwinds-bindings-node/node') }}
+      # install gcompat and spoof os-release to get gha to work on arm64 alpine
+      # https://github.com/actions/runner/issues/801#issuecomment-1374967227
+      - name: Prepare Alpine arm64
+        run: |
+          apk add gcompat
+          sed -i "s/ID=alpine/ID=armpine/" /etc/os-release
+        if: ${{ matrix.arch == 'arm64' && contains(matrix.image, 'alpine') }}
 
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v3
