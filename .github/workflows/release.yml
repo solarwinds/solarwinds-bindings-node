@@ -166,7 +166,7 @@ jobs:
         run: npm test
 
   terminate-arm64:
-    name: Terminate arm64 test runners
+    name: Terminate arm64 Runners
     runs-on: ubuntu-latest
     needs: [launch-arm64, test-group-install]
     if: always()
