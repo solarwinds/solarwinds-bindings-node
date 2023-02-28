@@ -143,16 +143,19 @@ jobs:
 
       # Download all prebuilt packages
       - name: Download Node 14 packages
+        if: ${{ contains(matrix.image, '14') }}
         uses: actions/download-artifact@v3
         with:
           name: npm-14
           path: npm/
       - name: Download Node 16 packages
+        if: ${{ contains(matrix.image, '16') }}
         uses: actions/download-artifact@v3
         with:
           name: npm-16
           path: npm/
       - name: Download Node 18 packages
+        if: ${{ contains(matrix.image, '18') }}
         uses: actions/download-artifact@v3
         with:
           name: npm-18
