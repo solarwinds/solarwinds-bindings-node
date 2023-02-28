@@ -85,7 +85,7 @@ jobs:
 
       - name: Launch Runners
         id: launch
-        uses: solarwindscloud/ec2-runner-action@instance-retry
+        uses: solarwindscloud/ec2-runner-action@main
         with:
           action: launch
           github-token: ${{ secrets.CI_GITHUB_TOKEN }}
@@ -181,7 +181,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Terminate Runners
-        uses: solarwindscloud/ec2-runner-action@instance-retry
+        uses: solarwindscloud/ec2-runner-action@main
         with:
           action: terminate
           github-token: ${{ secrets.CI_GITHUB_TOKEN }}
