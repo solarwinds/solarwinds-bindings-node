@@ -43,9 +43,9 @@ jobs:
           path: |
             ~/.zig-build
             ~/.cache/zig
-          key: zig-build-${{ matrix.node }}-${{ hashFiles('**/package-lock.json') }}
+          key: zig-build-${{ github.event.inputs.node || '18' }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            zig-build-${{ matrix.node }}-
+            zig-build-${{ github.event.inputs.node || '18' }}-
 
       - name: Show Environment Info
         run: |

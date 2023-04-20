@@ -52,14 +52,18 @@
     "solarwinds-apm-bindings-arm64-linux-gnu-14": "15.0.2",
     "solarwinds-apm-bindings-arm64-linux-gnu-16": "15.0.2",
     "solarwinds-apm-bindings-arm64-linux-gnu-18": "15.0.2",
+    "solarwinds-apm-bindings-arm64-linux-gnu-20": "15.0.2",
     "solarwinds-apm-bindings-arm64-linux-musl-14": "15.0.2",
     "solarwinds-apm-bindings-arm64-linux-musl-16": "15.0.2",
     "solarwinds-apm-bindings-arm64-linux-musl-18": "15.0.2",
+    "solarwinds-apm-bindings-arm64-linux-musl-20": "15.0.2",
     "solarwinds-apm-bindings-x64-linux-gnu-14": "15.0.2",
     "solarwinds-apm-bindings-x64-linux-gnu-16": "15.0.2",
     "solarwinds-apm-bindings-x64-linux-gnu-18": "15.0.2",
+    "solarwinds-apm-bindings-x64-linux-gnu-20": "15.0.2",
     "solarwinds-apm-bindings-x64-linux-musl-14": "15.0.2",
     "solarwinds-apm-bindings-x64-linux-musl-16": "15.0.2",
-    "solarwinds-apm-bindings-x64-linux-musl-18": "15.0.2"
+    "solarwinds-apm-bindings-x64-linux-musl-18": "15.0.2",
+    "solarwinds-apm-bindings-x64-linux-musl-20": "15.0.2"
   }
 }

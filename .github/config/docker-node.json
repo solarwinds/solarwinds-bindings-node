@@ -14,6 +14,9 @@
     },
     {
       "tag": "18-amazonlinux2022"
+    },
+    {
+      "tag": "20-amazonlinux2022"
     }
   ]
 }
