@@ -26,19 +26,30 @@ try {
   try {
     bindings = require(`solarwinds-apm-bindings-${p}/bindings.node`)
     metrics = require(`solarwinds-apm-bindings-${p}/metrics.node`)
-  } catch {
-    console.warn(`platform ${p} not supported`)
+  } catch (err) {
+    console.warn(`platform ${p} not supported`, err)
   }
 } finally {
-  if (bindings && metrics) {
+  module.exports.version = require('./package.json').version
+
+  if (bindings) {
     module.exports = bindings
 
-    module.exports.version = require('./package.json').version
     module.exports.init = function (sk) {
       return module.exports.oboeInit({ serviceKey: sk || process.env.SW_APM_SERVICE_KEY })
     }
 
-    module.exports.metrics = metrics
+    if (metrics) {
+      module.exports.metrics = metrics
+    } else {
+      console.warn("metrics disabled")
+
+      module.exports.metrics = {
+        start () { return true },
+        stop () { return true },
+        getMetrics () { return {} }
+      }
+    }
 
     const Event = module.exports.Event
 
