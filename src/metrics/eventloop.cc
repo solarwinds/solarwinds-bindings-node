@@ -1,11 +1,10 @@
-#include <nan.h>
+#include <uv.h>
 #include <map>
 
 #include "hdr_histogram.h"
 #include "eventloop.h"
 
 namespace ao { namespace metrics { namespace eventloop {
-using namespace v8;
 
 // state = 0 not initialized
 // state = 1 initialized
@@ -94,7 +93,7 @@ bool stop() {
   return true;
 }
 
-bool getInterval(const v8::Local<v8::Object> obj) {
+bool getInterval(Napi::Object& obj) {
   if (!enabled) {
     return false;
   }
@@ -102,7 +101,7 @@ bool getInterval(const v8::Local<v8::Object> obj) {
   std::map<std::string, double>::iterator it;
   for (it = PERCENTILES.begin(); it != PERCENTILES.end(); it++) {
     const int64_t p = hdr_value_at_percentile(hist, it->second);
-    Nan::Set(obj, Nan::New(it->first).ToLocalChecked(), Nan::New<Number>(p));
+    obj.Set(it->first, Napi::Number::New(obj.Env(), p));
   }
 
   // the next two values are NaN if no eventloops executed so default them to 0.
@@ -123,10 +122,10 @@ bool getInterval(const v8::Local<v8::Object> obj) {
     hdr_reset(hist);
   }
 
-  Nan::Set(obj, Nan::New("min").ToLocalChecked(), Nan::New<Number>(min));
-  Nan::Set(obj, Nan::New("max").ToLocalChecked(), Nan::New<Number>(max));
-  Nan::Set(obj, Nan::New("mean").ToLocalChecked(), Nan::New<Number>(mean));
-  Nan::Set(obj, Nan::New("stddev").ToLocalChecked(), Nan::New<Number>(stddev));
+  obj.Set("min", Napi::Number::New(obj.Env(), min));
+  obj.Set("max", Napi::Number::New(obj.Env(), max));
+  obj.Set("mean", Napi::Number::New(obj.Env(), mean));
+  obj.Set("stddev", Napi::Number::New(obj.Env(), stddev));
 
   return true;
 }

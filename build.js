@@ -28,15 +28,15 @@ const bindings = {
 
 /** @type{import('zig-build').Target} */
 const metrics = {
-  std: 'c++14',
+  std: 'c++17',
   sources: [
     'src/metrics/metrics.cc',
     'src/metrics/gc.cc',
     'src/metrics/eventloop.cc',
     'src/metrics/process.cc'
   ],
-  libraries: ['oboe'],
   include: [__dirname, nan],
+  libraries: ['oboe'],
   rpath: '$ORIGIN',
   cflags: ['-Wall', '-Wextra']
 }
