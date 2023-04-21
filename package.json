@@ -24,7 +24,7 @@
   },
   "scripts": {
     "build": "node build.js",
-    "build:all": "docker compose -f dev/docker-compose.build.yml up node-14 && docker compose -f dev/docker-compose.build.yml up node-16 && docker compose -f dev/docker-compose.build.yml up node-18 ; docker compose -f dev/docker-compose.build.yml down",
+    "build:all": "docker compose -f dev/docker-compose.build.yml up node-14 && docker compose -f dev/docker-compose.build.yml up node-16 && docker compose -f dev/docker-compose.build.yml up node-18 && docker compose -f dev/docker-compose.build.yml up node-20 ; docker compose -f dev/docker-compose.build.yml down",
     "test": "./test.sh",
     "lint": "eslint . --ext .json,.js,.yml --fix",
     "dev": "dev/start.sh",

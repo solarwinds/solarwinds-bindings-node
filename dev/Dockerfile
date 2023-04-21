@@ -29,11 +29,12 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | b
 # these are the stable versions as of January 2022
 # can't use lts alias due to all sorts of Dockerfile limitations.
 RUN source $NVM_DIR/nvm.sh \
-    && nvm install v18.13.0 \
-    && nvm install v16.19.0 \
-    && nvm install v14.21.2 \
+    && nvm install v20.0.0 \
+    && nvm install v18.16.0 \
+    && nvm install v16.20.0 \
+    && nvm install v14.21.3 \
     && nvm install stable
 
 # add node and npm to path so the commands are available
-ENV NODE_PATH $NVM_DIR/v18.13.0/lib/node_modules
-ENV PATH $NVM_DIR/versions/node/v18.13.0/bin:$PATH
+ENV NODE_PATH $NVM_DIR/v20.0.0/lib/node_modules
+ENV PATH $NVM_DIR/versions/node/v20.0.0/bin:$PATH

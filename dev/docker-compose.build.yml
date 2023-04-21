@@ -21,3 +21,10 @@ services:
     working_dir: /work
     entrypoint: /bin/sh -lc
     command: [npm install && npm run build]
+  node-20:
+    image: node:20-alpine
+    volumes:
+      - ..:/work
+    working_dir: /work
+    entrypoint: /bin/sh -lc
+    command: [npm install && npm run build]
