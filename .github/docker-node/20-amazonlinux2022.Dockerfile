@@ -1,6 +1,6 @@
 FROM amazonlinux:2022
 
-ENV NODE_VERSION 18.16.0
+ENV NODE_VERSION 20.0.0
 
 # install software required for this OS
 RUN yum -y install \

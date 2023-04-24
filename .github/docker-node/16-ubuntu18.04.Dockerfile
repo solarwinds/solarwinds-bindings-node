@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 
-ENV NODE_VERSION 16.19.0
+ENV NODE_VERSION 16.20.0
 
 # install software required for this OS
 RUN apt-get update && apt-get install -y curl

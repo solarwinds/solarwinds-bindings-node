@@ -33,7 +33,7 @@ jobs:
     needs: is-publishable
     strategy:
       matrix:
-        node: ['14', '16', '18']
+        node: ['14', '16', '18', '20']
     
     steps:
       - name: Checkout ${{ github.ref }}
@@ -237,7 +237,7 @@ jobs:
     if: always() && contains(needs.*.result, 'failure')
     strategy:
       matrix:
-        node: ['14', '16', '18']
+        node: ['14', '16', '18', '20']
       fail-fast: false
 
     steps:

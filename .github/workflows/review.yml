@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: ['14', '16', '18']
+        node: ['14', '16', '18', '20']
     
     steps:
       - name: Checkout ${{ github.ref }}
@@ -159,6 +159,12 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: npm-18
+          path: npm/
+      - name: Download Node 20 packages
+        if: ${{ contains(matrix.image, '20') }}
+        uses: actions/download-artifact@v3
+        with:
+          name: npm-20
           path: npm/
 
       - name: NPM Install dependencies

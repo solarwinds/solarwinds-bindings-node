@@ -28,7 +28,7 @@
 namespace ao { namespace metrics { namespace gc {
 using namespace v8;
 
-void set_histogram_values(hdr_histogram*, Local<Object>);
+void set_histogram_values(hdr_histogram*, Napi::Object&);
 
 typedef struct GCData {
 	uint64_t gcTime;
@@ -136,32 +136,32 @@ bool stop () {
   return status;
 }
 
-bool getInterval(const v8::Local<v8::Object> obj) {
+bool getInterval(Napi::Object& obj) {
 
   if (!enabled) {
     return false;
   }
 
   uint64_t count = raw.gcCount - interval_base.gcCount;
-  Nan::Set(obj, Nan::New("gcCount").ToLocalChecked(), Nan::New<Number>(count));
+  obj.Set("gcCout", Napi::Number::New(obj.Env(), count));
 
   uint64_t time = raw.gcTime - interval_base.gcTime;
-  Nan::Set(obj, Nan::New("gcTime").ToLocalChecked(), Nan::New<Number>(time));
+  obj.Set("gcTime", Napi::Number::New(obj.Env(), time));
 
   uint64_t majorCount = raw.majorCount - interval_base.majorCount;
   uint64_t minorCount = raw.minorCount - interval_base.minorCount;
 
-  Local<Object> major = Nan::New<Object>();
-  Local<Object> minor = Nan::New<Object>();
+  auto major = Napi::Object::New(obj.Env());
+  auto minor = Napi::Object::New(obj.Env());
 
   set_histogram_values(h_major, major);
   set_histogram_values(h_minor, minor);
 
-  Nan::Set(obj, Nan::New("major").ToLocalChecked(), major);
-  Nan::Set(obj, Nan::New("minor").ToLocalChecked(), minor);
+  obj.Set("major", major);
+  obj.Set("minor", minor);
 
-  Nan::Set(major, Nan::New("count").ToLocalChecked(), Nan::New<Number>(majorCount));
-  Nan::Set(minor, Nan::New("count").ToLocalChecked(), Nan::New<Number>(minorCount));
+  major.Set("count", Napi::Number::New(major.Env(), majorCount));
+  minor.Set("count", Napi::Number::New(minor.Env(), minorCount));
 
   // reset the interval base values
   interval_base.gcCount = raw.gcCount;
@@ -176,11 +176,11 @@ bool getInterval(const v8::Local<v8::Object> obj) {
   return true;
 }
 
-void set_histogram_values(hdr_histogram* h, Local<Object> obj) {
+void set_histogram_values(hdr_histogram* h, Napi::Object& obj) {
   std::map<std::string, double>::iterator it;
   for (it = PERCENTILES.begin(); it != PERCENTILES.end(); it++) {
     const int64_t p = hdr_value_at_percentile(h, it->second);
-    Nan::Set(obj, Nan::New(it->first).ToLocalChecked(), Nan::New<Number>(p));
+    obj.Set(it->first, Napi::Number::New(obj.Env(), p));
   }
 
   // the next two values are NaN if no GCs executed so default them to 0.
@@ -201,10 +201,10 @@ void set_histogram_values(hdr_histogram* h, Local<Object> obj) {
     hdr_reset(h);
   }
 
-  Nan::Set(obj, Nan::New("min").ToLocalChecked(), Nan::New<Number>(min));
-  Nan::Set(obj, Nan::New("max").ToLocalChecked(), Nan::New<Number>(max));
-  Nan::Set(obj, Nan::New("mean").ToLocalChecked(), Nan::New<Number>(mean));
-  Nan::Set(obj, Nan::New("stddev").ToLocalChecked(), Nan::New<Number>(stddev));
+  obj.Set("min", Napi::Number::New(obj.Env(), min));
+  obj.Set("max", Napi::Number::New(obj.Env(), max));
+  obj.Set("mean", Napi::Number::New(obj.Env(), mean));
+  obj.Set("stddev", Napi::Number::New(obj.Env(), stddev));
 }
 
 }}} // namespace ao::metrics::gc

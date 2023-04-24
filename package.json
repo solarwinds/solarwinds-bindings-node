@@ -24,7 +24,7 @@
   },
   "scripts": {
     "build": "node build.js",
-    "build:all": "docker compose -f dev/docker-compose.build.yml up node-14 && docker compose -f dev/docker-compose.build.yml up node-16 && docker compose -f dev/docker-compose.build.yml up node-18 ; docker compose -f dev/docker-compose.build.yml down",
+    "build:all": "docker compose -f dev/docker-compose.build.yml up node-14 && docker compose -f dev/docker-compose.build.yml up node-16 && docker compose -f dev/docker-compose.build.yml up node-18 && docker compose -f dev/docker-compose.build.yml up node-20 ; docker compose -f dev/docker-compose.build.yml down",
     "test": "./test.sh",
     "lint": "eslint . --ext .json,.js,.yml --fix",
     "dev": "dev/start.sh",
@@ -52,14 +52,18 @@
     "solarwinds-apm-bindings-arm64-linux-gnu-14": "15.0.2",
     "solarwinds-apm-bindings-arm64-linux-gnu-16": "15.0.2",
     "solarwinds-apm-bindings-arm64-linux-gnu-18": "15.0.2",
+    "solarwinds-apm-bindings-arm64-linux-gnu-20": "15.0.2",
     "solarwinds-apm-bindings-arm64-linux-musl-14": "15.0.2",
     "solarwinds-apm-bindings-arm64-linux-musl-16": "15.0.2",
     "solarwinds-apm-bindings-arm64-linux-musl-18": "15.0.2",
+    "solarwinds-apm-bindings-arm64-linux-musl-20": "15.0.2",
     "solarwinds-apm-bindings-x64-linux-gnu-14": "15.0.2",
     "solarwinds-apm-bindings-x64-linux-gnu-16": "15.0.2",
     "solarwinds-apm-bindings-x64-linux-gnu-18": "15.0.2",
+    "solarwinds-apm-bindings-x64-linux-gnu-20": "15.0.2",
     "solarwinds-apm-bindings-x64-linux-musl-14": "15.0.2",
     "solarwinds-apm-bindings-x64-linux-musl-16": "15.0.2",
-    "solarwinds-apm-bindings-x64-linux-musl-18": "15.0.2"
+    "solarwinds-apm-bindings-x64-linux-musl-18": "15.0.2",
+    "solarwinds-apm-bindings-x64-linux-musl-20": "15.0.2"
   }
 }
