@@ -1,27 +1,6 @@
 {
   "include": [
     {
-      "image": "node:14-alpine3.12"
-    },
-    {
-      "image": "node:14-alpine"
-    },
-    {
-      "image": "node:14-buster"
-    },
-    {
-      "image": "node:14-bullseye"
-    },
-    {
-      "image": "registry.access.redhat.com/ubi8/nodejs-14"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:14-ubuntu18.04"
-    },
-    {
-      "image": "ghcr.io/$GITHUB_REPOSITORY/node:14-amazonlinux2"
-    },
-    {
       "image": "node:16-alpine3.12"
     },
     {

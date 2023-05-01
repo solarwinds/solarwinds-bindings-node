@@ -32,7 +32,6 @@ RUN source $NVM_DIR/nvm.sh \
     && nvm install v20.0.0 \
     && nvm install v18.16.0 \
     && nvm install v16.20.0 \
-    && nvm install v14.21.3 \
     && nvm install stable
 
 # add node and npm to path so the commands are available

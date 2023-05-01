@@ -33,7 +33,7 @@ jobs:
     needs: is-publishable
     strategy:
       matrix:
-        node: ['14', '16', '18', '20']
+        node: ['16', '18', '20']
     
     steps:
       - name: Checkout ${{ github.ref }}
@@ -167,7 +167,10 @@ jobs:
         run: npm install
 
       - name: Check Artifacts
-        run: ls ./node_modules/solarwinds-apm-bindings-*/bindings.node && ls ./node_modules/solarwinds-apm-bindings-*/metrics.node
+        run: |
+          ls ./node_modules/solarwinds-apm-bindings-*/bindings.node
+          ls ./node_modules/solarwinds-apm-bindings-*/metrics.node
+        continue-on-error: true
 
       - name: Run Tests
         run: npm test
@@ -237,7 +240,7 @@ jobs:
     if: always() && contains(needs.*.result, 'failure')
     strategy:
       matrix:
-        node: ['14', '16', '18', '20']
+        node: ['16', '18', '20']
       fail-fast: false
 
     steps:

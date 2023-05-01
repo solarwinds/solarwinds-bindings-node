@@ -18,7 +18,7 @@
 # more official images at: https://hub.docker.com/_/node?tab=tags
 # more own images at: https://github.com/solarwindscloud/solarwinds-bindings-node/pkgs/container/solarwinds-bindings-node%2Fnode/versions
 
-os_node=${1:-'node:14-buster'} # stick to 14 for lockfileVersion stability
+os_node=${1:-'node:20-bullseye'}
 
 set -e
 
