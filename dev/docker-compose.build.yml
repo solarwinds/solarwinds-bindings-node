@@ -1,12 +1,5 @@
 version: '3'
 services:
-  node-14:
-    image: node:14-alpine
-    volumes:
-      - ..:/work
-    working_dir: /work
-    entrypoint: /bin/sh -lc
-    command: [npm install && npm run build]
   node-16:
     image: node:16-alpine
     volumes:

@@ -4,7 +4,7 @@
 
 The package is installed as a dependency when the SolarWinds APM Agent ([solarwinds-apm](https://www.npmjs.com/package/solarwinds-apm)) is installed. This package itself only contains the logic for loading one of the platform-specific packages listed in `optionalDependencies`, one of which will be installed if the current platform is supported. When working locally, the local binary builds will be loaded by the package instead of the ones published on npmjs.
 
-This library **only supports Linux**, on all maintained LTS versions of Node (currently 14, 16, 18), for both `glibc` 2.27+ (Ubuntu 18.04+, RHEL 8+, Debian 10+) and `musl` (Alpine, NixOS) based distributions.
+This library **only supports Linux**, on all maintained LTS versions of Node (currently 16, 18, 20), for both `glibc` 2.27+ (Ubuntu 18.04+, RHEL 8+, Debian 10+) and `musl` (Alpine, NixOS) based distributions.
 
 # Table of Contents
 

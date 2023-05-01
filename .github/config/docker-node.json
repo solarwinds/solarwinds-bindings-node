@@ -1,12 +1,6 @@
 {
   "include": [
     {
-      "tag": "14-ubuntu18.04"
-    },
-    {
-      "tag": "14-amazonlinux2"
-    },
-    {
       "tag": "16-ubuntu18.04"
     },
     {
