@@ -167,9 +167,7 @@ jobs:
         run: npm install
 
       - name: Check Artifacts
-        run: |
-          ls ./node_modules/solarwinds-apm-bindings-*/bindings.node
-          ls ./node_modules/solarwinds-apm-bindings-*/metrics.node
+        run: ls ./node_modules/solarwinds-apm-bindings-*
         continue-on-error: true
 
       - name: Run Tests
