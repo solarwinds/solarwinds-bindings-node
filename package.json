@@ -1,6 +1,6 @@
 {
   "name": "solarwinds-apm-bindings",
-  "version": "16.0.0",
+  "version": "16.1.0",
   "description": "Bindings for solarwinds-apm with pre-built support",
   "contributors": [
     "Stephen Belanger <admin@stephenbelanger.com>",
@@ -49,17 +49,17 @@
     "zig-build": "^0.1.1"
   },
   "optionalDependencies": {
-    "solarwinds-apm-bindings-arm64-linux-gnu-16": "16.0.0",
-    "solarwinds-apm-bindings-arm64-linux-gnu-18": "16.0.0",
-    "solarwinds-apm-bindings-arm64-linux-gnu-20": "16.0.0",
-    "solarwinds-apm-bindings-arm64-linux-musl-16": "16.0.0",
-    "solarwinds-apm-bindings-arm64-linux-musl-18": "16.0.0",
-    "solarwinds-apm-bindings-arm64-linux-musl-20": "16.0.0",
-    "solarwinds-apm-bindings-x64-linux-gnu-16": "16.0.0",
-    "solarwinds-apm-bindings-x64-linux-gnu-18": "16.0.0",
-    "solarwinds-apm-bindings-x64-linux-gnu-20": "16.0.0",
-    "solarwinds-apm-bindings-x64-linux-musl-16": "16.0.0",
-    "solarwinds-apm-bindings-x64-linux-musl-18": "16.0.0",
-    "solarwinds-apm-bindings-x64-linux-musl-20": "16.0.0"
+    "solarwinds-apm-bindings-arm64-linux-gnu-16": "16.1.0",
+    "solarwinds-apm-bindings-arm64-linux-gnu-18": "16.1.0",
+    "solarwinds-apm-bindings-arm64-linux-gnu-20": "16.1.0",
+    "solarwinds-apm-bindings-arm64-linux-musl-16": "16.1.0",
+    "solarwinds-apm-bindings-arm64-linux-musl-18": "16.1.0",
+    "solarwinds-apm-bindings-arm64-linux-musl-20": "16.1.0",
+    "solarwinds-apm-bindings-x64-linux-gnu-16": "16.1.0",
+    "solarwinds-apm-bindings-x64-linux-gnu-18": "16.1.0",
+    "solarwinds-apm-bindings-x64-linux-gnu-20": "16.1.0",
+    "solarwinds-apm-bindings-x64-linux-musl-16": "16.1.0",
+    "solarwinds-apm-bindings-x64-linux-musl-18": "16.1.0",
+    "solarwinds-apm-bindings-x64-linux-musl-20": "16.1.0"
   }
 }
