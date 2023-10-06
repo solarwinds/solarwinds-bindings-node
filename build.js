@@ -1,10 +1,7 @@
 const fs = require('node:fs/promises')
 const path = require('node:path')
 const { build } = require('zig-build')
-
 const nan = path.dirname(require.resolve('nan'))
-const version = Number.parseInt(process.version.split('.')[0].slice(1))
-const engines = { node: `>=${version} <${version + 1}` }
 
 /** @type{import('zig-build').Target} */
 const bindings = {
@@ -41,58 +38,67 @@ const metrics = {
   cflags: ['-Wall', '-Wextra']
 }
 
-const targets = [
-  {
-    name: `x64-linux-gnu-${version}`,
-    target: 'x86_64-linux-gnu',
-    glibc: '2.27',
-    cpu: 'sandybridge',
-    oboe: 'liboboe-1.0-x86_64.so',
-    npm: {
-      cpu: ['x64'],
-      os: ['linux'],
-      libc: ['glibc'],
-      engines
+const targets = [16, 18, 20].flatMap((version) => {
+  const engines = { node: `>=${version} <${version + 1}` }
+  const nodeVersion = `${version}.0.0`
+
+  return [
+    {
+      name: `x64-linux-gnu-${version}`,
+      target: 'x86_64-linux-gnu',
+      glibc: '2.27',
+      cpu: 'sandybridge',
+      nodeVersion,
+      oboe: 'liboboe-1.0-x86_64.so',
+      npm: {
+        cpu: ['x64'],
+        os: ['linux'],
+        libc: ['glibc'],
+        engines
+      }
+    },
+    {
+      name: `x64-linux-musl-${version}`,
+      target: 'x86_64-linux-musl',
+      cpu: 'sandybridge',
+      nodeVersion,
+      oboe: 'liboboe-1.0-alpine-x86_64.so',
+      npm: {
+        cpu: ['x64'],
+        os: ['linux'],
+        libc: ['musl'],
+        engines
+      }
+    },
+    {
+      name: `arm64-linux-gnu-${version}`,
+      target: 'aarch64-linux-gnu',
+      glibc: '2.27',
+      cpu: 'baseline',
+      nodeVersion,
+      oboe: 'liboboe-1.0-aarch64.so',
+      npm: {
+        cpu: ['arm64'],
+        os: ['linux'],
+        libc: ['glibc'],
+        engines
+      }
+    },
+    {
+      name: `arm64-linux-musl-${version}`,
+      target: 'aarch64-linux-musl',
+      cpu: 'baseline',
+      nodeVersion,
+      oboe: 'liboboe-1.0-alpine-aarch64.so',
+      npm: {
+        cpu: ['arm64'],
+        os: ['linux'],
+        libc: ['musl'],
+        engines
+      }
     }
-  },
-  {
-    name: `x64-linux-musl-${version}`,
-    target: 'x86_64-linux-musl',
-    cpu: 'sandybridge',
-    oboe: 'liboboe-1.0-alpine-x86_64.so',
-    npm: {
-      cpu: ['x64'],
-      os: ['linux'],
-      libc: ['musl'],
-      engines
-    }
-  },
-  {
-    name: `arm64-linux-gnu-${version}`,
-    target: 'aarch64-linux-gnu',
-    glibc: '2.27',
-    cpu: 'baseline',
-    oboe: 'liboboe-1.0-aarch64.so',
-    npm: {
-      cpu: ['arm64'],
-      os: ['linux'],
-      libc: ['glibc'],
-      engines
-    }
-  },
-  {
-    name: `arm64-linux-musl-${version}`,
-    target: 'aarch64-linux-musl',
-    cpu: 'baseline',
-    oboe: 'liboboe-1.0-alpine-aarch64.so',
-    npm: {
-      cpu: ['arm64'],
-      os: ['linux'],
-      libc: ['musl'],
-      engines
-    }
-  }
-]
+  ]
+})
 
 const bindingsTargets = Object.fromEntries(targets.map((target) => [
     `bindings-${target.name}`,
@@ -101,6 +107,7 @@ const bindingsTargets = Object.fromEntries(targets.map((target) => [
       target: target.target,
       glibc: target.glibc,
       cpu: target.cpu,
+      nodeVersion: target.nodeVersion,
       output: `npm/${target.name}/bindings.node`,
       librariesSearch: [`npm/${target.name}`]
     }
@@ -113,6 +120,7 @@ const metricsTargets = Object.fromEntries(targets.map((target) => [
       target: target.target,
       glibc: target.glibc,
       cpu: target.cpu,
+      nodeVersion: target.nodeVersion,
       output: `npm/${target.name}/metrics.node`,
       librariesSearch: [`npm/${target.name}`]
     }

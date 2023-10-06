@@ -31,18 +31,15 @@ jobs:
     name: Build & publish prebuilt platform-specific packages
     runs-on: ubuntu-latest
     needs: is-publishable
-    strategy:
-      matrix:
-        node: ['16', '18', '20']
     
     steps:
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v3
 
-      - name: Setup Node ${{ matrix.node }}
+      - name: Setup Node 18
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node }}
+          node-version: '18.x'
           registry-url: 'https://registry.npmjs.org' # Setup .npmrc file to publish to npm
 
       - name: Show Environment Info
@@ -55,28 +52,18 @@ jobs:
       - name: NPM Install dependencies
         run: npm install
 
-      # runs: node build.js for the current node version
-      - name: Build from source for Node ${{ matrix.node }}
+      - name: Build from source
         run: npm run build
 
-      - name: Publish arm64-linux-gnu-${{ matrix.node }}
-        run: npm publish
-        working-directory: npm/arm64-linux-gnu-${{ matrix.node }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-      - name: Publish arm64-linux-musl-${{ matrix.node }}
-        run: npm publish
-        working-directory: npm/arm64-linux-musl-${{ matrix.node }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-      - name: Publish x64-linux-gnu-${{ matrix.node }}
-        run: npm publish
-        working-directory: npm/x64-linux-gnu-${{ matrix.node }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-      - name: Publish x64-linux-musl-${{ matrix.node }}
-        run: npm publish
-        working-directory: npm/x64-linux-musl-${{ matrix.node }}
+      - name: Publish
+        run: |
+          for PKG in *
+          do
+            pushd $PKG > /dev/null
+            npm publish
+            popd > /dev/null
+          done
+        working-directory: npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
@@ -108,13 +95,19 @@ jobs:
           aws-access-key-id: ${{ secrets.CI_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.CI_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+      - name: Setup GitHub Token
+        uses: getsentry/action-github-app-token@v2
+        id: github-token
+        with:
+          app_id: ${{ vars.APPLICATION_ID }}
+          private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
 
       - name: Launch Runners
         id: launch
         uses: solarwindscloud/ec2-runner-action@main
         with:
           action: launch
-          github-token: ${{ secrets.CI_GITHUB_TOKEN }}
+          github-token: ${{ steps.github-token.outputs.token }}
           matrix: ${{ needs.load-test-group.outputs.arm64-images }}
           runner-user: github
           runner-directory: /gh
@@ -185,12 +178,18 @@ jobs:
           aws-access-key-id: ${{ secrets.CI_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.CI_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+      - name: Setup GitHub Token
+        uses: getsentry/action-github-app-token@v2
+        id: github-token
+        with:
+          app_id: ${{ vars.APPLICATION_ID }}
+          private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
 
       - name: Terminate Runners
         uses: solarwindscloud/ec2-runner-action@main
         with:
           action: terminate
-          github-token: ${{ secrets.CI_GITHUB_TOKEN }}
+          github-token: ${{ steps.github-token.outputs.token }}
           matrix: ${{ needs.launch-arm64.outputs.matrix }}
 
   npm-publish:

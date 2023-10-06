@@ -57,7 +57,6 @@ jobs:
       - name: NPM Install dependencies
         run: npm install
 
-      # runs: node build.js for the current node version
       - name: Build from source
         run: npm run build
 

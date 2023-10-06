@@ -24,7 +24,6 @@
   },
   "scripts": {
     "build": "node build.js",
-    "build:all": "docker compose -f dev/docker-compose.build.yml up node-16 && docker compose -f dev/docker-compose.build.yml up node-18 && docker compose -f dev/docker-compose.build.yml up node-20 ; docker compose -f dev/docker-compose.build.yml down",
     "test": "./test.sh",
     "lint": "eslint . --ext .json,.js,.yml --fix",
     "dev": "dev/start.sh",
@@ -46,7 +45,7 @@
     "mocha": "^10.0.0",
     "nan": "^2.17.0",
     "node-addon-api": "^5.1.0",
-    "zig-build": "^0.1.1"
+    "zig-build": "^0.3.0"
   },
   "optionalDependencies": {
     "solarwinds-apm-bindings-arm64-linux-gnu-16": "16.3.0",
