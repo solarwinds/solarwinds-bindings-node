@@ -9,18 +9,14 @@ jobs:
   build:
     name: Build for all supported Node versions
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: ['16', '18', '20']
-    
     steps:
       - name: Checkout ${{ github.ref }}
         uses: actions/checkout@v3
 
-      - name: Setup Node ${{ matrix.node }}
+      - name: Setup Node 8
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 18
           cache: 'npm'
 
       - name: Cache zig-build
@@ -29,9 +25,9 @@ jobs:
           path: |
             ~/.zig-build
             ~/.cache/zig
-          key: zig-build-${{ matrix.node }}-${{ hashFiles('**/package-lock.json') }}
+          key: zig-build-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            zig-build-${{ matrix.node }}-
+            zig-build-
 
       - name: Show Environment Info
         run: |
@@ -43,14 +39,13 @@ jobs:
       - name: NPM Install dependencies
         run: npm install
 
-      # runs: node build.js for the current node version
-      - name: Build from source for Node ${{ matrix.node }}
+      - name: Build from source
         run: npm run build
 
       - name: Upload built packages
         uses: actions/upload-artifact@v3
         with:
-          name: npm-${{ matrix.node }}
+          name: npm
           path: npm/*
           retention-days: 1
 
@@ -82,13 +77,19 @@ jobs:
           aws-access-key-id: ${{ secrets.CI_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.CI_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+      - name: Setup GitHub Token
+        uses: getsentry/action-github-app-token@v2
+        id: github-token
+        with:
+          app_id: ${{ vars.APPLICATION_ID }}
+          private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
 
       - name: Launch Runners
         id: launch
         uses: solarwindscloud/ec2-runner-action@main
         with:
           action: launch
-          github-token: ${{ secrets.CI_GITHUB_TOKEN }}
+          github-token: ${{ steps.github-token.outputs.token }}
           matrix: ${{ needs.load-test-group.outputs.arm64-images }}
           runner-user: github
           runner-directory: /gh
@@ -142,23 +143,10 @@ jobs:
           cat /etc/os-release
 
       # Download all prebuilt packages
-      - name: Download Node 16 packages
-        if: ${{ contains(matrix.image, '16') }}
+      - name: Download packages
         uses: actions/download-artifact@v3
         with:
-          name: npm-16
-          path: npm/
-      - name: Download Node 18 packages
-        if: ${{ contains(matrix.image, '18') }}
-        uses: actions/download-artifact@v3
-        with:
-          name: npm-18
-          path: npm/
-      - name: Download Node 20 packages
-        if: ${{ contains(matrix.image, '20') }}
-        uses: actions/download-artifact@v3
-        with:
-          name: npm-20
+          name: npm
           path: npm/
 
       - name: NPM Install dependencies
@@ -179,12 +167,18 @@ jobs:
           aws-access-key-id: ${{ secrets.CI_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.CI_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+      - name: Setup GitHub Token
+        uses: getsentry/action-github-app-token@v2
+        id: github-token
+        with:
+          app_id: ${{ vars.APPLICATION_ID }}
+          private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
 
       - name: Terminate Runners
         uses: solarwindscloud/ec2-runner-action@main
         with:
           action: terminate
-          github-token: ${{ secrets.CI_GITHUB_TOKEN }}
+          github-token: ${{ steps.github-token.outputs.token }}
           matrix: ${{ needs.launch-arm64.outputs.matrix }}
 
   checksum:
